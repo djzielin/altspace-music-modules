@@ -85,7 +85,7 @@ export default class Spawner {
 					local: { position: new MRE.Vector3(0, 0, 0) }
 				},
 				appearance:	{
-					enabled: true
+					enabled: false
 				}
 				
 
@@ -208,7 +208,7 @@ export default class Spawner {
 				appearance:
 				{
 					meshId: floorMesh.id,
-					enabled: true //set true for debugging
+					enabled: false //set true for debugging
 				}
 			}
 		});
