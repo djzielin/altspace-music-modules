@@ -26,46 +26,44 @@ export default class Spawner {
 		new MRE.Color4(177 / 255, 89 / 255, 40 / 255)];
 
 	private sphereMesh: MRE.Mesh;
-	private playingBubbles: Map<MRE.Actor, number> = new Map();
-	private activeBubbles: MRE.Actor[] = [];
+	private playingBubbles: Map<MRE.Actor, MRE.MediaInstance> = new Map();
+	//rivate activeBubbles: MRE.Actor[] = [];
 	private ourSpawners: MRE.Actor[]=[];
 	//private ourSpawners: MRE.Vector3[]=[];
 	private noteMaterials: MRE.Material[] = [];
 	private spawnerParent: MRE.Actor;
 	private gridParent: MRE.Actor;
+	private earthTexture: MRE.Texture;
 
 	private previousSpawnIndex =0;
 
-	constructor(private context: MRE.Context, private assets: MRE.AssetContainer,
+	constructor(private context: MRE.Context, private baseUrl: string, private assets: MRE.AssetContainer,
 		private ourPiano: Piano, private allHands: MRE.Actor[], private floorPlane: MRE.Actor) {
 
 		this.sphereMesh = this.assets.createSphereMesh('sphere', 0.5, 10, 10);
 		const boxMesh = this.assets.createBoxMesh('boxMesh',1.0,1.0,1.0);
 
+		//https://en.wikipedia.org/wiki/File:Blue_Marble_2002.png
+		//const filename = `${this.baseUrl}/` + "Blue_Marble_2002.png";
+
+		//http://paulbourke.net/geometry/spherical/
+		const filename = `${this.baseUrl}/` + "soccer_sph.png"; 
+		
+		this.earthTexture=this.assets.createTexture("earth", {
+			uri: filename
+		});
 
 		this.spawnerParent = MRE.Actor.Create(this.context, {
 			actor: {
 				name: 'spawner_parent',
 				transform: {
-					app: { position: new MRE.Vector3(0, 1, 0) }
-				}
-			}
-		});
-
-		this.gridParent = MRE.Actor.Create(this.context, {
-			actor: {
-				name: 'spawner_parent',
-				parentId: this.spawnerParent.id,
-				transform: {
-					local: { position: new MRE.Vector3(0, 0, 0) }
+					app: { position: new MRE.Vector3(0, 1.5, 0) }
 				}
 				
-
 			}
 		});
 
-
-		this.spawnerParent.setCollider(MRE.ColliderType.Box, false, new MRE.Vector3(2,0.25,2));
+		//this.spawnerParent.setCollider(MRE.ColliderType.Box, false, new MRE.Vector3(2,0.25,2));
 
 		/*this.spawnerParent.enableRigidBody({
 			enabled: true,
@@ -75,22 +73,38 @@ export default class Spawner {
 		this.spawnerParent.grabbable = true; //so we can move it around
 		*/
 
+		this.gridParent = MRE.Actor.Create(this.context, {
+			actor: {
+				name: 'grid_parent',
+				parentId: this.spawnerParent.id,
+				transform: {
+					local: { position: new MRE.Vector3(0, 0, 0) }
+				},
+				appearance:	{
+					enabled: false
+				}
+				
+
+			}
+		});	
+
 		const lineMat: MRE.Material = this.assets.createMaterial('lineMat', {
 			color: new MRE.Color4(0.0,0.5,0.0)
 		});
 
 
-		let numGridCells = 3;
-		let oneOverGridNum= 1 / numGridCells;
+		let xGridCells = 3;
+		let yGridCells = 3;
+		let zGridCells = 1;
 
-		for (let y = 0; y < numGridCells+1; y++) {
-			let yPos = y * oneOverGridNum-0.5;
-			for (let x = 0; x < numGridCells + 1; x++) {
-				let xPos = x * oneOverGridNum - 0.5;
+		for (let y = 0; y < yGridCells+1; y++) {
+			const yPos = y * (1/yGridCells)-0.5;
+			for (let x = 0; x < xGridCells + 1; x++) {
+				const xPos = x * (1/xGridCells) - 0.5;
 				MRE.Actor.Create(this.context, {
 					actor: {
 						name: 'gridLine' + x + y,
-						parentId: this.spawnerParent.id,
+						parentId: this.gridParent.id,
 						transform: {
 							local: {
 								position: new MRE.Vector3(xPos, yPos, 0),
@@ -106,12 +120,12 @@ export default class Spawner {
 				});
 
 			}
-			for (let z = 0; z < numGridCells + 1; z++) {
-				let zPos = z * oneOverGridNum - 0.5;
+			for (let z = 0; z < zGridCells + 1; z++) {
+				const zPos = z * (1/zGridCells) - 0.5;
 				MRE.Actor.Create(this.context, {
 					actor: {
 						name: 'gridLine' + y + z,
-						parentId: this.spawnerParent.id,
+						parentId: this.gridParent.id,
 						transform: {
 							local: {
 								position: new MRE.Vector3(0, yPos, zPos),
@@ -128,15 +142,15 @@ export default class Spawner {
 			}
 		}
 
-		for (let x = 0; x < numGridCells + 1; x++) {
-			let xPos = x * oneOverGridNum - 0.5
-			for (let z = 0; z < numGridCells + 1; z++) {
-				let zPos = z * oneOverGridNum - 0.5;
+		for (let x = 0; x < xGridCells + 1; x++) {
+			const xPos = x * (1/xGridCells) - 0.5
+			for (let z = 0; z < zGridCells + 1; z++) {
+				const zPos = z * (1/zGridCells) - 0.5;
 
 				MRE.Actor.Create(this.context, {
 					actor: {
 						name: 'vertical_gridLine',
-						parentId: this.spawnerParent.id,
+						parentId: this.gridParent.id,
 						transform: {
 							local: {
 								position: new MRE.Vector3(xPos, 0, zPos),
@@ -153,30 +167,13 @@ export default class Spawner {
 			}
 		}
 
-		for (let x = 0; x < numGridCells; x++) {
-			const xPos = x * oneOverGridNum - 0.5 + oneOverGridNum * 0.5;
-			for (let z = 0; z < numGridCells; z++) {
-				const zPos = z * oneOverGridNum - 0.5 + oneOverGridNum * 0.5;
-				for (let y = 0; y < numGridCells; y++) {
-					const yPos = y * oneOverGridNum - 0.5 + oneOverGridNum * 0.5
-
-					const ourSphere = MRE.Actor.Create(this.context, {
-						actor: {
-							name: 'sphere',
-							parentId: this.gridParent.id,
-							transform: {
-								local: {
-									position: new MRE.Vector3(xPos,yPos,zPos),
-									scale: new MRE.Vector3(oneOverGridNum,oneOverGridNum,oneOverGridNum)
-								}
-							},
-							appearance: {
-								meshId: this.sphereMesh.id//,
-								//materialId: this.noteMaterials[noteNum].id
-							}
-						}
-					});
-
+		for (let x = 0; x < xGridCells; x++) {
+			const xPos = x * (1/xGridCells) - 0.5 + (1/xGridCells) * 0.5;
+			for (let z = 0; z < zGridCells; z++) {
+				const zPos = z * (1/zGridCells) - 0.5 + (1/zGridCells) * 0.5;
+				for (let y = 0; y < yGridCells; y++) {
+					const yPos = y * (1/yGridCells) - 0.5 + (1/yGridCells) * 0.5;
+					const ourSphere=this.createSphere(new MRE.Vector3(xPos,yPos,zPos), (1/yGridCells));
 					this.ourSpawners.push(ourSphere);
 				}
 			}
@@ -185,7 +182,8 @@ export default class Spawner {
 
 		for (const noteColor of this.noteColors) {
 			const ourMat: MRE.Material = this.assets.createMaterial('bubblemat', {
-				color: noteColor
+				color: noteColor,
+				mainTextureId: this.earthTexture.id
 			});
 			this.noteMaterials.push(ourMat);
 		}
@@ -212,52 +210,104 @@ export default class Spawner {
 		}, 2000);
 	}
 
-	public spawnBubble(note: number, vel: number) {
-		const octave = Math.floor(note / 12) - 1;
-		const noteNum = note % 12;
-		const scale = ((9 - octave) / 8.0) * 0.4;
-		let spawnIndex=0;
-/*
-		do { //make sure we don't spawn into same exact spot
-			spawnIndex = Math.floor(Math.random() * this.ourSpawners.length);
-		} while (spawnIndex === this.previousSpawnIndex); 
+	private createSphere(pos: MRE.Vector3, scale: number): MRE.Actor {
 
-		this.previousSpawnIndex=spawnIndex;	
-		const spawnPos=this.ourSpawners[spawnIndex].transform.local.position.clone();
-		spawnPos.y= -0.5;
+	
 
+
+		MRE.log.info("app","trying to create bubble at: " + pos );
 		const ourSphere = MRE.Actor.Create(this.context, {
 			actor: {
-				name: 'sphere' + note,
+				name: 'sphere',
 				parentId: this.spawnerParent.id,
 				transform: {
 					local: {
-						position: spawnPos,
+						position: pos,
 						scale: new MRE.Vector3(scale, scale, scale)
 					}
 				},
 				appearance: {
 					meshId: this.sphereMesh.id,
-					materialId: this.noteMaterials[noteNum].id
+					enabled: false
 				}
 			}
 		});
 
-		//const velFloat=vel/127.0;
+		ourSphere.setCollider(MRE.ColliderType.Auto, true); //trigger
+		ourSphere.collider.enabled=false;
 
-		ourSphere.setCollider(MRE.ColliderType.Auto, false);
 		ourSphere.enableRigidBody({
 			enabled: true,
-			isKinematic: false,
+			isKinematic: true,
 			useGravity: false,
-			//velocity: new MRE.Vector3(0.0,0,-0.3)
-			velocity: new MRE.Vector3(0,-0.3,0)
 		});
-		ourSphere.subscribe('transform'); //so we can check on position, ect. later
 
+		//ourSphere.collider.onCollision("collision-enter", (data: MRE.CollisionData) => {
+		ourSphere.collider.onTrigger('trigger-enter', (otherActor: MRE.Actor) => {
+			//const otherActor=data.otherActor;
+			MRE.log.info("app", "sphere collided with: " + otherActor.name);
 
-		this.activeBubbles.push(ourSphere);
+			if (this.allHands.includes(otherActor)) { //bubble touches hand
+				MRE.log.info("app", "  this was one of our hands! lets do something!");
+				//ourSphere.rigidBody.enabled = false;
+				ourSphere.collider.enabled = false;
+				ourSphere.appearance.enabled = false;
 
+				this.playingBubbles.get(ourSphere).resume(); //start sound
+				
+				setTimeout(() => {
+					MRE.log.info("app", "5 seconds has expired. deleting bubble: " + ourSphere.name);
+					//this.playingBubbles.get(ourSphere).stop(); //make sure sound is done
+					this.playingBubbles.delete(ourSphere);
+					//ourSphere.destroy();
+				}, 5000); //allow time for sound to play, then delete.
+				//this.spawnParticleEffect(ourSphere.transform.app.position);
+			}
+
+			/*		if(data.otherActor.id===this.floorPlane.id){ //bubble touches floor
+						MRE.log.info("app","  bubble touched the floor, destroying");
+			
+						this.removeBubbleFromActiveArray(ourSphere);
+						ourSphere.destroy();
+					}
+			
+					if(this.activeBubbles.includes(data.otherActor)) { //bubble touches another bubble
+						MRE.log.info("app","  touched another bubble! destroying");
+			
+						this.removeBubbleFromActiveArray(ourSphere);
+						ourSphere.destroy();
+			
+						this.removeBubbleFromActiveArray(data.otherActor);
+						data.otherActor.destroy();
+					}
+					*/
+		});
+
+		//ourSphere.collider.enabled = false;
+
+		return ourSphere;
+	}
+
+	public spawnBubble(note: number, vel: number) {
+		MRE.log.info("app","trying to spawn bubble for: " + note);
+		const octave = Math.floor(note / 12) - 1;
+		const noteNum = note % 12;
+		const scale = ((9 - octave) / 8.0) * 0.4;
+		let spawnIndex = 0;
+
+		if(this.playingBubbles.size===this.ourSpawners.length){
+			MRE.log.info("app", "no free slots, skipping this note spawn");
+			return;
+		}
+
+		let slotUsed=false;
+		do {
+			spawnIndex = Math.floor(Math.random() * this.ourSpawners.length);
+			slotUsed=this.playingBubbles.has(this.ourSpawners[spawnIndex]);
+
+		} while (slotUsed) //if full, keep looking 
+
+		const ourSphere = this.ourSpawners[spawnIndex];
 		const soundInstance: MRE.MediaInstance =
 			ourSphere.startSound(this.ourPiano.getSoundGUID(note), {
 				doppler: 0,
@@ -267,53 +317,17 @@ export default class Spawner {
 				volume: 1.0
 			});
 
-		ourSphere.collider.onCollision( "collision-enter", (data: MRE.CollisionData) => {
-			MRE.log.info("app","sphere collided with: " + data.otherActor.name);
-			
-			if(this.allHands.includes(data.otherActor)) { //bubble touches hand
-				MRE.log.info("app","  this was one of our hands! lets do something!");
-				ourSphere.rigidBody.enabled=false;
-				ourSphere.collider.enabled=false;
-				ourSphere.appearance.enabled=false;
+		this.playingBubbles.set(ourSphere, soundInstance);
 
-				soundInstance.resume();
-				
-				this.playingBubbles.set(ourSphere, Date.now());
-				setTimeout(() => {
-					MRE.log.info("app","5 seconds has expired. deleting bubble: " + ourSphere.name);
-					this.playingBubbles.delete(ourSphere);
-					this.removeBubbleFromActiveArray(ourSphere);
-					ourSphere.destroy();
-				}, 5000); //allow time for sound to play, then delete.
-				
+		ourSphere.appearance.enabled = true;
+		ourSphere.appearance.materialId = this.noteMaterials[noteNum].id;
+		ourSphere.collider.enabled = true;		
+	}	
 
-				this.spawnParticleEffect(ourSphere.transform.app.position); 
-			}			
-
-			if(data.otherActor.id===this.floorPlane.id){ //bubble touches floor
-				MRE.log.info("app","  bubble touched the floor, destroying");
-
-				this.removeBubbleFromActiveArray(ourSphere);
-				ourSphere.destroy();
-			}
-
-			if(this.activeBubbles.includes(data.otherActor)) { //bubble touches another bubble
-				MRE.log.info("app","  touched another bubble! destroying");
-
-				this.removeBubbleFromActiveArray(ourSphere);
-				ourSphere.destroy();
-
-				this.removeBubbleFromActiveArray(data.otherActor);
-				data.otherActor.destroy();
-			}
-		});
-		*/
-	}
-
-	private removeBubbleFromActiveArray(bubble: MRE.Actor) {
+	/*private removeBubbleFromActiveArray(bubble: MRE.Actor) {
 		const bIndex = this.activeBubbles.indexOf(bubble);
 		if (bIndex > -1) {
 			this.activeBubbles.splice(bIndex, 1);
 		}
-	}
+	}*/
 }

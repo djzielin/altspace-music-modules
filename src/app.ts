@@ -145,8 +145,8 @@ export default class HelloWorld {
 	}
 	
 	private started() {
-		//this.ourPiano=new Piano(this.context, this.baseUrl, this.assets);
-		this.ourSpawner=new Spawner(this.context, this.assets, 
+		this.ourPiano=new Piano(this.context, this.baseUrl, this.assets);
+		this.ourSpawner=new Spawner(this.context, this.baseUrl, this.assets, 
 			this.ourPiano, this.allHands, this.floorPlane); //TODO pass this better
 
 		this.ourReceiver.ourCallback=this.PianoReceiveCallback.bind(this);	
