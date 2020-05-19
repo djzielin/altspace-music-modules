@@ -26,6 +26,8 @@ export default class Spawner {
 		new MRE.Color4(177 / 255, 89 / 255, 40 / 255)];
 
 	private sphereMesh: MRE.Mesh;
+	private boxMesh: MRE.Mesh;
+
 	private playingBubbles: Map<MRE.Actor, MRE.MediaInstance> = new Map();
 	//rivate activeBubbles: MRE.Actor[] = [];
 	private ourSpawners: MRE.Actor[]=[];
@@ -33,17 +35,16 @@ export default class Spawner {
 	private noteMaterials: MRE.Material[] = [];
 	private spawnerParent: MRE.Actor;
 	private gridParent: MRE.Actor;
-	private earthTexture: MRE.Texture;
+	private sphereTexture: MRE.Texture;
 	private floorPlane: MRE.Actor=null;
 
 	private previousSpawnIndex =0;
 
 	constructor(private context: MRE.Context, private baseUrl: string, private assets: MRE.AssetContainer,
 		private ourPiano: Piano, private allHands: MRE.Actor[]) {
-
 		
-		this.sphereMesh = this.assets.createSphereMesh('sphere', 0.5, 10, 10);
-		const boxMesh = this.assets.createBoxMesh('boxMesh',1.0,1.0,1.0);
+		this.sphereMesh = this.assets.createSphereMesh('sphere', 0.5, 16, 16);
+		this.boxMesh = this.assets.createBoxMesh('boxMesh',1.0,1.0,1.0);
 
 		//https://en.wikipedia.org/wiki/File:Blue_Marble_2002.png
 		//const filename = `${this.baseUrl}/` + "Blue_Marble_2002.png";
@@ -51,7 +52,7 @@ export default class Spawner {
 		//http://paulbourke.net/geometry/spherical/
 		const filename = `${this.baseUrl}/` + "soccer_sph.png"; 
 		
-		this.earthTexture=this.assets.createTexture("earth", {
+		this.sphereTexture=this.assets.createTexture("earth", {
 			uri: filename
 		});
 
@@ -118,7 +119,7 @@ export default class Spawner {
 						},
 						appearance:
 						{
-							meshId: boxMesh.id,
+							meshId: this.boxMesh.id,
 							materialId: lineMat.id
 						},
 					}
@@ -139,7 +140,7 @@ export default class Spawner {
 						},
 						appearance:
 						{
-							meshId: boxMesh.id,
+							meshId: this.boxMesh.id,
 							materialId: lineMat.id
 						},
 					}
@@ -164,13 +165,14 @@ export default class Spawner {
 						},
 						appearance:
 						{
-							meshId: boxMesh.id,
+							meshId: this.boxMesh.id,
 							materialId: lineMat.id
 						},
 					}
 				});
 			}
 		}
+		MRE.log.info("app","created all grid components");
 
 		for (let x = 0; x < xGridCells; x++) {
 			const xPos = (x+0.5) * (cubeDim/xGridCells) - cubeDim/2;
@@ -178,20 +180,26 @@ export default class Spawner {
 				const zPos = (z+0.5) * (cubeDim/zGridCells) - cubeDim/2 ;
 				for (let y = 0; y < yGridCells; y++) {
 					const yPos = (y +0.5)* (cubeDim/yGridCells) - cubeDim/2 ;
-					const ourSphere=this.createSphere(new MRE.Vector3(xPos,yPos,zPos), (cubeDim/yGridCells));
+					const ourSphere=this.createSphere(
+						new MRE.Vector3(xPos,yPos,zPos), 
+						(cubeDim/yGridCells)*0.9,
+						this.sphereMesh.id);
+						//this.boxMesh.id);
 					this.ourSpawners.push(ourSphere);
 				}
 			}
 		}
-
+		MRE.log.info("app","created all bubbles");
 
 		for (const noteColor of this.noteColors) {
 			const ourMat: MRE.Material = this.assets.createMaterial('bubblemat', {
 				color: noteColor,
-				mainTextureId: this.earthTexture.id
+				mainTextureId: this.sphereTexture.id
 			});
 			this.noteMaterials.push(ourMat);
 		}
+
+		MRE.log.info("app","complete all spawner object creation");
 	}
 
 	private createFloorPlane() {
@@ -254,8 +262,7 @@ export default class Spawner {
 		//this.spawnParticleEffect(ourSphere.transform.app.position);
 	}
 
-
-	private createSphere(pos: MRE.Vector3, scale: number): MRE.Actor {
+	private createSphere(pos: MRE.Vector3, scale: number, meshID: MRE.Guid): MRE.Actor {
 		MRE.log.info("app","trying to create bubble at: " + pos );
 		const ourSphere = MRE.Actor.Create(this.context, {
 			actor: {
@@ -268,7 +275,7 @@ export default class Spawner {
 					}
 				},
 				appearance: {
-					meshId: this.sphereMesh.id,
+					meshId: meshID,
 					enabled: false
 				}
 			}

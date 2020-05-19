@@ -73,7 +73,9 @@ export default class Piano{
 		//this.loadSound(filename,0);
 
 		for (let i = 21; i < 109; i++) {
-			const filename = `${this.baseUrl}/` + "Piano.ff." + this.noteOrder[note] + octave.toString() + ".ogg";
+			const filename = `${this.baseUrl}/piano_mono/` + 
+				"Piano.ff." + this.noteOrder[note] + 
+				octave.toString() + "_mono.ogg";
 			MRE.log.info("app", "trying to load: " + filename);
 			this.loadSound(filename,i);
 
