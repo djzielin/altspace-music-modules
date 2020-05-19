@@ -237,11 +237,25 @@ export default class Spawner {
 		}, 2000);
 	}
 
+	private activateBubble(ourSphere: MRE.Actor)
+	{
+		//ourSphere.rigidBody.enabled = false;
+		ourSphere.collider.enabled = false;
+		ourSphere.appearance.enabled = false;
+
+		this.playingBubbles.get(ourSphere).resume(); //start sound
+
+		setTimeout(() => {
+			MRE.log.info("app", "5 seconds has expired. deleting bubble: " + ourSphere.name);
+			//this.playingBubbles.get(ourSphere).stop(); //make sure sound is done
+			this.playingBubbles.delete(ourSphere);
+			//ourSphere.destroy();
+		}, 5000); //allow time for sound to play, then delete.
+		//this.spawnParticleEffect(ourSphere.transform.app.position);
+	}
+
+
 	private createSphere(pos: MRE.Vector3, scale: number): MRE.Actor {
-
-	
-
-
 		MRE.log.info("app","trying to create bubble at: " + pos );
 		const ourSphere = MRE.Actor.Create(this.context, {
 			actor: {
@@ -269,6 +283,13 @@ export default class Spawner {
 			useGravity: false,
 		});
 
+		//allow user to click on bubble (so still works in desktop mode)
+		const clickBehavior = ourSphere.setBehavior(MRE.ButtonBehavior);
+
+		clickBehavior.onClick(() => {
+			this.activateBubble(ourSphere);
+		});
+
 		//ourSphere.collider.onCollision("collision-enter", (data: MRE.CollisionData) => {
 		ourSphere.collider.onTrigger('trigger-enter', (otherActor: MRE.Actor) => {
 			//const otherActor=data.otherActor;
@@ -276,19 +297,7 @@ export default class Spawner {
 
 			if (this.allHands.includes(otherActor)) { //bubble touches hand
 				MRE.log.info("app", "  this was one of our hands! lets do something!");
-				//ourSphere.rigidBody.enabled = false;
-				ourSphere.collider.enabled = false;
-				ourSphere.appearance.enabled = false;
-
-				this.playingBubbles.get(ourSphere).resume(); //start sound
-				
-				setTimeout(() => {
-					MRE.log.info("app", "5 seconds has expired. deleting bubble: " + ourSphere.name);
-					//this.playingBubbles.get(ourSphere).stop(); //make sure sound is done
-					this.playingBubbles.delete(ourSphere);
-					//ourSphere.destroy();
-				}, 5000); //allow time for sound to play, then delete.
-				//this.spawnParticleEffect(ourSphere.transform.app.position);
+				this.activateBubble(ourSphere);
 			}
 
 			/*		if(data.otherActor.id===this.floorPlane.id){ //bubble touches floor
@@ -309,8 +318,6 @@ export default class Spawner {
 					}
 					*/
 		});
-
-		//ourSphere.collider.enabled = false;
 
 		return ourSphere;
 	}

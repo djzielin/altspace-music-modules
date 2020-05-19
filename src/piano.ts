@@ -68,6 +68,10 @@ export default class Piano{
 		});
 		keyboardParent.grabbable = true;
 
+		//const filename = `${this.baseUrl}/` + 'piano_mono/combined.ogg';
+		//MRE.log.info("app", "trying to load: " + filename);
+		//this.loadSound(filename,0);
+
 		for (let i = 21; i < 109; i++) {
 			const filename = `${this.baseUrl}/` + "Piano.ff." + this.noteOrder[note] + octave.toString() + ".ogg";
 			MRE.log.info("app", "trying to load: " + filename);
