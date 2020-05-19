@@ -1,0 +1,46 @@
+{
+  "name": "hello-world",
+  "version": "0.1.0",
+  "private": true,
+  "description": "",
+  "main": "built/server.js",
+  "author": "David J. Zielinski",
+  "license": "MIT",
+  "keywords": [
+    "mixed reality",
+    "virtual reality",
+    "vr",
+    "altspacevr",
+    "sample",
+    "node"
+  ],
+  "engines": {
+    "node": ">=8.12.0",
+    "npm": ">=6.4.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "clean": "tsc --build --clean",
+    "build": "tsc --build && eslint --ext .ts src",
+    "build-only": "tsc --build",
+    "lint": "eslint --ext .ts src",
+    "start": "node .",
+    "debug": "node --nolazy --inspect-brk=9229 ."
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^2.17.0",
+    "@typescript-eslint/parser": "^2.17.0",
+    "eslint": "^6.8.0",
+    "eslint-plugin-header": "^3.0.0",
+    "typescript": "^3.8.3"
+  },
+  "dependencies": {
+    "@types/ws": "",
+    "@types/dotenv": "^6.1.0",
+    "@types/node": "^10.3.1",
+    "ws": "",
+    "colorsys": "^1.0.22",
+    "dotenv": "",
+    "@microsoft/mixed-reality-extension-sdk": ""
+  }
+}
