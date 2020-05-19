@@ -122,12 +122,16 @@ export default class HelloWorld {
 				" Y: " + v.y.toFixed(precision) + 
 				" Z: " + v.z.toFixed(precision) + "}";
 	}
-	
+		
 	private started() {
-		this.ourPiano=new Piano(this.context, this.baseUrl, this.assets);
-		this.ourSpawner=new Spawner(this.context, this.baseUrl, this.assets, 
+		this.ourPiano = new Piano(this.context, this.baseUrl, this.assets);
+		this.ourSpawner = new Spawner(this.context, this.baseUrl, this.assets,
 			this.ourPiano, this.allHands); //TODO pass this better
 
-		this.ourReceiver.ourCallback=this.PianoReceiveCallback.bind(this);	
+		this.ourPiano.loadAllSounds().then(() => {
+			MRE.log.info("app", " all sounds loaded!");
+			this.ourReceiver.ourCallback = this.PianoReceiveCallback.bind(this);
+		});
+
 	}
 }

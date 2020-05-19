@@ -73,11 +73,11 @@ export default class Piano{
 		//this.loadSound(filename,0);
 
 		for (let i = 21; i < 109; i++) {
-			const filename = `${this.baseUrl}/piano_mono/` + 
-				"Piano.ff." + this.noteOrder[note] + 
-				octave.toString() + "_mono.ogg";
-			MRE.log.info("app", "trying to load: " + filename);
-			this.loadSound(filename,i);
+			//const filename = `${this.baseUrl}/piano_mono/` + 
+			//	"Piano.ff." + this.noteOrder[note] + 
+			//	octave.toString() + "_mono.ogg";
+			//MRE.log.info("app", "trying to load: " + filename);
+			//this.loadSound(filename,i);
 
 			let meshId: MRE.Guid = blackKeyMesh.id;
 			let mattId: MRE.Guid = blackKeyMaterial.id;
@@ -115,8 +115,34 @@ export default class Piano{
 			}
 		}
 	}
+	
+	public async loadAllSounds() {
+		let octave = 0;
+		let note = 9;
 
-	private loadSound(filename: string, note: number) {
+		for (let i = 21; i < 109; i++) {
+			const filename = `${this.baseUrl}/piano_mono/` +
+				"Piano.ff." + this.noteOrder[note] +
+				octave.toString() + "_mono.ogg";
+
+			MRE.log.info("app", "trying to load: " + filename);
+			const newSound = this.assets.createSound("pianoKey" + i, {
+				uri: filename
+			});
+			await newSound.created;
+			MRE.log.info("app", " Loaded!");
+
+			this.ourSounds.push(newSound);
+
+			note = note + 1;
+			if (note === 12) {
+				note = 0;
+				octave++;
+			}
+		}
+	}	
+
+	private loadSingleSound(filename: string, note: number) {
 		MRE.log.info("app", "trying to load filename: " + filename);
 		const newSound = this.assets.createSound("pianoKey"+note, {
 			uri: filename
