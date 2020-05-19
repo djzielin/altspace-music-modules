@@ -34,6 +34,28 @@ export default class Piano{
 	private noteOrder =
 	["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
 
+	private whiteKeyMaterial: MRE.Material = this.assets.createMaterial('cubemat', {
+		color: new MRE.Color4(1, 1, 1)
+	});
+	private blackKeyMaterial: MRE.Material = this.assets.createMaterial('cubemat', {
+		color: new MRE.Color4(0, 0, 0)
+	});
+	private redKeyMaterial: MRE.Material = this.assets.createMaterial('cubemat', {
+		color: new MRE.Color4(1, 0, 0)
+	});
+
+	public setProperKeyColor(midiNote: number) {
+		const note = midiNote % 12;
+
+		let matt = this.blackKeyMaterial;
+
+		if (this.zOffset[note] === 0) {
+			matt = this.whiteKeyMaterial;
+		}
+
+		this.ourKeys[midiNote - 21].appearance.material = matt;
+	}
+
 	constructor(private context: MRE.Context, private baseUrl: string, private assets: MRE.AssetContainer) {
 		let octave = 0;
 		let note = 9;
@@ -102,7 +124,7 @@ export default class Piano{
 					appearance:
 					{
 						meshId: meshId,
-						materialId: mattId
+						materialId: this.redKeyMaterial.id
 					},
 				}
 			});
@@ -131,7 +153,7 @@ export default class Piano{
 			});
 			await newSound.created;
 			MRE.log.info("app", " Loaded!");
-
+			this.setProperKeyColor(i);
 			this.ourSounds.push(newSound);
 
 			note = note + 1;
