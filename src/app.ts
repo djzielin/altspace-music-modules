@@ -21,40 +21,18 @@ export default class HelloWorld {
 	private handMesh: MRE.Mesh;
 
 	private allHands: MRE.Actor[] =[];
-	private floorPlane: MRE.Actor=null;
 
 	constructor(private context: MRE.Context, private baseUrl: string, private ourReceiver: PianoReceiver) {
 		MRE.log.info("app", "our constructor started");
 		this.assets = new MRE.AssetContainer(context);
 
 		this.handMesh=	this.assets.createSphereMesh('sphere', 0.5, 10,10);
-		this.createFloorPlane();
+		//this.createFloorPlane();
 
 		this.context.onStarted(() => this.started());
 		this.context.onUserLeft(user => this.userLeft(user));
 		this.context.onUserJoined(user => this.userJoined(user));	
 	}	
-
-	private createFloorPlane() {
-		const floorMesh= this.assets.createBoxMesh('floorMesh',20,0.1,20);
-		this.floorPlane = MRE.Actor.Create(this.context, {
-			actor: {
-				name: 'floorplane',
-				transform: {
-					local: {
-						position: new MRE.Vector3 (0,0,0),
-					}
-				},
-				appearance:
-				{
-					meshId: floorMesh.id,
-					enabled: false //set true for debugging
-				}
-			}
-		});
-
-		this.floorPlane.setCollider(MRE.ColliderType.Auto, false);		
-	}
 
 	private PianoReceiveCallback(note: number, vel: number): void {
 		MRE.log.info("app", `App received - note: ${note} vel: ${vel}`);
@@ -86,7 +64,8 @@ export default class HelloWorld {
 				},
 				appearance:
 				{
-					meshId: this.handMesh.id
+					meshId: this.handMesh.id,
+					enabled: false
 				}
 			}
 		});
@@ -147,7 +126,7 @@ export default class HelloWorld {
 	private started() {
 		this.ourPiano=new Piano(this.context, this.baseUrl, this.assets);
 		this.ourSpawner=new Spawner(this.context, this.baseUrl, this.assets, 
-			this.ourPiano, this.allHands, this.floorPlane); //TODO pass this better
+			this.ourPiano, this.allHands); //TODO pass this better
 
 		this.ourReceiver.ourCallback=this.PianoReceiveCallback.bind(this);	
 	}

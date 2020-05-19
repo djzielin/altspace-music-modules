@@ -34,12 +34,14 @@ export default class Spawner {
 	private spawnerParent: MRE.Actor;
 	private gridParent: MRE.Actor;
 	private earthTexture: MRE.Texture;
+	private floorPlane: MRE.Actor=null;
 
 	private previousSpawnIndex =0;
 
 	constructor(private context: MRE.Context, private baseUrl: string, private assets: MRE.AssetContainer,
-		private ourPiano: Piano, private allHands: MRE.Actor[], private floorPlane: MRE.Actor) {
+		private ourPiano: Piano, private allHands: MRE.Actor[]) {
 
+		
 		this.sphereMesh = this.assets.createSphereMesh('sphere', 0.5, 10, 10);
 		const boxMesh = this.assets.createBoxMesh('boxMesh',1.0,1.0,1.0);
 
@@ -63,6 +65,8 @@ export default class Spawner {
 			}
 		});
 
+		this.createFloorPlane();
+
 		//this.spawnerParent.setCollider(MRE.ColliderType.Box, false, new MRE.Vector3(2,0.25,2));
 
 		/*this.spawnerParent.enableRigidBody({
@@ -81,7 +85,7 @@ export default class Spawner {
 					local: { position: new MRE.Vector3(0, 0, 0) }
 				},
 				appearance:	{
-					enabled: false
+					enabled: true
 				}
 				
 
@@ -96,11 +100,12 @@ export default class Spawner {
 		let xGridCells = 3;
 		let yGridCells = 3;
 		let zGridCells = 1;
+		let cubeDim=0.75;
 
 		for (let y = 0; y < yGridCells+1; y++) {
-			const yPos = y * (1/yGridCells)-0.5;
+			const yPos = y * (cubeDim/yGridCells)-cubeDim/2;
 			for (let x = 0; x < xGridCells + 1; x++) {
-				const xPos = x * (1/xGridCells) - 0.5;
+				const xPos = x * (cubeDim/xGridCells) - cubeDim/2;
 				MRE.Actor.Create(this.context, {
 					actor: {
 						name: 'gridLine' + x + y,
@@ -108,7 +113,7 @@ export default class Spawner {
 						transform: {
 							local: {
 								position: new MRE.Vector3(xPos, yPos, 0),
-								scale: new MRE.Vector3(0.01, 0.01, 1.0)
+								scale: new MRE.Vector3(0.01, 0.01, cubeDim)
 							}
 						},
 						appearance:
@@ -121,7 +126,7 @@ export default class Spawner {
 
 			}
 			for (let z = 0; z < zGridCells + 1; z++) {
-				const zPos = z * (1/zGridCells) - 0.5;
+				const zPos = z * (cubeDim/zGridCells) - cubeDim/2;
 				MRE.Actor.Create(this.context, {
 					actor: {
 						name: 'gridLine' + y + z,
@@ -129,7 +134,7 @@ export default class Spawner {
 						transform: {
 							local: {
 								position: new MRE.Vector3(0, yPos, zPos),
-								scale: new MRE.Vector3(1.0, 0.01, 0.01)
+								scale: new MRE.Vector3(cubeDim, 0.01, 0.01)
 							}
 						},
 						appearance:
@@ -143,9 +148,9 @@ export default class Spawner {
 		}
 
 		for (let x = 0; x < xGridCells + 1; x++) {
-			const xPos = x * (1/xGridCells) - 0.5
+			const xPos = x * (cubeDim/xGridCells) - cubeDim/2;
 			for (let z = 0; z < zGridCells + 1; z++) {
-				const zPos = z * (1/zGridCells) - 0.5;
+				const zPos = z * (cubeDim/zGridCells) - cubeDim/2;
 
 				MRE.Actor.Create(this.context, {
 					actor: {
@@ -154,7 +159,7 @@ export default class Spawner {
 						transform: {
 							local: {
 								position: new MRE.Vector3(xPos, 0, zPos),
-								scale: new MRE.Vector3(0.01, 1.0, 0.01)
+								scale: new MRE.Vector3(0.01, cubeDim, 0.01)
 							}
 						},
 						appearance:
@@ -168,12 +173,12 @@ export default class Spawner {
 		}
 
 		for (let x = 0; x < xGridCells; x++) {
-			const xPos = x * (1/xGridCells) - 0.5 + (1/xGridCells) * 0.5;
+			const xPos = (x+0.5) * (cubeDim/xGridCells) - cubeDim/2;
 			for (let z = 0; z < zGridCells; z++) {
-				const zPos = z * (1/zGridCells) - 0.5 + (1/zGridCells) * 0.5;
+				const zPos = (z+0.5) * (cubeDim/zGridCells) - cubeDim/2 ;
 				for (let y = 0; y < yGridCells; y++) {
-					const yPos = y * (1/yGridCells) - 0.5 + (1/yGridCells) * 0.5;
-					const ourSphere=this.createSphere(new MRE.Vector3(xPos,yPos,zPos), (1/yGridCells));
+					const yPos = (y +0.5)* (cubeDim/yGridCells) - cubeDim/2 ;
+					const ourSphere=this.createSphere(new MRE.Vector3(xPos,yPos,zPos), (cubeDim/yGridCells));
 					this.ourSpawners.push(ourSphere);
 				}
 			}
@@ -187,6 +192,28 @@ export default class Spawner {
 			});
 			this.noteMaterials.push(ourMat);
 		}
+	}
+
+	private createFloorPlane() {
+		const floorMesh= this.assets.createBoxMesh('floorMesh',20,0.1,20);
+		this.floorPlane = MRE.Actor.Create(this.context, {
+			actor: {
+				name: 'floorplane',
+				parentId: this.spawnerParent.id,
+				transform: {
+					local: {
+						position: new MRE.Vector3 (0,-0.75/2-0.1/2,0), //todo reference cube size
+					}
+				},
+				appearance:
+				{
+					meshId: floorMesh.id,
+					enabled: true //set true for debugging
+				}
+			}
+		});
+
+		this.floorPlane.setCollider(MRE.ColliderType.Auto, false);		
 	}
 
 	private spawnParticleEffect(pos: MRE.Vector3){
