@@ -1,4 +1,0 @@
-
-> hello-world@0.1.0 start /root/altspace-theremin
-> node .
-
