@@ -25,9 +25,8 @@ export default class HelloWorld {
 	constructor(private context: MRE.Context, private baseUrl: string, private ourReceiver: PianoReceiver) {
 		MRE.log.info("app", "our constructor started");
 		this.assets = new MRE.AssetContainer(context);
-
+		
 		this.handMesh=	this.assets.createSphereMesh('sphere', 0.5, 10,10);
-		//this.createFloorPlane();
 
 		this.context.onStarted(() => this.started());
 		this.context.onUserLeft(user => this.userLeft(user));

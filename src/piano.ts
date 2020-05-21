@@ -5,10 +5,10 @@
 
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 
-export default class Piano{
+export default class Piano {
 	private ourKeys: MRE.Actor[] = [];
 	private ourSounds: MRE.Sound[] = [];
-	private activeSounds: Map<number,MRE.MediaInstance> = new Map();
+	private activeSounds: Map<number, MRE.MediaInstance> = new Map();
 
 	private inch = 0.0254;
 	private halfinch = this.inch * 0.5;
@@ -28,11 +28,11 @@ export default class Piano{
 	private yOffset =
 		[0, this.halfinch, 0, this.halfinch, 0, 0, this.halfinch, 0, this.halfinch, 0, this.halfinch, 0];
 	private zOffset =
-		[0, this.inch-0.001, 0, this.inch-0.001, 0, 0, this.inch-0.001, 0, this.inch-0.001, 0, this.inch-0.001, 0];
+		[0, this.inch - 0.001, 0, this.inch - 0.001, 0, 0, this.inch - 0.001, 0, this.inch - 0.001, 0, this.inch - 0.001, 0];
 	private octaveSize = this.inch * 7.0;
 
 	private noteOrder =
-	["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
+		["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
 
 	private whiteKeyMaterial: MRE.Material = this.assets.createMaterial('cubemat', {
 		color: new MRE.Color4(1, 1, 1)
@@ -57,10 +57,10 @@ export default class Piano{
 	}
 
 	constructor(private context: MRE.Context, private baseUrl: string, private assets: MRE.AssetContainer) {
-		
+
 	}
 
-	public async createAllKeys(){
+	public async createAllKeys() {
 		let octave = 0;
 		let note = 9;
 
@@ -78,7 +78,7 @@ export default class Piano{
 
 		const blackKeyMaterial: MRE.Material = this.assets.createMaterial('cubemat', {
 			color: new MRE.Color4(0, 0, 0)
-		});		
+		});
 		await blackKeyMaterial.created;
 
 		const keyboardParent = MRE.Actor.Create(this.context, {
@@ -93,7 +93,7 @@ export default class Piano{
 
 		await keyboardParent.created();
 
-		keyboardParent.setCollider(MRE.ColliderType.Box, false, 
+		keyboardParent.setCollider(MRE.ColliderType.Box, false,
 			new MRE.Vector3(this.octaveSize * 8, this.inch * 2.0, this.inch * 6.0));
 
 		keyboardParent.enableRigidBody({
@@ -142,7 +142,7 @@ export default class Piano{
 			}
 		}
 	}
-	
+
 	public async loadAllSounds() {
 		let octave = 0;
 		let note = 9;
@@ -167,33 +167,18 @@ export default class Piano{
 				octave++;
 			}
 		}
-	}	
-
-	private loadSingleSound(filename: string, note: number) {
-		MRE.log.info("app", "trying to load filename: " + filename);
-		const newSound = this.assets.createSound("pianoKey"+note, {
-			uri: filename
-		});
-
-		/*const p = new Promise((resolve, reject) => { //need to better understand promises
-			resolve();
-		});
-
-		newSound.setLoadedPromise(p);
-		*/
-
-		this.ourSounds.push(newSound);
 	}
 
 	public keyPressed(note: number) {
 		const adjustedMidiNote: number = note - 21;
 
-		//maybe use pitch rotation instead?
+		//maybe use pitch (x axis) rotation instead?
 		const currentPos = this.ourKeys[adjustedMidiNote].transform.local.position;
 
 		this.ourKeys[adjustedMidiNote].transform.local.position =
 			new MRE.Vector3(currentPos.x, currentPos.y - 0.01, currentPos.z);
 	}
+
 	public keyReleased(note: number) {
 		const adjustedMidiNote: number = note - 21;
 		const noteNum = note % 12;
@@ -204,7 +189,7 @@ export default class Piano{
 			new MRE.Vector3(currentPos.x, this.yOffset[noteNum], currentPos.z);
 	}
 
-	public getSoundGUID(note: number){
+	public getSoundGUID(note: number) {
 		const adjustedNote: number = note - 21;
 		return this.ourSounds[adjustedNote].id;
 	}
