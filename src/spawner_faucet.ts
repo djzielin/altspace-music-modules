@@ -5,7 +5,7 @@
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 import Piano from './piano';
 
-export default class SpawnerGrid {
+export default class SpawnerFaucet {
 
 	/**************
 	   https://colorbrewer2.org/#type=qualitative&scheme=Paired&n=12
@@ -166,20 +166,19 @@ export default class SpawnerGrid {
 		this.ourBubbles.push(ourSphere);
 
 		ourSphere.setCollider(MRE.ColliderType.Auto, true); //trigger
-		ourSphere.collider.enabled=false;
 
-		ourSphere.enableRigidBody({
+		/*ourSphere.enableRigidBody({
 			enabled: true,
 			isKinematic: true,
 			useGravity: false,
-		});
+		});*/
 
 		//allow user to click on bubble (so still works in desktop mode)
-		const clickBehavior = ourSphere.setBehavior(MRE.ButtonBehavior);
+		/*const clickBehavior = ourSphere.setBehavior(MRE.ButtonBehavior);
 
 		clickBehavior.onClick(() => {
 			this.playBubble(ourSphere);
-		});
+		});*/
 
 		//ourSphere.collider.onCollision("collision-enter", (data: MRE.CollisionData) => {
 		ourSphere.collider.onTrigger('trigger-enter', (otherActor: MRE.Actor) => {
@@ -209,6 +208,9 @@ export default class SpawnerGrid {
 					}
 					*/
 		});
+
+		ourSphere.collider.enabled=false;
+
 	}
 
 	private spawnParticleEffect(pos: MRE.Vector3){

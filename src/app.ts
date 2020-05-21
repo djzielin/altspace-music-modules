@@ -63,7 +63,7 @@ export default class HelloWorld {
 				appearance:
 				{
 					meshId: this.handMesh.id,
-					enabled: false
+					enabled: true
 				}
 			}
 		});

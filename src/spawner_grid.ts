@@ -5,7 +5,7 @@
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 import Piano from './piano';
 
-export default class Spawner {
+export default class SpawnerGrid {
 
 	/**************
 	   https://colorbrewer2.org/#type=qualitative&scheme=Paired&n=12
@@ -164,51 +164,26 @@ export default class Spawner {
 		await ourSphere.created();
 
 		this.ourBubbles.push(ourSphere);
+		ourSphere.setCollider(MRE.ColliderType.Sphere, true, 0.5); //trigger
+		//ourSphere.setCollider(MRE.ColliderType.Auto, true); //trigger
 
-		ourSphere.setCollider(MRE.ColliderType.Auto, true); //trigger
-		ourSphere.collider.enabled=false;
-
-		ourSphere.enableRigidBody({
-			enabled: true,
-			isKinematic: true,
-			useGravity: false,
-		});
-
-		//allow user to click on bubble (so still works in desktop mode)
-		const clickBehavior = ourSphere.setBehavior(MRE.ButtonBehavior);
-
-		clickBehavior.onClick(() => {
-			this.playBubble(ourSphere);
-		});
-
-		//ourSphere.collider.onCollision("collision-enter", (data: MRE.CollisionData) => {
 		ourSphere.collider.onTrigger('trigger-enter', (otherActor: MRE.Actor) => {
-			//const otherActor=data.otherActor;
 			MRE.log.info("app", "sphere collided with: " + otherActor.name);
 
 			if (this.allHands.includes(otherActor)) { //bubble touches hand
 				MRE.log.info("app", "  this was one of our hands! lets do something!");
 				this.playBubble(ourSphere);
 			}
-
-			/*		if(data.otherActor.id===this.floorPlane.id){ //bubble touches floor
-						MRE.log.info("app","  bubble touched the floor, destroying");
-			
-						this.removeBubbleFromActiveArray(ourSphere);
-						ourSphere.destroy();
-					}
-			
-					if(this.activeBubbles.includes(data.otherActor)) { //bubble touches another bubble
-						MRE.log.info("app","  touched another bubble! destroying");
-			
-						this.removeBubbleFromActiveArray(ourSphere);
-						ourSphere.destroy();
-			
-						this.removeBubbleFromActiveArray(data.otherActor);
-						data.otherActor.destroy();
-					}
-					*/
 		});
+
+		ourSphere.collider.enabled=false;
+		
+		//allow user to click on bubble (so still works in desktop mode)
+		/*const clickBehavior = ourSphere.setBehavior(MRE.ButtonBehavior);
+
+		clickBehavior.onClick(() => {
+			this.playBubble(ourSphere);
+		});*/
 	}
 
 	private spawnParticleEffect(pos: MRE.Vector3){
@@ -232,7 +207,7 @@ export default class Spawner {
 		}, 2000);
 	}
 
-	public turnOff() {
+	/*public turnOff() {
 		for (const [ourSphere, ourSound] of this.readyToPlayBubbles) {
 			ourSphere.collider.enabled = false;
 			ourSphere.appearance.enabled = false;
@@ -247,7 +222,7 @@ export default class Spawner {
 	public turnOn()	{
 		this.floorPlane.collider.enabled=true;
 	}
-
+*/
 	private playBubble(ourSphere: MRE.Actor) {
 		//ourSphere.rigidBody.enabled = false;
 		ourSphere.collider.enabled = false;
@@ -289,6 +264,8 @@ export default class Spawner {
 			slotUsed=this.readyToPlayBubbles.has(sphereActor) || this.playingBubbles.includes(sphereActor);
 		} while (slotUsed) //if full, keep looking 
 
+		MRE.log.info("app","  spawning at index: " + spawnIndex);
+
 		const ourSphere = this.ourBubbles[spawnIndex];
 		const soundInstance: MRE.MediaInstance =
 			ourSphere.startSound(this.ourPiano.getSoundGUID(note), {
@@ -302,8 +279,13 @@ export default class Spawner {
 		this.readyToPlayBubbles.set(ourSphere, soundInstance);
 
 		ourSphere.appearance.enabled = true;
+		MRE.log.info("app","  enabling appearance");
 		ourSphere.appearance.materialId = this.noteMaterials[noteNum].id;
-		ourSphere.collider.enabled = true;		
+		ourSphere.collider.enabled = true;	
+		MRE.log.info("app","  enabling collider");
+
+	
+	
 	}	
 
 	/*private removeBubbleFromActiveArray(bubble: MRE.Actor) {
