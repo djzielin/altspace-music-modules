@@ -1,5 +1,4 @@
 /*!
- * Copyright (c) Microsoft Corporation. All rights reserved.
  * Licensed under the MIT License.
  */
 
@@ -48,16 +47,16 @@ export default class Spawner {
 	public async createAsyncItems() {
 		this.sphereMesh = this.assets.createSphereMesh('sphere', 0.5, 16, 16);
 		await this.sphereMesh.created;
-		this.boxMesh = this.assets.createBoxMesh('boxMesh',1.0,1.0,1.0);
+		this.boxMesh = this.assets.createBoxMesh('boxMesh', 1.0, 1.0, 1.0);
 		await this.boxMesh.created;
 
 		//https://en.wikipedia.org/wiki/File:Blue_Marble_2002.png
 		//const filename = `${this.baseUrl}/` + "Blue_Marble_2002.png";
 
 		//http://paulbourke.net/geometry/spherical/
-		const filename = `${this.baseUrl}/` + "soccer_sph.png"; 
-		
-		this.sphereTexture=this.assets.createTexture("earth", {
+		const filename = `${this.baseUrl}/` + "soccer_sph.png";
+
+		this.sphereTexture = this.assets.createTexture("earth", {
 			uri: filename
 		});
 		await this.sphereTexture.created;
@@ -68,17 +67,17 @@ export default class Spawner {
 				transform: {
 					app: { position: new MRE.Vector3(0, 1.5, 0) }
 				}
-				
+
 			}
 		});
 		await this.spawnerParent.created();
 
 		await this.createFloorPlane();
-		
+
 		const xGridCells = 3;
 		const yGridCells = 3;
 		const zGridCells = 1;
-		const cubeDim=0.75;
+		const cubeDim = 0.75;
 
 		//so we can move it around
 		/*
@@ -92,20 +91,20 @@ export default class Spawner {
 		*/
 
 		for (let x = 0; x < xGridCells; x++) {
-			const xPos = (x+0.5) * (cubeDim/xGridCells) - cubeDim/2;
+			const xPos = (x + 0.5) * (cubeDim / xGridCells) - cubeDim / 2;
 			for (let z = 0; z < zGridCells; z++) {
-				const zPos = (z+0.5) * (cubeDim/zGridCells) - cubeDim/2 ;
+				const zPos = (z + 0.5) * (cubeDim / zGridCells) - cubeDim / 2;
 				for (let y = 0; y < yGridCells; y++) {
-					const yPos = (y +0.5)* (cubeDim/yGridCells) - cubeDim/2 ;
+					const yPos = (y + 0.5) * (cubeDim / yGridCells) - cubeDim / 2;
 					await this.createSphere(
-						new MRE.Vector3(xPos,yPos,zPos), 
-						(cubeDim/yGridCells)*0.9,
+						new MRE.Vector3(xPos, yPos, zPos),
+						(cubeDim / yGridCells) * 0.9,
 						this.sphereMesh.id);
-						//this.boxMesh.id);
+					//this.boxMesh.id);
 				}
 			}
 		}
-		MRE.log.info("app","created all bubbles");
+		MRE.log.info("app", "created all bubbles");
 
 		for (const noteColor of this.noteColors) {
 			const ourMat: MRE.Material = this.assets.createMaterial('bubblemat', {
@@ -116,7 +115,7 @@ export default class Spawner {
 			this.noteMaterials.push(ourMat);
 		}
 
-		MRE.log.info("app","complete all spawner object creation");
+		MRE.log.info("app", "complete all spawner object creation");
 	}
 
 	private async createFloorPlane() {
@@ -245,8 +244,7 @@ export default class Spawner {
 
 		this.floorPlane.collider.enabled=false;
 	}
-	public turnOn()
-	{
+	public turnOn()	{
 		this.floorPlane.collider.enabled=true;
 	}
 
@@ -274,9 +272,9 @@ export default class Spawner {
 
 	public spawnBubble(note: number, vel: number) {
 		MRE.log.info("app","trying to spawn bubble for: " + note);
-		const octave = Math.floor(note / 12) - 1;
+		//const octave = Math.floor(note / 12) - 1;
 		const noteNum = note % 12;
-		const scale = ((9 - octave) / 8.0) * 0.4;
+		//const scale = ((9 - octave) / 8.0) * 0.4;
 		let spawnIndex = 0;
 
 		if((this.readyToPlayBubbles.size+this.playingBubbles.length)===this.ourBubbles.length){

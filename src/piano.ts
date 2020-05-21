@@ -27,7 +27,8 @@ export default class Piano {
 	private yOffset =
 		[0, this.halfinch, 0, this.halfinch, 0, 0, this.halfinch, 0, this.halfinch, 0, this.halfinch, 0];
 	private zOffset =
-		[0, this.inch - 0.001, 0, this.inch - 0.001, 0, 0, this.inch - 0.001, 0, this.inch - 0.001, 0, this.inch - 0.001, 0];
+		[0, this.inch - 0.001, 0, this.inch - 0.001, 0, 0, this.inch - 0.001, 0, this.inch - 0.001, 0, 
+			this.inch - 0.001, 0];
 	private octaveSize = this.inch * 7.0;
 
 	private noteOrder =
