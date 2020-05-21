@@ -5,7 +5,7 @@
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 import PianoReceiver from './receiver'
 import Piano from './piano'
-import Spawner from './spawner'
+import SpawnerGrid from './spawner_grid'
 
 /**
  * The main class of this app. All the logic goes here.
@@ -16,7 +16,7 @@ export default class HelloWorld {
 	private assets: MRE.AssetContainer;
 
 	private ourPiano: Piano = null;
-	private ourSpawner: Spawner = null;
+	private ourSpawner: SpawnerGrid = null;
 	private handMesh: MRE.Mesh;
 
 	private allHands: MRE.Actor[] =[];
@@ -129,7 +129,7 @@ export default class HelloWorld {
 		await this.ourPiano.loadAllSounds();
 
 		MRE.log.info("app", "Loading spawner items");
-		this.ourSpawner = new Spawner(this.context, this.baseUrl, this.assets,
+		this.ourSpawner = new SpawnerGrid(this.context, this.baseUrl, this.assets,
 			this.ourPiano, this.allHands); //TODO pass this better
 		await this.ourSpawner.createAsyncItems();
 	}

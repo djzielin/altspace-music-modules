@@ -5,7 +5,7 @@
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 import Piano from './piano';
 
-export default class SpawnerGrid {
+export default class Spawner {
 
 	/**************
 	   https://colorbrewer2.org/#type=qualitative&scheme=Paired&n=12
