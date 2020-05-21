@@ -57,18 +57,29 @@ export default class Piano{
 	}
 
 	constructor(private context: MRE.Context, private baseUrl: string, private assets: MRE.AssetContainer) {
+		
+	}
+
+	public async createAllKeys(){
 		let octave = 0;
 		let note = 9;
 
 		const whiteKeyMesh = this.assets.createBoxMesh('box', this.inch * 0.9, this.inch, this.inch * 5.5);
+		await whiteKeyMesh.created;
+
 		const blackKeyMesh = this.assets.createBoxMesh('box', this.halfinch, this.inch, this.inch * 3.5);
+		await blackKeyMesh.created;
 
 		const whiteKeyMaterial: MRE.Material = this.assets.createMaterial('cubemat', {
 			color: new MRE.Color4(1, 1, 1)
 		});
+		await whiteKeyMaterial.created;
+
+
 		const blackKeyMaterial: MRE.Material = this.assets.createMaterial('cubemat', {
 			color: new MRE.Color4(0, 0, 0)
-		});
+		});		
+		await blackKeyMaterial.created;
 
 		const keyboardParent = MRE.Actor.Create(this.context, {
 			actor: {
@@ -80,6 +91,8 @@ export default class Piano{
 			}
 		});
 
+		await keyboardParent.created();
+
 		keyboardParent.setCollider(MRE.ColliderType.Box, false, 
 			new MRE.Vector3(this.octaveSize * 8, this.inch * 2.0, this.inch * 6.0));
 
@@ -90,23 +103,13 @@ export default class Piano{
 		});
 		keyboardParent.grabbable = true;
 
-		//const filename = `${this.baseUrl}/` + 'piano_mono/combined.ogg';
-		//MRE.log.info("app", "trying to load: " + filename);
-		//this.loadSound(filename,0);
-
 		for (let i = 21; i < 109; i++) {
-			//const filename = `${this.baseUrl}/piano_mono/` + 
-			//	"Piano.ff." + this.noteOrder[note] + 
-			//	octave.toString() + "_mono.ogg";
-			//MRE.log.info("app", "trying to load: " + filename);
-			//this.loadSound(filename,i);
-
 			let meshId: MRE.Guid = blackKeyMesh.id;
-			let mattId: MRE.Guid = blackKeyMaterial.id;
+			//let mattId: MRE.Guid = blackKeyMaterial.id;
 
 			if (this.zOffset[note] === 0) {
 				meshId = whiteKeyMesh.id;
-				mattId = whiteKeyMaterial.id;
+				//mattId = whiteKeyMaterial.id;
 			}
 
 			const keyPos = new MRE.Vector3(
@@ -128,6 +131,8 @@ export default class Piano{
 					},
 				}
 			});
+
+			await keyActor.created();
 
 			this.ourKeys.push(keyActor);
 			note = note + 1;

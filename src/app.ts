@@ -122,14 +122,23 @@ export default class HelloWorld {
 				" Y: " + v.y.toFixed(precision) + 
 				" Z: " + v.z.toFixed(precision) + "}";
 	}
-		
-	private started() {
+
+	private async loadAsyncItems() {
+		MRE.log.info("app", "Loading async items!");
+		MRE.log.info("app", "Loading piano items");
 		this.ourPiano = new Piano(this.context, this.baseUrl, this.assets);
+		await this.ourPiano.createAllKeys();
+		await this.ourPiano.loadAllSounds();
+
+		MRE.log.info("app", "Loading spawner items");
 		this.ourSpawner = new Spawner(this.context, this.baseUrl, this.assets,
 			this.ourPiano, this.allHands); //TODO pass this better
-
-		this.ourPiano.loadAllSounds().then(() => {
-			MRE.log.info("app", " all sounds loaded!");
+		await this.ourSpawner.createAsyncItems();
+	}
+		
+	private started() {
+		this.loadAsyncItems().then(() => {
+			MRE.log.info("app", " all items loaded!");
 			this.ourReceiver.ourCallback = this.PianoReceiveCallback.bind(this);
 		});
 
