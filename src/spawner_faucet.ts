@@ -36,11 +36,12 @@ export default class SpawnerFaucet {
 	private gridParent: MRE.Actor;
 	private sphereTexture: MRE.Texture;
 	private floorPlane: MRE.Actor=null;
+	private ourSpawners: MRE.Actor[]=[];
 
-	private previousSpawnIndex =0;
+	private previousSpawnIndex = 0;
 
 	constructor(private context: MRE.Context, private baseUrl: string, private assets: MRE.AssetContainer,
-		private ourPiano: Piano, private allHands: MRE.Actor[]) {		
+		private ourPiano: Piano, private allHands: MRE.Actor[]) {
 
 	}
 
@@ -65,7 +66,7 @@ export default class SpawnerFaucet {
 			actor: {
 				name: 'spawner_parent',
 				transform: {
-					app: { position: new MRE.Vector3(0, 1.5, 0) }
+					app: { position: new MRE.Vector3(0, 2, 0) }
 				}
 
 			}
@@ -74,42 +75,59 @@ export default class SpawnerFaucet {
 
 		await this.createFloorPlane();
 
-		const xGridCells = 3;
-		const yGridCells = 3;
-		const zGridCells = 1;
-		const cubeDim = 0.75;
+		const spawnWidth = 0.5;
 
-		//so we can move it around
-		/*
-		this.spawnerParent.setCollider(MRE.ColliderType.Box, false, new MRE.Vector3(2,0.25,2));
+		this.spawnerParent.setCollider(MRE.ColliderType.Box, false, new MRE.Vector3(spawnWidth,0.1,spawnWidth));
+
 		this.spawnerParent.enableRigidBody({
 			enabled: true,
 			isKinematic: true,
 			useGravity: false
 		});
-		this.spawnerParent.grabbable = true; 
-		*/
+		this.spawnerParent.grabbable = true; //so we can move it around
 
-		for (let x = 0; x < xGridCells; x++) {
-			const xPos = (x + 0.5) * (cubeDim / xGridCells) - cubeDim / 2;
-			for (let z = 0; z < zGridCells; z++) {
-				const zPos = (z + 0.5) * (cubeDim / zGridCells) - cubeDim / 2;
-				for (let y = 0; y < yGridCells; y++) {
-					const yPos = (y + 0.5) * (cubeDim / yGridCells) - cubeDim / 2;
-					await this.createSphere(
-						new MRE.Vector3(xPos, yPos, zPos),
-						(cubeDim / yGridCells) * 0.9,
-						this.sphereMesh.id);
-					//this.boxMesh.id);
-				}
+		for (let z = 0; z < 3; z++) {
+			for (let x = 0; x < 3; x++) {
+				const spawnVec3 = new MRE.Vector3(x * spawnWidth / 3 - spawnWidth / 2,
+					0,
+					z * spawnWidth / 3 - spawnWidth / 2);
+
+				const singleSpawner = MRE.Actor.Create(this.context, {
+					actor: {
+						name: 'spawnActor' + x + '_' + z,
+						parentId: this.spawnerParent.id,
+						transform: {
+							local: {
+								position: spawnVec3,
+								scale: new MRE.Vector3(0.1, 0.01, 0.1)
+							}
+						},
+						appearance:
+						{
+							meshId: this.boxMesh.id,
+							//materialId: mattId
+						},
+					}
+				});
+				await singleSpawner.created();
+				singleSpawner.subscribe('transform'); //so we can check on position later
+				this.ourSpawners.push(singleSpawner);
 			}
 		}
+	
+		for (let i = 0; i < 10; i++) {
+			await this.createSphere(
+				new MRE.Vector3(0, 0, 0),
+				.04,
+				this.boxMesh.id);
+		}
+
 		MRE.log.info("app", "created all bubbles");
 
 		for (const noteColor of this.noteColors) {
 			const ourMat: MRE.Material = this.assets.createMaterial('bubblemat', {
-				color: noteColor,
-				mainTextureId: this.sphereTexture.id
+				color: noteColor//,
+				//mainTextureId: this.sphereTexture.id
 			});
 			await ourMat.created;
 			this.noteMaterials.push(ourMat);
@@ -119,22 +137,22 @@ export default class SpawnerFaucet {
 	}
 
 	private async createFloorPlane() {
-		const floorMesh= this.assets.createBoxMesh('floorMesh',20,0.1,20);
+		const floorMesh= this.assets.createBoxMesh('floorMesh',1,0.1,1);
 		await floorMesh.created;
 
 		this.floorPlane = MRE.Actor.Create(this.context, {
 			actor: {
 				name: 'floorplane',
-				parentId: this.spawnerParent.id,
+				//parentId: this.spawnerParent.id,
 				transform: {
-					local: {
-						position: new MRE.Vector3 (0,-0.75/2-0.1/2,0), //todo reference cube size
+					app: {
+						position: new MRE.Vector3 (0,1,0), 
 					}
 				},
 				appearance:
 				{
 					meshId: floorMesh.id,
-					enabled: false //set true for debugging
+					enabled: true //set true for debugging
 				}
 			}
 		});
@@ -148,7 +166,7 @@ export default class SpawnerFaucet {
 		const ourSphere = MRE.Actor.Create(this.context, {
 			actor: {
 				name: 'sphere',
-				parentId: this.spawnerParent.id,
+				//parentId: this.spawnerParent.id,
 				transform: {
 					local: {
 						position: pos,
@@ -165,52 +183,34 @@ export default class SpawnerFaucet {
 
 		this.ourBubbles.push(ourSphere);
 
-		ourSphere.setCollider(MRE.ColliderType.Auto, true); //trigger
-
-		/*ourSphere.enableRigidBody({
-			enabled: true,
-			isKinematic: true,
-			useGravity: false,
-		});*/
-
-		//allow user to click on bubble (so still works in desktop mode)
-		/*const clickBehavior = ourSphere.setBehavior(MRE.ButtonBehavior);
-
-		clickBehavior.onClick(() => {
-			this.playBubble(ourSphere);
-		});*/
-
-		//ourSphere.collider.onCollision("collision-enter", (data: MRE.CollisionData) => {
-		ourSphere.collider.onTrigger('trigger-enter', (otherActor: MRE.Actor) => {
-			//const otherActor=data.otherActor;
-			MRE.log.info("app", "sphere collided with: " + otherActor.name);
-
-			if (this.allHands.includes(otherActor)) { //bubble touches hand
-				MRE.log.info("app", "  this was one of our hands! lets do something!");
-				this.playBubble(ourSphere);
-			}
-
-			/*		if(data.otherActor.id===this.floorPlane.id){ //bubble touches floor
-						MRE.log.info("app","  bubble touched the floor, destroying");
-			
-						this.removeBubbleFromActiveArray(ourSphere);
-						ourSphere.destroy();
-					}
-			
-					if(this.activeBubbles.includes(data.otherActor)) { //bubble touches another bubble
-						MRE.log.info("app","  touched another bubble! destroying");
-			
-						this.removeBubbleFromActiveArray(ourSphere);
-						ourSphere.destroy();
-			
-						this.removeBubbleFromActiveArray(data.otherActor);
-						data.otherActor.destroy();
-					}
-					*/
-		});
-
+		//ourSphere.setCollider(MRE.ColliderType.Auto, true); //trigger
+		ourSphere.setCollider(MRE.ColliderType.Box, false, new MRE.Vector3(1.0, 1.0, 1.0)); 
 		ourSphere.collider.enabled=false;
 
+		ourSphere.enableRigidBody({
+			enabled: false,
+			isKinematic: false,
+			useGravity: false
+		});
+
+		ourSphere.collider.onCollision("collision-enter", (data: MRE.CollisionData) => {
+			//ourSphere.collider.onTrigger('trigger-enter', (otherActor: MRE.Actor) => {
+			const otherActor = data.otherActor;
+
+			if (this.allHands.includes(otherActor)) { //bubble touches hand
+				MRE.log.info("app", "touched one of our hands! lets play a sound!");
+				this.playBubble(ourSphere);
+			} else if (data.otherActor.id === this.floorPlane.id) { //bubble touches floor
+				MRE.log.info("app", "bubble touched the floor");
+				ourSphere.rigidBody.enabled=false;
+			} else if (this.readyToPlayBubbles.has(data.otherActor)) { //bubble touches another bubble
+				MRE.log.info("app", "touched another bubble!");				
+				ourSphere.rigidBody.useGravity = true;				
+				data.otherActor.rigidBody.useGravity = true;
+			} else{
+				MRE.log.info("app", "sphere collided with: " + otherActor.name);
+			}
+		});
 	}
 
 	private spawnParticleEffect(pos: MRE.Vector3){
@@ -251,7 +251,8 @@ export default class SpawnerFaucet {
 	}
 
 	private playBubble(ourSphere: MRE.Actor) {
-		//ourSphere.rigidBody.enabled = false;
+		ourSphere.rigidBody.enabled = false;	
+		ourSphere.rigidBody.useGravity=false;
 		ourSphere.collider.enabled = false;
 		ourSphere.appearance.enabled = false;
 
@@ -262,36 +263,49 @@ export default class SpawnerFaucet {
 
 		setTimeout(() => {
 			MRE.log.info("app", "5 seconds has expired. deleting bubble: " + ourSphere.name);
-			//this.playingBubbles.get(ourSphere).stop(); //make sure sound is done
 			const bIndex=this.playingBubbles.indexOf(ourSphere);
 			if(bIndex>-1){
 				this.playingBubbles.splice(bIndex);
 			}
-			//ourSphere.destroy();
 		}, 5000); //allow time for sound to play, then delete.
 		//this.spawnParticleEffect(ourSphere.transform.app.position);
 	}
 
 	public spawnBubble(note: number, vel: number) {
 		MRE.log.info("app","trying to spawn bubble for: " + note);
-		//const octave = Math.floor(note / 12) - 1;
+		const octave = Math.floor(note / 12) - 1;
 		const noteNum = note % 12;
-		//const scale = ((9 - octave) / 8.0) * 0.4;
+		const scale = ((9 - octave) / 8.0) * 0.04;
 		let spawnIndex = 0;
 
-		if((this.readyToPlayBubbles.size+this.playingBubbles.length)===this.ourBubbles.length){
-			MRE.log.info("app", "no free slots, skipping this note spawn");
+		do { //make sure we don't spawn into same exact spot
+			spawnIndex = Math.floor(Math.random() * this.ourSpawners.length);
+		} while (spawnIndex === this.previousSpawnIndex);
+		const singleSpawner=this.ourSpawners[spawnIndex];
+		MRE.log.error("app","  found a spawn spot: " + spawnIndex);
+
+		this.previousSpawnIndex = spawnIndex;
+		
+		let ourSphere: MRE.Actor=null;
+		ourSphere=this.ourBubbles[0];
+		if(this.playingBubbles.includes(ourSphere)){
+			MRE.log.error("app","no free bubbles! everything playing!");
 			return;
+		} else{
+			MRE.log.info("app","  first bubble will work" + spawnIndex);
 		}
 
-		let slotUsed=false;
-		do {
-			spawnIndex = Math.floor(Math.random() * this.ourBubbles.length);
-			const sphereActor=this.ourBubbles[spawnIndex];
-			slotUsed=this.readyToPlayBubbles.has(sphereActor) || this.playingBubbles.includes(sphereActor);
-		} while (slotUsed) //if full, keep looking 
+		ourSphere=this.ourBubbles.shift(); //cycle to the back 
+		this.ourBubbles.push(ourSphere);
 
-		const ourSphere = this.ourBubbles[spawnIndex];
+		if (this.readyToPlayBubbles.has(ourSphere)) {
+			MRE.log.info("app","  already active, have to disable first");
+			this.readyToPlayBubbles.get(ourSphere).stop();
+			//this.readyToPlayBubbles.delete(ourSphere);
+		}
+
+		ourSphere.transform.local.scale=new MRE.Vector3(scale,scale,scale);
+
 		const soundInstance: MRE.MediaInstance =
 			ourSphere.startSound(this.ourPiano.getSoundGUID(note), {
 				doppler: 0,
@@ -303,15 +317,25 @@ export default class SpawnerFaucet {
 
 		this.readyToPlayBubbles.set(ourSphere, soundInstance);
 
-		ourSphere.appearance.enabled = true;
-		ourSphere.appearance.materialId = this.noteMaterials[noteNum].id;
-		ourSphere.collider.enabled = true;		
-	}	
+		const spawnPos=singleSpawner.transform.app.position.clone();
+		spawnPos.y-= 0.2;
+		MRE.log.info("app","  spawning at pos: " + spawnPos);
 
-	/*private removeBubbleFromActiveArray(bubble: MRE.Actor) {
-		const bIndex = this.activeBubbles.indexOf(bubble);
-		if (bIndex > -1) {
-			this.activeBubbles.splice(bIndex, 1);
-		}
-	}*/
+		ourSphere.rigidBody.movePosition(
+			{
+				x: spawnPos.x, 
+				y: spawnPos.y,
+				z: spawnPos.z
+			});		
+
+		ourSphere.collider.enabled = true;
+
+		ourSphere.rigidBody.enabled = true;
+		ourSphere.rigidBody.useGravity=false;
+		ourSphere.rigidBody.velocity={x: 0, y:-0.3, z: 0};
+		//ourSphere.rigidBody.velocity={x: 0, y:-0.3+Math.random()*0.0001, z: 0};
+
+		ourSphere.appearance.materialId = this.noteMaterials[noteNum].id;
+		ourSphere.appearance.enabled = true;
+	}	
 }

@@ -98,7 +98,7 @@ export default class SpawnerGrid {
 					const yPos = (y + 0.5) * (cubeDim / yGridCells) - cubeDim / 2;
 					await this.createSphere(
 						new MRE.Vector3(xPos, yPos, zPos),
-						(cubeDim / yGridCells) * 0.9,
+						.02, //(cubeDim / yGridCells) * 0.9,
 						this.sphereMesh.id);
 					//this.boxMesh.id);
 				}
@@ -179,11 +179,11 @@ export default class SpawnerGrid {
 		ourSphere.collider.enabled=false;
 		
 		//allow user to click on bubble (so still works in desktop mode)
-		/*const clickBehavior = ourSphere.setBehavior(MRE.ButtonBehavior);
+		const clickBehavior = ourSphere.setBehavior(MRE.ButtonBehavior);
 
 		clickBehavior.onClick(() => {
 			this.playBubble(ourSphere);
-		});*/
+		});
 	}
 
 	private spawnParticleEffect(pos: MRE.Vector3){
