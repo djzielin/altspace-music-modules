@@ -95,6 +95,42 @@ export default class Spawner {
 				transform: {
 					app: { position: spawnPos },
 					local: {
+						//scale: new MRE.Vector3(this.spawnerWidth, 0.01, 0.05)
+					}
+				},
+				appearance:
+				{
+					//meshId: this.boxMesh.id
+				}
+			}
+		});
+
+		await this.ourSpawner.created();
+		this.ourSpawner.setCollider(MRE.ColliderType.Box, false, {x: this.spawnerWidth, y: 0.01, z: 0.05});
+
+		this.ourSpawner.enableRigidBody({
+			enabled: true,
+			isKinematic: true,
+			useGravity: false
+		});
+		this.ourSpawner.grabbable = true; //so we can move it around
+		this.ourSpawner.subscribe('transform'); //so we can get pos updates
+
+	/*	this.ourSpawner.onGrab("end",()=>{
+			for (const ourBubble of this.allBubbles) {
+				if (!ourBubble.isVisible){
+					this.resetBubble(ourBubble.actor); //redo spawn positions
+				}
+			}
+		});
+*/
+		MRE.Actor.Create(this.context, {
+			actor: {
+				name: 'spawner',
+				parentId: this.ourSpawner.id,
+				transform: {
+					app: { },
+					local: {
 						scale: new MRE.Vector3(this.spawnerWidth, 0.01, 0.05)
 					}
 				},
@@ -105,24 +141,6 @@ export default class Spawner {
 			}
 		});
 
-		await this.ourSpawner.created();
-		this.ourSpawner.setCollider(MRE.ColliderType.Box, false);
-
-		this.ourSpawner.enableRigidBody({
-			enabled: true,
-			isKinematic: true,
-			useGravity: false
-		});
-		this.ourSpawner.grabbable = true; //so we can move it around
-		this.ourSpawner.subscribe('transform'); //so we can get pos updates
-
-		this.ourSpawner.onGrab("end",()=>{
-			for (const ourBubble of this.allBubbles) {
-				if (!ourBubble.isVisible){
-					this.resetBubble(ourBubble.actor); //redo spawn positions
-				}
-			}
-		});
 
 		for (let i = 0; i < 30; i++) {
 			await this.createSphere(
@@ -150,7 +168,7 @@ export default class Spawner {
 		const bubbleActor = MRE.Actor.Create(this.context, {
 			actor: {
 				name: 'sphere',
-				//parentId: this.bigSpawner.id,
+				parentId: this.ourSpawner.id,
 				transform: {
 					local: {
 						position: pos,
@@ -227,11 +245,14 @@ export default class Spawner {
 		ourBubble.collider.enabled = false;		
 		ourBubble.rigidBody.enabled = false;
 
-		const spawnPos=this.ourSpawner.transform.app.position.clone();
-		spawnPos.x += Math.random() * this.spawnerWidth - this.spawnerWidth * 0.5;
-		spawnPos.y += 0.1 + Math.random() * 0.2;
-		spawnPos.z += Math.random() *0.00001;
-		ourBubble.transform.app.position=spawnPos;
+		//const spawnPos=this.ourSpawner.transform.app.position.clone();
+		const spawnPos = new MRE.Vector3(
+			Math.random() * this.spawnerWidth - this.spawnerWidth * 0.5,
+			0.1 + Math.random() * 0.2,
+			Math.random() * 0.00001);	
+
+		//ourBubble.transform.app.position=spawnPos;
+		ourBubble.transform.local.position=spawnPos;
 
 		ourBubble.transform.app.rotation=
 			MRE.Quaternion.FromEulerAngles(Math.random()*360,Math.random()*360,Math.random()*360);
@@ -296,13 +317,28 @@ export default class Spawner {
 		}
 
 		ourBubble.actor.transform.local.scale = new MRE.Vector3(scale, scale, scale);
+		
+		const ourRot=this.ourSpawner.transform.app.rotation;
+		const forVec=new MRE.Vector3(0,0,1);
+		const spawnForVec=new MRE.Vector3(0,0,0);		
+		forVec.rotateByQuaternionToRef(ourRot,spawnForVec);
+		//MRE.log.info("app","new forward vec: " + spawnForVec);
+
+		const randVec = new MRE.Vector3(
+			Math.random() * 0.00001,
+			Math.random() * 0.00001,
+			Math.random() * 0.00001);
+
+		let velocityVec=spawnForVec.multiplyByFloats(speed,speed,speed);
+		velocityVec=velocityVec.add(randVec); //add some noise to bypass observer limitations
 
 		ourBubble.actor.rigidBody.velocity =
 		{
-			x: 0 + Math.random() * 0.00001,
-			y: 0 + Math.random() * 0.00001,
-			z: speed + Math.random() * 0.00001
+			x: velocityVec.x,
+			y: velocityVec.y,
+			z: velocityVec.z
 		};
+
 		ourBubble.actor.rigidBody.angularVelocity={x:0, y:0, z:0};
 
 		ourBubble.actor.collider.enabled = true;
