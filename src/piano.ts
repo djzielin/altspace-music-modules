@@ -8,7 +8,8 @@ export default class Piano {
 	private ourKeys: MRE.Actor[] = [];
 	private ourSounds: MRE.Sound[] = [];
 	private activeSounds: Map<number, MRE.MediaInstance> = new Map();
-
+	public keyboardParent: MRE.Actor;
+	
 	private inch = 0.0254;
 	private halfinch = this.inch * 0.5;
 	private xOffset =
@@ -81,7 +82,7 @@ export default class Piano {
 		});
 		await blackKeyMaterial.created;
 
-		const keyboardParent = MRE.Actor.Create(this.context, {
+		this.keyboardParent = MRE.Actor.Create(this.context, {
 			actor: {
 				name: 'keyboard_parent',
 				transform: {
@@ -91,17 +92,17 @@ export default class Piano {
 			}
 		});
 
-		await keyboardParent.created();
+		await this.keyboardParent.created();
 
-		keyboardParent.setCollider(MRE.ColliderType.Box, false,
+		this.keyboardParent.setCollider(MRE.ColliderType.Box, false,
 			new MRE.Vector3(this.octaveSize * 8, this.inch * 2.0, this.inch * 6.0));
 
-		keyboardParent.enableRigidBody({
+			this.keyboardParent.enableRigidBody({
 			enabled: true,
 			isKinematic: true,
 			useGravity: false
 		});
-		keyboardParent.grabbable = true;
+		this.keyboardParent.grabbable = true;
 
 		for (let i = 21; i < 109; i++) {
 			let meshId: MRE.Guid = blackKeyMesh.id;
@@ -120,7 +121,7 @@ export default class Piano {
 			const keyActor = MRE.Actor.Create(this.context, {
 				actor: {
 					name: 'PianoKey' + i,
-					parentId: keyboardParent.id,
+					parentId: this.keyboardParent.id,
 					transform: {
 						local: { position: keyPos }
 					},
