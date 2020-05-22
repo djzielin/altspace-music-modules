@@ -56,7 +56,7 @@ export default class Spawner {
 				}
 
 				if (ourBubble.isVisible) {
-					if (currentTime - ourBubble.spawnTime > 7000) {
+					if (currentTime - ourBubble.spawnTime > 15000) {
 						MRE.log.info("app","7 seconds has expired, pulling unplayed bubble");
 						this.resetBubble(ourBubble.actor);
 						ourBubble.isVisible = false;
@@ -101,11 +101,11 @@ export default class Spawner {
 		await this.ourSpawner.created();
 
 		this.ourSpawner.setCollider(MRE.ColliderType.Box, false, {x: this.spawnerWidth, y: 0.01, z: 0.05});
-		this.ourSpawner.enableRigidBody({
+		/*this.ourSpawner.enableRigidBody({
 			enabled: true,
 			isKinematic: true,
 			useGravity: false
-		});
+		});*/
 
 		this.ourSpawner.grabbable = true; //so we can move it around
 		this.ourSpawner.subscribe('transform'); //so we can get pos updates
@@ -331,7 +331,9 @@ export default class Spawner {
 				pitch: 0.0,
 				looping: false,
 				paused: true,
-				volume: 1.0
+				volume: 1.0,
+				rolloffStartDistance: 10.0
+
 			});
 		
 		ourBubble.spawnTime=Date.now();

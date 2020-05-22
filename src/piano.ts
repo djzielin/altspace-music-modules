@@ -97,12 +97,23 @@ export default class Piano {
 		this.keyboardParent.setCollider(MRE.ColliderType.Box, false,
 			new MRE.Vector3(this.octaveSize * 8, this.inch * 2.0, this.inch * 6.0));
 
-		this.keyboardParent.enableRigidBody({
+		/*this.keyboardParent.enableRigidBody({
 			enabled: true,
 			isKinematic: true,
 			useGravity: false
-		});
+		});*/
 		this.keyboardParent.grabbable = true;
+
+
+		const randVec = new MRE.Vector3(
+			Math.random() * 0.00001,
+			Math.random() * 0.00001,
+			Math.random() * 0.00001);
+
+		/*this.keyboardParent.onGrab("end",()=>{
+			MRE.log.info("app","grab has ended");
+			this.keyboardParent.transform.app.position=this.keyboardParent.transform.app.position.add(randVec);
+		});*/
 
 		for (let i = 21; i < 109; i++) {
 			let meshId: MRE.Guid = blackKeyMesh.id;
@@ -196,7 +207,7 @@ export default class Piano {
 	}
 
 	public playSound(note: number, vel: number) {
-		const adjustedNote: number = note - 21;
+	/*	const adjustedNote: number = note - 21;
 		const soundInstance: MRE.MediaInstance =
 			this.ourKeys[adjustedNote].startSound(this.getSoundGUID(note), {
 				doppler: 0,
@@ -205,6 +216,7 @@ export default class Piano {
 				volume: vel / 127
 			});
 		this.activeSounds.set(note, soundInstance);
+		*/
 	}
 
 	public stopSound(note: number) {
