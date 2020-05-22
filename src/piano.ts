@@ -97,7 +97,7 @@ export default class Piano {
 		this.keyboardParent.setCollider(MRE.ColliderType.Box, false,
 			new MRE.Vector3(this.octaveSize * 8, this.inch * 2.0, this.inch * 6.0));
 
-			this.keyboardParent.enableRigidBody({
+		this.keyboardParent.enableRigidBody({
 			enabled: true,
 			isKinematic: true,
 			useGravity: false

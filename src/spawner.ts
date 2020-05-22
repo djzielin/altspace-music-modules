@@ -14,7 +14,7 @@ interface BubbleProperties{
 	isVisible: boolean; 
 }
 
-export default class SpawnerFaucet {
+export default class Spawner {
 
 	/**************
 	   https://colorbrewer2.org/#type=qualitative&scheme=Paired&n=12
