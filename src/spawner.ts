@@ -63,6 +63,23 @@ export default class Spawner {
 					}
 				}
 			}
+
+			let playingCount=0;
+			let visibleCount=0;
+
+			for (const ourBubble of this.allBubbles) {
+				if (ourBubble.isPlaying) {
+					playingCount++;
+				}
+
+				if(ourBubble.isVisible) {
+					visibleCount++;
+				}
+			}
+			const hiddenCount=this.allBubbles.length-playingCount-visibleCount;
+
+			MRE.log.info("app",`STATUS: ${playingCount} playing, ${visibleCount} playable, ${hiddenCount} hidden`);
+
 		}, 1000);
 	}
 
@@ -71,7 +88,7 @@ export default class Spawner {
 		await this.boxMesh.created;
 
 		const spawnPos=this.ourPiano.keyboardParent.transform.app.position.clone();
-		spawnPos.y+=0.1;
+		spawnPos.y+=0.3;
 		this.ourSpawner = MRE.Actor.Create(this.context, {
 			actor: {
 				name: 'spawner',
@@ -110,7 +127,7 @@ export default class Spawner {
 		for (let i = 0; i < 50; i++) {
 			await this.createSphere(
 				new MRE.Vector3(0, 0, 0),
-				.04,
+				.05,
 				this.boxMesh.id);
 		}
 
@@ -148,8 +165,8 @@ export default class Spawner {
 		});
 		await bubbleActor.created();
 
-		bubbleActor.subscribe('transform');
-		bubbleActor.subscribe('rigidbody');
+		//bubbleActor.subscribe('transform');
+		//bubbleActor.subscribe('rigidbody');
 
 		const ourBubble={
 			spawnTime: -1,
@@ -162,12 +179,12 @@ export default class Spawner {
 
 		this.allBubbles.push(ourBubble);
 
-		bubbleActor.setCollider(MRE.ColliderType.Box, false, new MRE.Vector3(1.0, 1.0, 1.0));
+		bubbleActor.setCollider(MRE.ColliderType.Box, false);
 		bubbleActor.collider.enabled = false;
 
 		bubbleActor.enableRigidBody({
 			enabled: false,
-			isKinematic: true,
+			isKinematic: false,
 			useGravity: false
 		});
 
@@ -207,22 +224,28 @@ export default class Spawner {
 	}
 
 	private resetBubble(ourBubble: MRE.Actor) {
-		ourBubble.appearance.enabled = false;
-		ourBubble.rigidBody.enabled = false;
-		ourBubble.rigidBody.useGravity = false;
-		ourBubble.rigidBody.isKinematic = true;
 		ourBubble.collider.enabled = false;		
-		
+		ourBubble.rigidBody.enabled = false;
+
 		const spawnPos=this.ourSpawner.transform.app.position.clone();
-		spawnPos.y += 0.1 + Math.random() * 0.2;
 		spawnPos.x += Math.random() * this.spawnerWidth - this.spawnerWidth * 0.5;
-		//spawnPos.z+=Math.random()*this.spawnerWidth-this.spawnerWidth*0.5;
+		spawnPos.y += 0.1 + Math.random() * 0.2;
+		spawnPos.z += Math.random() *0.00001;
 		ourBubble.transform.app.position=spawnPos;
-	
+
 		ourBubble.transform.app.rotation=
 			MRE.Quaternion.FromEulerAngles(Math.random()*360,Math.random()*360,Math.random()*360);
+
 		ourBubble.rigidBody.velocity={x:0, y:0, z:0};
-		ourBubble.rigidBody.angularVelocity={x:0, y:0, z:0};
+
+		ourBubble.rigidBody.angularVelocity = {
+			x: Math.random() * 0.00001,
+			y: Math.random() * 0.00001,
+			z: Math.random() * 0.00001
+		};
+
+		//ourBubble.appearance.enabled = true;
+		ourBubble.appearance.enabled = false;
 	}
 
 	private playBubble(bubbleProp: BubbleProperties) {		
@@ -267,18 +290,23 @@ export default class Spawner {
 		} 
 
 		if(ourBubble.isVisible) {
+			MRE.log.error("app", "  bubble is still visible, lets reset it");
 			this.resetBubble(ourBubble.actor);
 			ourBubble.isVisible=false;
 		}
 
 		ourBubble.actor.transform.local.scale = new MRE.Vector3(scale, scale, scale);
 
+		ourBubble.actor.rigidBody.velocity =
+		{
+			x: 0 + Math.random() * 0.00001,
+			y: 0 + Math.random() * 0.00001,
+			z: speed + Math.random() * 0.00001
+		};
+		ourBubble.actor.rigidBody.angularVelocity={x:0, y:0, z:0};
+
 		ourBubble.actor.collider.enabled = true;
 		ourBubble.actor.rigidBody.enabled = true;
-		ourBubble.actor.rigidBody.isKinematic=false;
-		ourBubble.actor.rigidBody.useGravity = false;
-		ourBubble.actor.rigidBody.velocity =
-			{ x: 0 + Math.random() * 0.00001, z: speed + Math.random() * 0.00001, y: 0 + Math.random() * 0.00001 };
 
 		const soundInstance: MRE.MediaInstance =
 			ourBubble.actor.startSound(this.ourPiano.getSoundGUID(note), {

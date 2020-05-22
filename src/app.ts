@@ -24,7 +24,8 @@ export default class HelloWorld {
 		MRE.log.info("app", "our constructor started");
 		this.assets = new MRE.AssetContainer(context);
 		
-		this.handMesh=	this.assets.createSphereMesh('sphere', 0.5, 10,10);
+		//this.handMesh=	this.assets.createSphereMesh('sphere', 0.5, 10,10);
+		this.handMesh = this.assets.createBoxMesh('boxMesh', 1.0, 1.0, 1.0);
 
 		this.context.onStarted(() => this.started());
 		this.context.onUserLeft(user => this.userLeft(user));
@@ -62,12 +63,12 @@ export default class HelloWorld {
 				appearance:
 				{
 					meshId: this.handMesh.id,
-					enabled: true
+					enabled: false
 				}
 			}
 		});
 
-		hand.setCollider(MRE.ColliderType.Auto, false);
+		hand.setCollider(MRE.ColliderType.Box, false);
 		hand.enableRigidBody({
 			enabled: true,
 			isKinematic: true,
@@ -80,8 +81,10 @@ export default class HelloWorld {
 	private userJoined(user: MRE.User) {
 		MRE.log.info("app", "user joined. name: " + user.name + " id: " + user.id);
 
-		const rHand=this.createHand('right-hand', user.id, new MRE.Vector3(0, 0,0.1), new MRE.Vector3(0.1, 0.1, 0.2));
-		const lHand=this.createHand('left-hand', user.id, new MRE.Vector3(0, 0, 0.1), new MRE.Vector3(0.1, 0.1, 0.2));
+		const rHand=this.createHand('right-hand', user.id, new MRE.Vector3(0, 0,0.1), 
+			new MRE.Vector3(0.06, 0.06, 0.14));
+		const lHand=this.createHand('left-hand', user.id, new MRE.Vector3(0, 0, 0.1),
+			new MRE.Vector3(0.06, 0.06, 0.14));
 
 		this.allHands.push(rHand);
 		this.allHands.push(lHand);
