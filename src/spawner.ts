@@ -48,16 +48,16 @@ export default class Spawner {
 			const currentTime = Date.now();
 			for (const ourBubble of this.allBubbles) {
 				if (ourBubble.isPlaying) {
-					if (currentTime - ourBubble.playTime > 5000) {
-						MRE.log.info("app","5 seconds has expired, stopping playback");
+					if (currentTime - ourBubble.playTime > 3000) {
+						MRE.log.info("app","3 seconds has expired, stopping playback");
 						ourBubble.sound.stop();
 						ourBubble.isPlaying = false;
 					}
 				}
 
 				if (ourBubble.isVisible) {
-					if (currentTime - ourBubble.spawnTime > 10000) {
-						MRE.log.info("app","10 seconds has expired, pulling unplayed bubble");
+					if (currentTime - ourBubble.spawnTime > 7000) {
+						MRE.log.info("app","7 seconds has expired, pulling unplayed bubble");
 						this.resetBubble(ourBubble.actor);
 						ourBubble.isVisible = false;
 					}
@@ -124,7 +124,7 @@ export default class Spawner {
 			}
 		});
 
-		for (let i = 0; i < 50; i++) {
+		for (let i = 0; i < 30; i++) {
 			await this.createSphere(
 				new MRE.Vector3(0, 0, 0),
 				.05,
