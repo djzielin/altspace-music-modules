@@ -87,13 +87,11 @@ export default class Spawner {
 		this.boxMesh = this.assets.createBoxMesh('boxMesh', 1.0, 1.0, 1.0);
 		await this.boxMesh.created;
 
-		const spawnPos=this.ourPiano.keyboardParent.transform.app.position.clone();
-		spawnPos.y+=0.3;
 		this.ourSpawner = MRE.Actor.Create(this.context, {
 			actor: {
 				name: 'spawner',
 				transform: {
-					app: { position: spawnPos },
+					app: { position: new MRE.Vector3(0,1.3,0) },
 				}
 			}
 		});
