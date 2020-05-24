@@ -125,7 +125,7 @@ export default class Spawner {
 		});
 
 
-		for (let i = 0; i < 30; i++) {
+		for (let i = 0; i < 10; i++) {
 			await this.createSphere(
 				new MRE.Vector3(0, 0, 0),
 				.05,
@@ -186,7 +186,8 @@ export default class Spawner {
 		bubbleActor.enableRigidBody({
 			enabled: false,
 			isKinematic: false,
-			useGravity: false
+			useGravity: false,
+			//collisionDetectionMode: MRE.CollisionDetectionMode.ContinuousDynamic
 		});
 
 		bubbleActor.collider.onCollision("collision-enter", (data: MRE.CollisionData) => {

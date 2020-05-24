@@ -1,1 +1,1 @@
-for f in *.wav; do ffmpeg -i "$f" -acodec libvorbis "${f%.wav}.ogg"; done
+for f in *.wav; do oggenc "$f" -o "${f%.wav}.ogg"; done

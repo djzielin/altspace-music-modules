@@ -72,8 +72,15 @@ export default class HelloWorld {
 		hand.enableRigidBody({
 			enabled: true,
 			isKinematic: true,
-			useGravity: false
+			useGravity: false//,
+			//collisionDetectionMode: MRE.CollisionDetectionMode.Discrete
+			//collisionDetectionMode: MRE.CollisionDetectionMode.Continuous
+			//collisionDetectionMode: MRE.CollisionDetectionMode.ContinuousDynamic
 		});
+
+		//hand.subscribe('transform');
+		//hand.subscribe('rigidbody');
+		//hand.subscribe('collider');
 
 		return hand;
 	}
