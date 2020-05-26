@@ -6,22 +6,29 @@ import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 import PianoReceiver from './receiver'
 import Piano from './piano'
 import Spawner from './spawner'
+
 /**
  * The main class of this app. All the logic goes here.
  */
 
 
-export default class HelloWorld {
+export default class App {
 	private assets: MRE.AssetContainer;
 
 	private ourPiano: Piano = null;
 	private ourSpawner: any = null;
 	private boxMesh: MRE.Mesh;
+	private consoleTextActor: MRE.Actor=null;
+	private consoleText: string[]=[];
 
 	private allHands: MRE.Actor[] =[];
 
 	constructor(private context: MRE.Context, private baseUrl: string, private ourReceiver: PianoReceiver) {
-		MRE.log.info("app", "our constructor started");
+		for(let i=0;i<25;i++){
+			this.consoleText.push("");
+		}
+
+		this.logMessage("our App constructor started");
 		this.assets = new MRE.AssetContainer(context);
 		
 		//this.boxMesh=	this.assets.createSphereMesh('sphere', 0.5, 10,10);
@@ -33,7 +40,7 @@ export default class HelloWorld {
 	}	
 
 	private PianoReceiveCallback(note: number, vel: number): void {
-		MRE.log.info("app", `App received - note: ${note} vel: ${vel}`);
+		this.logMessage(`App received - note: ${note} vel: ${vel}`);
 
 		if (vel > 0) {
 			this.ourPiano.playSound(note, vel);
@@ -90,6 +97,66 @@ export default class HelloWorld {
 		return degrees * (pi / 180);
 	}
 	
+	private async createConsole() {
+		const consoleParent = MRE.Actor.Create(this.context, {
+			actor: {
+				name: "parent",
+				transform: {
+					local: {
+						position: { x: 2, y: 0, z: 0 },
+						scale: new MRE.Vector3(0.5, 0.5, 0.5)
+					}
+				}
+			}
+		});
+		await consoleParent.created();
+
+		const consoleMat = this.assets.createMaterial('consolemat', {
+			color: new MRE.Color3(0, 0, 0)
+		});
+		await consoleMat.created;	
+
+		const consoleBackground = MRE.Actor.Create(this.context, {
+			actor: {
+				parentId: consoleParent.id,
+				name: "consoleBackground",
+				appearance: {
+					meshId: this.boxMesh.id,
+					materialId: consoleMat.id
+				},
+				transform: {
+					local: {
+						position: { x: 0, y: 0.05, z: 0 },
+						scale: new MRE.Vector3(4.4, 0.1, 2.5)
+					}
+				}
+			}
+		});
+		await consoleBackground.created();
+
+		this.consoleTextActor = MRE.Actor.Create(this.context, {
+			actor: {
+				parentId: consoleParent.id,
+				name: 'consoleText',
+				text: {
+					contents: "test",
+					height: 2.0/25,
+					anchor: MRE.TextAnchorLocation.TopLeft,
+					color: new MRE.Color3(1,1,1)
+				},
+				transform: {
+					local: {
+						position: { x: -(4.4/2)+0.05, y: 0.101, z: (2.5/2)-0.05 },
+						rotation: MRE.Quaternion.FromEulerAngles(this.degToRad(90), 0, 0)
+					}
+				}
+			}
+		});
+		await this.consoleTextActor.created();
+	
+		this.logMessage("log initialized");
+	}
+
 	private async createResetButton() {
 
 		const button = MRE.Actor.Create(this.context, {
@@ -115,8 +182,8 @@ export default class HelloWorld {
 				process.exit(0);
 			});
 
-			
-		const buttonLabel=MRE.Actor.Create(this.context, {
+
+		const buttonLabel = MRE.Actor.Create(this.context, {
 			actor: {
 				name: 'label',
 				text: {
@@ -125,19 +192,35 @@ export default class HelloWorld {
 					anchor: MRE.TextAnchorLocation.MiddleCenter
 				},
 				transform: {
-					local: { 
+					local: {
 						position: { x: 0, y: 0.101, z: 0 },
-						rotation: MRE.Quaternion.FromEulerAngles(this.degToRad(90),0,0)
-					}					
+						rotation: MRE.Quaternion.FromEulerAngles(this.degToRad(90), 0, 0)
+					}
 				}
 			}
 		});
-
 		await buttonLabel.created();
 	}
 
+	public logMessage(message: string) { //TODO: trim lines longer then 80 width
+		MRE.log.info("app", message);
+
+		this.consoleText.push(message);
+		this.consoleText.shift();
+
+		if (this.consoleTextActor) {
+			let combinedText = "";
+
+			for (const s of this.consoleText) {
+				combinedText += s;
+				combinedText += "\n";
+			}
+			this.consoleTextActor.text.contents = combinedText;
+		}
+	}
+
 	private userJoined(user: MRE.User) {
-		MRE.log.info("app", "user joined. name: " + user.name + " id: " + user.id);
+		this.logMessage("user joined. name: " + user.name + " id: " + user.id);
 
 		const rHand=this.createHand('right-hand', user.id, new MRE.Vector3(0, 0,0.1), 
 			new MRE.Vector3(0.06, 0.06, 0.14));
@@ -147,11 +230,11 @@ export default class HelloWorld {
 		this.allHands.push(rHand);
 		this.allHands.push(lHand);
 
-		MRE.log.info("app", "  hand array is now size: " + this.allHands.length);
+		this.logMessage("  hand array is now size: " + this.allHands.length);
 	}
 
 	private userLeft(user: MRE.User) {
-		MRE.log.info("app", "user left. name: " + user.name + " id: " + user.id);
+		this.logMessage("user left. name: " + user.name + " id: " + user.id);
 
 		const handsToDelete: MRE.Actor[] = [];
 
@@ -159,7 +242,7 @@ export default class HelloWorld {
 			const hand = this.allHands[i];
 			const userID = hand.attachment.userId;
 			if (userID === user.id) {
-				MRE.log.info("app", "  found one of the users hands: " + this.allHands[i].name);
+				this.logMessage("  found one of the users hands: " + this.allHands[i].name);
 				handsToDelete.push(hand);
 			}
 		}
@@ -168,11 +251,11 @@ export default class HelloWorld {
 			const hIndex = this.allHands.indexOf(hand);
 			if (hIndex > -1) {
 				this.allHands.splice(hIndex, 1);
-				MRE.log.info("app", "  removed " + hand.name);
+				this.logMessage("  removed " + hand.name);
 			}
 		}
 
-		MRE.log.info("app", "  hand array is now size: " + this.allHands.length);
+		this.logMessage("  hand array is now size: " + this.allHands.length);
 	}
 
 	private Vector2String(v: MRE.Vector3, precision: number){
@@ -182,24 +265,27 @@ export default class HelloWorld {
 	}
 
 	private async loadAsyncItems() {
-		MRE.log.info("app", "Loading async items!");
-		MRE.log.info("app", "Loading App Menu Items");
+		this.logMessage("Loading async items!");
+		this.logMessage("Creating Console");
+		await this.createConsole();
+
+		this.logMessage("Creating Reset Button ");
 		await this.createResetButton();
 
-		MRE.log.info("app", "Loading piano items");
+		this.logMessage("creating piano keys");
 		this.ourPiano = new Piano(this.context, this.baseUrl, this.assets);
 		await this.ourPiano.createAllKeys();
 		await this.ourPiano.loadAllSounds();
 
-		MRE.log.info("app", "Loading spawner items");
+		this.logMessage("Loading spawner items");
 		this.ourSpawner = new Spawner(this.context, this.baseUrl, this.assets,
-			this.ourPiano, this.allHands); //TODO pass this better
+			this.ourPiano, this.allHands, this); //TODO pass this better
 		await this.ourSpawner.createAsyncItems();
 	}
 		
 	private started() {
 		this.loadAsyncItems().then(() => {
-			MRE.log.info("app", " all items loaded!");
+			this.logMessage("all async items created/loaded!");
 			this.ourReceiver.ourCallback = this.PianoReceiveCallback.bind(this);
 		});
 

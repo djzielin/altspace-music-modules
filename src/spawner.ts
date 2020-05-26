@@ -4,14 +4,13 @@
 
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 import Piano from './piano';
+import App from './app';
+import { appendFile } from 'fs';
 
 interface BubbleProperties{
-	spawnTime: number;
-	playTime: number;
+	timeStamp: number;
 	actor: MRE.Actor;
-	sound: MRE.MediaInstance;
-	isPlaying: boolean;
-	isVisible: boolean; 
+	soundGUID: MRE.Guid; 
 }
 
 export default class Spawner {
@@ -36,49 +35,72 @@ export default class Spawner {
 	private sphereMesh: MRE.Mesh;
 	private boxMesh: MRE.Mesh;
 
-	private allBubbles: BubbleProperties[]=[]; 
+	private availableBubbles: BubbleProperties[]=[]; 
+	private playingBubbles: BubbleProperties[]=[]; 
+
 	private noteMaterials: MRE.Material[] = [];
 	private spawnerWidth=0.5;
 	private ourSpawner: MRE.Actor;
 
+	private polyphonyLimit=20; //TODO: allow these to be set in in-world GUI
+	private bubbleLimit=50;
+
+	/*
+		https://stackoverflow.com/questions/10073699/pad-a-number-with-leading-zeros-in-javascript	
+	*/	
+	private pad(value: number, maxWidth: number, padChar: string) {
+		const n = value.toString();
+		return n.length >= maxWidth ? n : new Array(maxWidth - n.length + 1).join(padChar) + n;
+	}
+
 	constructor(private context: MRE.Context, private baseUrl: string, private assets: MRE.AssetContainer,
-		private ourPiano: Piano, private allHands: MRE.Actor[]) {
+		private ourPiano: Piano, private allHands: MRE.Actor[], private ourApp: App) {
 
 		setInterval(() => { //cull bubbles that have been around too long
 			const currentTime = Date.now();
-			for (const ourBubble of this.allBubbles) {
-				if (ourBubble.isPlaying) {
-					if (currentTime - ourBubble.playTime > 3000) {
-						MRE.log.info("app","3 seconds has expired, stopping playback");
-						ourBubble.sound.stop();
-						ourBubble.isPlaying = false;
-					}
-				}
+			const listOfAvailableBubblesToDelete: BubbleProperties[]=[];
+			const listOfPlayingBubblesToDelete: BubbleProperties[]=[];
 
-				if (ourBubble.isVisible) {
-					if (currentTime - ourBubble.spawnTime > 15000) {
-						MRE.log.info("app","7 seconds has expired, pulling unplayed bubble");
-						this.resetBubble(ourBubble.actor);
-						ourBubble.isVisible = false;
-					}
+			for (const ourBubble of this.availableBubbles) {
+				if (currentTime - ourBubble.timeStamp > 10000) {
+					this.ourApp.logMessage("10 seconds has expired, pulling unplayed bubble");
+					ourBubble.actor.destroy();
+					listOfAvailableBubblesToDelete.push(ourBubble);
 				}
 			}
 
-			let playingCount=0;
-			let visibleCount=0;
-
-			for (const ourBubble of this.allBubbles) {
-				if (ourBubble.isPlaying) {
-					playingCount++;
-				}
-
-				if(ourBubble.isVisible) {
-					visibleCount++;
+			for (const ourBubble of this.playingBubbles) {
+				if (currentTime - ourBubble.timeStamp > 5000) {
+					this.ourApp.logMessage("5 seconds has expired, pulling playing bubble");
+					ourBubble.actor.destroy();
+					listOfPlayingBubblesToDelete.push(ourBubble);
 				}
 			}
-			const hiddenCount=this.allBubbles.length-playingCount-visibleCount;
+			
+			for(const ourBubble of listOfAvailableBubblesToDelete)
+			{
+				const index=this.availableBubbles.indexOf(ourBubble);
+				if(index>-1){
+					this.availableBubbles.splice(index,1);
+				}
+			}
 
-			MRE.log.info("app",`STATUS: ${playingCount} playing, ${visibleCount} playable, ${hiddenCount} hidden`);
+			for(const ourBubble of listOfPlayingBubblesToDelete)
+			{
+				const index=this.playingBubbles.indexOf(ourBubble);
+				if(index>-1){
+					this.availableBubbles.splice(index,1);
+				}
+			}
+	
+			const timeNow=new Date(Date.now());			
+
+			this.ourApp.logMessage(
+				`Time: ${this.pad(timeNow.getHours(),2,'0')}:`+
+				`${this.pad(timeNow.getMinutes(),2,'0')}:` +
+				`${this.pad(timeNow.getSeconds(),2,'0')} - ` +
+				`${this.playingBubbles.length} playing, ` +
+				`${this.availableBubbles.length} playable`);
 
 		}, 1000);
 	}
@@ -125,7 +147,7 @@ export default class Spawner {
 		});
 
 
-		for (let i = 0; i < 10; i++) {
+	/*	for (let i = 0; i < 10; i++) {
 			await this.createSphere(
 				new MRE.Vector3(0, 0, 0),
 				.05,
@@ -133,6 +155,7 @@ export default class Spawner {
 		}
 
 		MRE.log.info("app", "created all bubbles");
+*/
 
 		for (const noteColor of this.noteColors) {
 			const ourMat: MRE.Material = this.assets.createMaterial('bubblemat', {
@@ -143,11 +166,11 @@ export default class Spawner {
 			this.noteMaterials.push(ourMat);
 		}
 
-		MRE.log.info("app", "complete all spawner object creation");
+		this.ourApp.logMessage("complete all spawner object creation");
 	}
 
 	private async createSphere(pos: MRE.Vector3, scale: number, meshID: MRE.Guid) {
-		MRE.log.info("app", "trying to create bubble at: " + pos);
+		this.ourApp.logMessage("trying to create bubble at: " + pos);
 		const bubbleActor = MRE.Actor.Create(this.context, {
 			actor: {
 				name: 'sphere',
@@ -170,15 +193,12 @@ export default class Spawner {
 		//bubbleActor.subscribe('rigidbody');
 
 		const ourBubble={
-			spawnTime: -1,
-			playTime: -1,
+			timeStamp: Date.now(),
 			actor: bubbleActor,
-			sound: null as MRE.MediaInstance,
-			isPlaying: false,
-			isVisible: false
+			soundGUID: MRE.ZeroGuid //TODO GUID
 		};
 
-		this.allBubbles.push(ourBubble);
+		this.availableBubbles.push(ourBubble);
 
 		bubbleActor.setCollider(MRE.ColliderType.Box, false);
 		bubbleActor.collider.enabled = false;
@@ -194,10 +214,10 @@ export default class Spawner {
 			const otherActor = data.otherActor;
 
 			if (this.allHands.includes(otherActor)) { //bubble touches hand
-				MRE.log.info("app", "touched one of our hands! lets play a sound!");
+				this.ourApp.logMessage("touched one of our hands! lets play a sound!");
 				this.playBubble(ourBubble);
 			} else {
-				MRE.log.info("app", "sphere collided with: " + otherActor.name);
+				this.ourApp.logMessage("sphere collided with: " + otherActor.name);
 			}
 		});
 
@@ -220,7 +240,7 @@ export default class Spawner {
 			}
 		});
 		setTimeout(() => {
-			MRE.log.info("app", "2 seconds has expired. deleting particle effect");
+			this.ourApp.logMessage("2 seconds has expired. deleting particle effect");
 			particleActor.destroy();
 		}, 2000);
 	}
@@ -251,13 +271,13 @@ export default class Spawner {
 	}
 
 	private playBubble(bubbleProp: BubbleProperties) {		
-		bubbleProp.sound.resume(); //start sound
+		/*bubbleProp.sound.resume(); //start sound
 		bubbleProp.isPlaying=true;
 		bubbleProp.playTime=Date.now();
 
 		this.resetBubble(bubbleProp.actor);
 		bubbleProp.isVisible=false;
-
+*/
 		//spawnParticleEffect(pos: MRE.Vector3);
 	}
 
@@ -272,7 +292,7 @@ export default class Spawner {
 	}
 
 	public spawnBubble(note: number, vel: number) {
-		MRE.log.info("app", "trying to spawn bubble for: " + note);
+		this.ourApp.logMessage("trying to spawn bubble for: " + note);
 		//const octave = Math.floor(note / 12);
 		const noteNum = note % 12;
 		const scale = 0.05; //this.mapRange(note,21,108,1.0,0.1) * 0.04;
@@ -281,7 +301,7 @@ export default class Spawner {
 		MRE.log.error("app", "  scale will be: " + scale);
 		MRE.log.error("app", "  speed will be: " + speed);
 
-		const ourBubble = this.allBubbles.shift(); //cycle to the back 
+		/*const ourBubble = this.allBubbles.shift(); //cycle to the back 
 		this.allBubbles.push(ourBubble);
 
 		if (ourBubble.isPlaying) {
@@ -341,5 +361,6 @@ export default class Spawner {
 		ourBubble.actor.appearance.materialId = this.noteMaterials[noteNum].id;
 		ourBubble.actor.appearance.enabled = true;
 		ourBubble.isVisible=true;
+		*/
 	}
 }
