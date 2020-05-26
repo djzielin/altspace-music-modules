@@ -16,7 +16,7 @@ export default class HelloWorld {
 
 	private ourPiano: Piano = null;
 	private ourSpawner: any = null;
-	private handMesh: MRE.Mesh;
+	private boxMesh: MRE.Mesh;
 
 	private allHands: MRE.Actor[] =[];
 
@@ -24,8 +24,8 @@ export default class HelloWorld {
 		MRE.log.info("app", "our constructor started");
 		this.assets = new MRE.AssetContainer(context);
 		
-		//this.handMesh=	this.assets.createSphereMesh('sphere', 0.5, 10,10);
-		this.handMesh = this.assets.createBoxMesh('boxMesh', 1.0, 1.0, 1.0);
+		//this.boxMesh=	this.assets.createSphereMesh('sphere', 0.5, 10,10);
+		this.boxMesh = this.assets.createBoxMesh('boxMesh', 1.0, 1.0, 1.0);
 
 		this.context.onStarted(() => this.started());
 		this.context.onUserLeft(user => this.userLeft(user));
@@ -62,7 +62,7 @@ export default class HelloWorld {
 				},
 				appearance:
 				{
-					meshId: this.handMesh.id,
+					meshId: this.boxMesh.id,
 					enabled: false
 				}
 			}
@@ -83,6 +83,57 @@ export default class HelloWorld {
 		//hand.subscribe('collider');
 
 		return hand;
+	}
+
+	private degToRad(degrees: number) {
+		const pi = Math.PI;
+		return degrees * (pi / 180);
+	}
+	
+	private async createResetButton() {
+
+		const button = MRE.Actor.Create(this.context, {
+			actor: {
+				//parentId: menu.id,
+				name: "resetButton",
+				appearance: { meshId: this.boxMesh.id },
+				collider: { geometry: { shape: MRE.ColliderType.Auto } },
+				transform: {
+					local: {
+						position: { x: 0, y: 0.05, z: 0 },
+						scale: new MRE.Vector3(0.5, 0.1, 0.1)
+					}
+				}
+			}
+		});
+
+		await button.created();
+
+		// Set a click handler on the button.
+		button.setBehavior(MRE.ButtonBehavior)
+			.onClick(() => {
+				process.exit(0);
+			});
+
+			
+		const buttonLabel=MRE.Actor.Create(this.context, {
+			actor: {
+				name: 'label',
+				text: {
+					contents: "Reset",
+					height: 0.1,
+					anchor: MRE.TextAnchorLocation.MiddleCenter
+				},
+				transform: {
+					local: { 
+						position: { x: 0, y: 0.101, z: 0 },
+						rotation: MRE.Quaternion.FromEulerAngles(this.degToRad(90),0,0)
+					}					
+				}
+			}
+		});
+
+		await buttonLabel.created();
 	}
 
 	private userJoined(user: MRE.User) {
@@ -132,6 +183,9 @@ export default class HelloWorld {
 
 	private async loadAsyncItems() {
 		MRE.log.info("app", "Loading async items!");
+		MRE.log.info("app", "Loading App Menu Items");
+		await this.createResetButton();
+
 		MRE.log.info("app", "Loading piano items");
 		this.ourPiano = new Piano(this.context, this.baseUrl, this.assets);
 		await this.ourPiano.createAllKeys();

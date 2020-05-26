@@ -35,12 +35,12 @@
     "typescript": "^3.8.3"
   },
   "dependencies": {
-    "@types/ws": "",
+    "@microsoft/mixed-reality-extension-sdk": "",
     "@types/dotenv": "^6.1.0",
-    "@types/node": "^10.3.1",
-    "ws": "",
+    "@types/node": "^10.17.24",
+    "@types/ws": "",
     "colorsys": "^1.0.22",
     "dotenv": "",
-    "@microsoft/mixed-reality-extension-sdk": ""
+    "ws": ""
   }
 }
