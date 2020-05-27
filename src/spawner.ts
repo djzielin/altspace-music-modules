@@ -5,12 +5,10 @@
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 import Piano from './piano';
 import App from './app';
-import { appendFile } from 'fs';
 
 interface BubbleProperties{
 	timeStamp: number;
 	actor: MRE.Actor;
-	soundGUID: MRE.Guid; 
 }
 
 export default class Spawner {
@@ -53,6 +51,20 @@ export default class Spawner {
 		return n.length >= maxWidth ? n : new Array(maxWidth - n.length + 1).join(padChar) + n;
 	}
 
+	private removeFromAvailable(ourBubble: BubbleProperties) {
+		const index = this.availableBubbles.indexOf(ourBubble);
+		if (index > -1) {
+			this.availableBubbles.splice(index, 1);
+		}
+	}
+
+	private removeFromPlaying(ourBubble: BubbleProperties) {
+		const index = this.playingBubbles.indexOf(ourBubble);
+		if (index > -1) {
+			this.playingBubbles.splice(index, 1);
+		}
+	}
+
 	constructor(private context: MRE.Context, private baseUrl: string, private assets: MRE.AssetContainer,
 		private ourPiano: Piano, private allHands: MRE.Actor[], private ourApp: App) {
 
@@ -77,20 +89,12 @@ export default class Spawner {
 				}
 			}
 			
-			for(const ourBubble of listOfAvailableBubblesToDelete)
-			{
-				const index=this.availableBubbles.indexOf(ourBubble);
-				if(index>-1){
-					this.availableBubbles.splice(index,1);
-				}
+			for(const ourBubble of listOfAvailableBubblesToDelete){
+				this.removeFromAvailable(ourBubble);
 			}
 
-			for(const ourBubble of listOfPlayingBubblesToDelete)
-			{
-				const index=this.playingBubbles.indexOf(ourBubble);
-				if(index>-1){
-					this.availableBubbles.splice(index,1);
-				}
+			for(const ourBubble of listOfPlayingBubblesToDelete){
+				this.removeFromPlaying(ourBubble);
 			}
 	
 			const timeNow=new Date(Date.now());			
@@ -121,6 +125,8 @@ export default class Spawner {
 		await this.ourSpawner.created();
 
 		this.ourSpawner.setCollider(MRE.ColliderType.Box, false, {x: this.spawnerWidth, y: 0.01, z: 0.05});
+
+		//adding rigidbody leads to incorrect behavior. perhaps grabbable=true instantiates rigidbody?
 		/*this.ourSpawner.enableRigidBody({
 			enabled: true,
 			isKinematic: true,
@@ -146,20 +152,9 @@ export default class Spawner {
 			}
 		});
 
-
-	/*	for (let i = 0; i < 10; i++) {
-			await this.createSphere(
-				new MRE.Vector3(0, 0, 0),
-				.05,
-				this.boxMesh.id);
-		}
-
-		MRE.log.info("app", "created all bubbles");
-*/
-
 		for (const noteColor of this.noteColors) {
 			const ourMat: MRE.Material = this.assets.createMaterial('bubblemat', {
-				color: noteColor//,
+				color: noteColor
 				//mainTextureId: this.sphereTexture.id
 			});
 			await ourMat.created;
@@ -169,8 +164,9 @@ export default class Spawner {
 		this.ourApp.logMessage("complete all spawner object creation");
 	}
 
-	private async createSphere(pos: MRE.Vector3, scale: number, meshID: MRE.Guid) {
+	private createBubble(pos: MRE.Vector3, rot: MRE.Quaternion, scale: number): BubbleProperties{
 		this.ourApp.logMessage("trying to create bubble at: " + pos);
+
 		const bubbleActor = MRE.Actor.Create(this.context, {
 			actor: {
 				name: 'sphere',
@@ -178,50 +174,35 @@ export default class Spawner {
 				transform: {
 					local: {
 						position: pos,
+						rotation: rot,
 						scale: new MRE.Vector3(scale, scale, scale)
 					}
 				},
 				appearance: {
-					meshId: meshID,
-					enabled: false
+					meshId: this.boxMesh.id,
+					enabled: true
 				}
 			}
 		});
-		await bubbleActor.created();
-
-		//bubbleActor.subscribe('transform');
-		//bubbleActor.subscribe('rigidbody');
 
 		const ourBubble={
 			timeStamp: Date.now(),
 			actor: bubbleActor,
-			soundGUID: MRE.ZeroGuid //TODO GUID
 		};
 
 		this.availableBubbles.push(ourBubble);
 
 		bubbleActor.setCollider(MRE.ColliderType.Box, false);
-		bubbleActor.collider.enabled = false;
+		bubbleActor.collider.enabled = true;
 
 		bubbleActor.enableRigidBody({
-			enabled: false,
+			enabled: true,
 			isKinematic: false,
 			useGravity: false,
 			//collisionDetectionMode: MRE.CollisionDetectionMode.ContinuousDynamic
 		});
 
-		bubbleActor.collider.onCollision("collision-enter", (data: MRE.CollisionData) => {
-			const otherActor = data.otherActor;
-
-			if (this.allHands.includes(otherActor)) { //bubble touches hand
-				this.ourApp.logMessage("touched one of our hands! lets play a sound!");
-				this.playBubble(ourBubble);
-			} else {
-				this.ourApp.logMessage("sphere collided with: " + otherActor.name);
-			}
-		});
-
-		this.resetBubble(bubbleActor);
+		return ourBubble;
 	}
 
 	private spawnParticleEffect(pos: MRE.Vector3) {
@@ -245,42 +226,6 @@ export default class Spawner {
 		}, 2000);
 	}
 
-	private resetBubble(ourBubble: MRE.Actor) {
-		ourBubble.collider.enabled = false;		
-		ourBubble.rigidBody.enabled = false;
-
-		const spawnPos = new MRE.Vector3(
-			Math.random() * this.spawnerWidth - this.spawnerWidth * 0.5,
-			0.1 + Math.random() * 0.2,
-			Math.random() * 0.00001);	
-
-		ourBubble.transform.local.position=spawnPos;
-		ourBubble.transform.app.rotation=
-			MRE.Quaternion.FromEulerAngles(Math.random()*360,Math.random()*360,Math.random()*360);
-
-		ourBubble.rigidBody.velocity={x:0, y:0, z:0};
-
-		ourBubble.rigidBody.angularVelocity = {
-			x: Math.random() * 0.00001,
-			y: Math.random() * 0.00001,
-			z: Math.random() * 0.00001
-		};
-
-		//ourBubble.appearance.enabled = true;
-		ourBubble.appearance.enabled = false;
-	}
-
-	private playBubble(bubbleProp: BubbleProperties) {		
-		/*bubbleProp.sound.resume(); //start sound
-		bubbleProp.isPlaying=true;
-		bubbleProp.playTime=Date.now();
-
-		this.resetBubble(bubbleProp.actor);
-		bubbleProp.isVisible=false;
-*/
-		//spawnParticleEffect(pos: MRE.Vector3);
-	}
-
 	private mapRange(input: number, inputLow: number, inputHigh: number, outputLow: number, outputHigh: number) {
 
 		const inputRange = inputHigh - inputLow;
@@ -300,37 +245,24 @@ export default class Spawner {
 
 		MRE.log.error("app", "  scale will be: " + scale);
 		MRE.log.error("app", "  speed will be: " + speed);
+	
+		const spawnPos = new MRE.Vector3(
+			Math.random() * this.spawnerWidth - this.spawnerWidth * 0.5,
+			0.1 + Math.random() * 0.2,
+			0.0);	
 
-		/*const ourBubble = this.allBubbles.shift(); //cycle to the back 
-		this.allBubbles.push(ourBubble);
+		const spawnRot = 
+			MRE.Quaternion.FromEulerAngles(Math.random()*360,Math.random()*360,Math.random()*360);
 
-		if (ourBubble.isPlaying) {
-			MRE.log.error("app", "  proposed bubble is still playing, lets first shut it down");
-			
-			ourBubble.sound.stop();
-			ourBubble.isPlaying=false;		
-		} 
+		//TODO: enforce limit on max number of spawned bubbles here
 
-		if(ourBubble.isVisible) {
-			MRE.log.error("app", "  bubble is still visible, lets reset it");
-			this.resetBubble(ourBubble.actor);
-			ourBubble.isVisible=false;
-		}
-
-		ourBubble.actor.transform.local.scale = new MRE.Vector3(scale, scale, scale);
+		const ourBubble=this.createBubble(spawnPos,spawnRot, scale)
 		
-		const ourRot=this.ourSpawner.transform.app.rotation;
+		const spawnerRot=this.ourSpawner.transform.app.rotation;
 		const forVec=new MRE.Vector3(0,0,1);
 		const spawnForVec=new MRE.Vector3(0,0,0);		
-		forVec.rotateByQuaternionToRef(ourRot,spawnForVec);
-
-		const randVec = new MRE.Vector3(
-			Math.random() * 0.00001,
-			Math.random() * 0.00001,
-			Math.random() * 0.00001);
-
-		let velocityVec=spawnForVec.multiplyByFloats(speed,speed,speed);
-		velocityVec=velocityVec.add(randVec); //add some noise to bypass observer limitations
+		forVec.rotateByQuaternionToRef(spawnerRot,spawnForVec);
+		const velocityVec=spawnForVec.multiplyByFloats(speed,speed,speed);
 
 		ourBubble.actor.rigidBody.velocity =
 		{
@@ -339,28 +271,36 @@ export default class Spawner {
 			z: velocityVec.z
 		};
 
-		ourBubble.actor.rigidBody.angularVelocity={x:0, y:0, z:0};
+		ourBubble.actor.collider.onCollision("collision-enter", (data: MRE.CollisionData) => {
+			const otherActor = data.otherActor;
 
-		ourBubble.actor.collider.enabled = true;
-		ourBubble.actor.rigidBody.enabled = true;
+			if (this.allHands.includes(otherActor)) { //bubble touches hand
+				this.ourApp.logMessage("touched one of our hands! lets play a sound for note: " + note);
 
-		const soundInstance: MRE.MediaInstance =
-			ourBubble.actor.startSound(this.ourPiano.getSoundGUID(note), {
-				doppler: 0,
-				pitch: 0.0,
-				looping: false,
-				paused: true,
-				volume: 1.0,
-				rolloffStartDistance: 10.0
+				//TODO enforce polyphony here (cull oldest note)
 
-			});
+				ourBubble.actor.startSound(this.ourPiano.getSoundGUID(note), {
+					doppler: 0,
+					pitch: 0.0,
+					looping: false,
+					paused: false,
+					volume: 1.0,
+					rolloffStartDistance: 10.0
+				});
+
+				this.removeFromAvailable(ourBubble);
+				this.playingBubbles.push(ourBubble);
+
+				ourBubble.timeStamp = Date.now();
+				ourBubble.actor.appearance.enabled = false;
+				ourBubble.actor.collider.enabled = false;
+				ourBubble.actor.rigidBody.enabled = false;
+
+			} else {
+				this.ourApp.logMessage("sphere collided with: " + otherActor.name);
+			}
+		});		
 		
-		ourBubble.spawnTime=Date.now();
-		ourBubble.sound=soundInstance;
-
-		ourBubble.actor.appearance.materialId = this.noteMaterials[noteNum].id;
-		ourBubble.actor.appearance.enabled = true;
-		ourBubble.isVisible=true;
-		*/
+		ourBubble.actor.appearance.materialId = this.noteMaterials[noteNum].id;	
 	}
 }
