@@ -104,7 +104,7 @@ export default class Spawner {
 				`${this.pad(timeNow.getMinutes(),2,'0')}:` +
 				`${this.pad(timeNow.getSeconds(),2,'0')} - ` +
 				`${this.playingBubbles.length} playing ` +
-				`(${listOfPlayingBubblesToDelete.length} culled) `+
+				`(${listOfPlayingBubblesToDelete.length} culled) - `+
 				`${this.availableBubbles.length} playable `+
 				`(${listOfAvailableBubblesToDelete.length} culled)`);
 
@@ -168,8 +168,7 @@ export default class Spawner {
 
 	private createBubble(pos: MRE.Vector3, rot: MRE.Quaternion, scale: number,
 		vel: MRE.Vector3, mat: MRE.Material): BubbleProperties {
-		this.ourApp.logMessage("trying to create bubble at: " + pos);
-
+		
 		const bubbleActor = MRE.Actor.Create(this.context, {
 			actor: {
 				name: 'sphere',
@@ -245,8 +244,11 @@ export default class Spawner {
 		const scale = 0.05; //this.mapRange(note,21,108,1.0,0.1) * 0.04;
 		const speed = -0.1; //this.mapRange(note,21,108,0.1,1.0) * -0.5;
 
-		//MRE.log.error("app", "  scale will be: " + scale);
-		//MRE.log.error("app", "  speed will be: " + speed);
+		while(this.availableBubbles.length>this.bubbleLimit){
+			this.ourApp.logMessage("culling bubble. enforcing bubble limit of: " + this.bubbleLimit);
+			const bubbleToCull=this.availableBubbles.shift();
+			bubbleToCull.actor.destroy();
+		}
 
 		const spawnPos = new MRE.Vector3(
 			Math.random() * this.spawnerWidth - this.spawnerWidth * 0.5,
@@ -262,8 +264,6 @@ export default class Spawner {
 		forVec.rotateByQuaternionToRef(spawnerRot, spawnForVec);
 		const velocityVec = spawnForVec.multiplyByFloats(speed, speed, speed);
 
-		//TODO: enforce limit on max number of spawned bubbles here
-
 		const ourBubble = this.createBubble(spawnPos, spawnRot, scale, velocityVec, this.noteMaterials[noteNum]);
 
 		ourBubble.actor.rigidBody.velocity = {
@@ -277,7 +277,11 @@ export default class Spawner {
 
 			if (this.allHands.includes(otherActor)) { //bubble touches hand
 
-				//TODO enforce polyphony here (cull oldest note)
+				while(this.playingBubbles.length>this.polyphonyLimit){
+					this.ourApp.logMessage("culling bubble. enforcing polyphony limit of: " + this.polyphonyLimit);
+					const bubbleToCull=this.playingBubbles.shift();
+					bubbleToCull.actor.destroy();
+				}
 
 				ourBubble.actor.startSound(this.ourPiano.getSoundGUID(note), {
 					doppler: 0,

@@ -103,7 +103,7 @@ export default class App {
 				name: "parent",
 				transform: {
 					local: {
-						position: { x: 2, y: 0, z: 0 },
+						position: { x: 1.5, y: 0, z: 0 },
 						scale: new MRE.Vector3(0.5, 0.5, 0.5)
 					}
 				}
@@ -212,7 +212,7 @@ export default class App {
 			let combinedText = "";
 
 			for (const s of this.consoleText) {
-				combinedText += s;
+				combinedText += s.substr(0,80);
 				combinedText += "\n";
 			}
 			this.consoleTextActor.text.contents = combinedText;
