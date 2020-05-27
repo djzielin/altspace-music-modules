@@ -144,9 +144,9 @@ export default class Piano {
 		let note = 9;
 
 		for (let i = 21; i < 109; i++) {
-			const filename = `${this.baseUrl}/piano_mono_5s/` +
+			const filename = `${this.baseUrl}/mono_5s_wav/` +
 				"Piano.ff." + this.noteOrder[note] +
-				octave.toString() + ".ogg";
+				octave.toString() + ".wav";
 
 			MRE.log.info("app", "trying to load: " + filename);
 			const newSound = this.assets.createSound("pianoKey" + i, {

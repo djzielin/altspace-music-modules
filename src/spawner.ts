@@ -75,7 +75,7 @@ export default class Spawner {
 
 			for (const ourBubble of this.availableBubbles) {
 				if (currentTime - ourBubble.timeStamp > 10000) {
-					this.ourApp.logMessage("10 seconds has expired, pulling unplayed bubble");
+					//this.ourApp.logMessage("10 seconds has expired, pulling unplayed bubble");
 					ourBubble.actor.destroy();
 					listOfAvailableBubblesToDelete.push(ourBubble);
 				}
@@ -83,7 +83,7 @@ export default class Spawner {
 
 			for (const ourBubble of this.playingBubbles) {
 				if (currentTime - ourBubble.timeStamp > 5000) {
-					this.ourApp.logMessage("5 seconds has expired, pulling playing bubble");
+					//this.ourApp.logMessage("5 seconds has expired, pulling playing bubble");
 					ourBubble.actor.destroy();
 					listOfPlayingBubblesToDelete.push(ourBubble);
 				}
@@ -103,8 +103,10 @@ export default class Spawner {
 				`Time: ${this.pad(timeNow.getHours(),2,'0')}:`+
 				`${this.pad(timeNow.getMinutes(),2,'0')}:` +
 				`${this.pad(timeNow.getSeconds(),2,'0')} - ` +
-				`${this.playingBubbles.length} playing, ` +
-				`${this.availableBubbles.length} playable`);
+				`${this.playingBubbles.length} playing ` +
+				`(${listOfPlayingBubblesToDelete.length} culled) `+
+				`${this.availableBubbles.length} playable `+
+				`(${listOfAvailableBubblesToDelete.length} culled)`);
 
 		}, 1000);
 	}
@@ -164,7 +166,8 @@ export default class Spawner {
 		this.ourApp.logMessage("complete all spawner object creation");
 	}
 
-	private createBubble(pos: MRE.Vector3, rot: MRE.Quaternion, scale: number): BubbleProperties{
+	private createBubble(pos: MRE.Vector3, rot: MRE.Quaternion, scale: number,
+		vel: MRE.Vector3, mat: MRE.Material): BubbleProperties {
 		this.ourApp.logMessage("trying to create bubble at: " + pos);
 
 		const bubbleActor = MRE.Actor.Create(this.context, {
@@ -180,7 +183,17 @@ export default class Spawner {
 				},
 				appearance: {
 					meshId: this.boxMesh.id,
-					enabled: true
+					materialId: mat.id
+				},
+				collider: {
+					geometry: {
+						shape: MRE.ColliderType.Box
+					},
+					isTrigger: false
+				},
+				rigidBody: {
+					useGravity: false,
+					velocity: vel
 				}
 			}
 		});
@@ -191,16 +204,6 @@ export default class Spawner {
 		};
 
 		this.availableBubbles.push(ourBubble);
-
-		bubbleActor.setCollider(MRE.ColliderType.Box, false);
-		bubbleActor.collider.enabled = true;
-
-		bubbleActor.enableRigidBody({
-			enabled: true,
-			isKinematic: false,
-			useGravity: false,
-			//collisionDetectionMode: MRE.CollisionDetectionMode.ContinuousDynamic
-		});
 
 		return ourBubble;
 	}
@@ -227,7 +230,6 @@ export default class Spawner {
 	}
 
 	private mapRange(input: number, inputLow: number, inputHigh: number, outputLow: number, outputHigh: number) {
-
 		const inputRange = inputHigh - inputLow;
 		const inputPercent = (input - inputLow) / inputRange;
 		const outputRange = outputHigh - outputLow;
@@ -243,29 +245,28 @@ export default class Spawner {
 		const scale = 0.05; //this.mapRange(note,21,108,1.0,0.1) * 0.04;
 		const speed = -0.1; //this.mapRange(note,21,108,0.1,1.0) * -0.5;
 
-		MRE.log.error("app", "  scale will be: " + scale);
-		MRE.log.error("app", "  speed will be: " + speed);
-	
+		//MRE.log.error("app", "  scale will be: " + scale);
+		//MRE.log.error("app", "  speed will be: " + speed);
+
 		const spawnPos = new MRE.Vector3(
 			Math.random() * this.spawnerWidth - this.spawnerWidth * 0.5,
 			0.1 + Math.random() * 0.2,
-			0.0);	
+			0.0);
 
-		const spawnRot = 
-			MRE.Quaternion.FromEulerAngles(Math.random()*360,Math.random()*360,Math.random()*360);
+		const spawnRot =
+			MRE.Quaternion.FromEulerAngles(Math.random() * 360, Math.random() * 360, Math.random() * 360);
+
+		const spawnerRot = this.ourSpawner.transform.app.rotation;
+		const forVec = new MRE.Vector3(0, 0, 1);
+		const spawnForVec = new MRE.Vector3(0, 0, 0);
+		forVec.rotateByQuaternionToRef(spawnerRot, spawnForVec);
+		const velocityVec = spawnForVec.multiplyByFloats(speed, speed, speed);
 
 		//TODO: enforce limit on max number of spawned bubbles here
 
-		const ourBubble=this.createBubble(spawnPos,spawnRot, scale)
-		
-		const spawnerRot=this.ourSpawner.transform.app.rotation;
-		const forVec=new MRE.Vector3(0,0,1);
-		const spawnForVec=new MRE.Vector3(0,0,0);		
-		forVec.rotateByQuaternionToRef(spawnerRot,spawnForVec);
-		const velocityVec=spawnForVec.multiplyByFloats(speed,speed,speed);
+		const ourBubble = this.createBubble(spawnPos, spawnRot, scale, velocityVec, this.noteMaterials[noteNum]);
 
-		ourBubble.actor.rigidBody.velocity =
-		{
+		ourBubble.actor.rigidBody.velocity = {
 			x: velocityVec.x,
 			y: velocityVec.y,
 			z: velocityVec.z
@@ -275,7 +276,6 @@ export default class Spawner {
 			const otherActor = data.otherActor;
 
 			if (this.allHands.includes(otherActor)) { //bubble touches hand
-				this.ourApp.logMessage("touched one of our hands! lets play a sound for note: " + note);
 
 				//TODO enforce polyphony here (cull oldest note)
 
@@ -292,15 +292,15 @@ export default class Spawner {
 				this.playingBubbles.push(ourBubble);
 
 				ourBubble.timeStamp = Date.now();
-				ourBubble.actor.appearance.enabled = false;
 				ourBubble.actor.collider.enabled = false;
+				ourBubble.actor.appearance.enabled = false;				
 				ourBubble.actor.rigidBody.enabled = false;
 
+				this.ourApp.logMessage("play a sound for note: " + note);
+
 			} else {
-				this.ourApp.logMessage("sphere collided with: " + otherActor.name);
+				//this.ourApp.logMessage("sphere collided with: " + otherActor.name);
 			}
-		});		
-		
-		ourBubble.actor.appearance.materialId = this.noteMaterials[noteNum].id;	
+		});
 	}
 }
