@@ -2,7 +2,8 @@
  * Licensed under the MIT License.
  */
 
-import * as MRE from '@microsoft/mixed-reality-extension-sdk';
+//import * as MRE from '@microsoft/mixed-reality-extension-sdk';
+import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 
 export default class Piano {
 	private ourKeys: MRE.Actor[] = [];

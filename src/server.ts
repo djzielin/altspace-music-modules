@@ -2,7 +2,8 @@
  * Licensed under the MIT License.
  */
 
-import * as MRE from '@microsoft/mixed-reality-extension-sdk';
+//import * as MRE from '@microsoft/mixed-reality-extension-sdk';
+import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 
 import dotenv from 'dotenv';
 import { resolve as resolvePath } from 'path';
@@ -29,6 +30,11 @@ const server = new MRE.WebHost({
 const ourReceiver: PianoReceiver = new PianoReceiver();
 
 // Handle new application sessions
-server.adapter.onConnection(context => new App(context, server.baseUrl, ourReceiver));
+server.adapter.onConnection(context => {
+	const sessionId=context.sessionId;
+	const session=(server.adapter as MRE.MultipeerAdapter).sessions[sessionId];
+	
+	return new App(context, server.baseUrl, ourReceiver, session);
+});
 
 
