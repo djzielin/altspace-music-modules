@@ -4,13 +4,13 @@
 
 //import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
-
 import Piano from './piano';
 import App from './app';
 
 interface BubbleProperties{
 	timeStamp: number;
 	actor: MRE.Actor;
+	note: number;
 }
 
 export default class Spawner {
@@ -36,36 +36,19 @@ export default class Spawner {
 	private boxMesh: MRE.Mesh;
 
 	private availableBubbles: BubbleProperties[]=[]; 
-	private playingBubbles: BubbleProperties[]=[]; 
 
 	private noteMaterials: MRE.Material[] = [];
 	private spawnerWidth=0.5;
 	private ourSpawner: MRE.Actor;
 
-	private polyphonyLimit=20; //TODO: allow these to be set in in-world GUI
 	private bubbleLimit=50;
-
-	/*
-		https://stackoverflow.com/questions/10073699/pad-a-number-with-leading-zeros-in-javascript	
-	*/	
-	private pad(value: number, maxWidth: number, padChar: string) {
-		const n = value.toString();
-		return n.length >= maxWidth ? n : new Array(maxWidth - n.length + 1).join(padChar) + n;
-	}
 
 	private removeFromAvailable(ourBubble: BubbleProperties) {
 		const index = this.availableBubbles.indexOf(ourBubble);
 		if (index > -1) {
 			this.availableBubbles.splice(index, 1);
 		}
-	}
-
-	private removeFromPlaying(ourBubble: BubbleProperties) {
-		const index = this.playingBubbles.indexOf(ourBubble);
-		if (index > -1) {
-			this.playingBubbles.splice(index, 1);
-		}
-	}
+	}	
 
 	constructor(private context: MRE.Context, private baseUrl: string, private assets: MRE.AssetContainer,
 		private ourPiano: Piano, private allHands: MRE.Actor[], private ourApp: App) {
@@ -73,7 +56,6 @@ export default class Spawner {
 		setInterval(() => { //cull bubbles that have been around too long
 			const currentTime = Date.now();
 			const listOfAvailableBubblesToDelete: BubbleProperties[]=[];
-			const listOfPlayingBubblesToDelete: BubbleProperties[]=[];
 
 			for (const ourBubble of this.availableBubbles) {
 				if (currentTime - ourBubble.timeStamp > 10000) {
@@ -81,35 +63,20 @@ export default class Spawner {
 					ourBubble.actor.destroy();
 					listOfAvailableBubblesToDelete.push(ourBubble);
 				}
-			}
-
-			for (const ourBubble of this.playingBubbles) {
-				if (currentTime - ourBubble.timeStamp > 5000) {
-					//this.ourApp.logMessage("5 seconds has expired, pulling playing bubble");
-					ourBubble.actor.destroy();
-					listOfPlayingBubblesToDelete.push(ourBubble);
-				}
-			}
+			}		
 			
 			for(const ourBubble of listOfAvailableBubblesToDelete){
 				this.removeFromAvailable(ourBubble);
-			}
-
-			for(const ourBubble of listOfPlayingBubblesToDelete){
-				this.removeFromPlaying(ourBubble);
-			}
+			}		
 	
 			const timeNow=new Date(Date.now());			
 
 			this.ourApp.logMessage(
-				`Time: ${this.pad(timeNow.getHours(),2,'0')}:`+
-				`${this.pad(timeNow.getMinutes(),2,'0')}:` +
-				`${this.pad(timeNow.getSeconds(),2,'0')} - ` +
-				`${this.playingBubbles.length} playing ` +
-				`(${listOfPlayingBubblesToDelete.length} culled) - `+
+				`Time: ${this.ourApp.pad(timeNow.getHours(),2,'0')}:`+
+				`${this.ourApp.pad(timeNow.getMinutes(),2,'0')}:` +
+				`${this.ourApp.pad(timeNow.getSeconds(),2,'0')} - ` +
 				`${this.availableBubbles.length} playable `+
 				`(${listOfAvailableBubblesToDelete.length} culled)`);
-
 		}, 1000);
 	}
 
@@ -195,13 +162,15 @@ export default class Spawner {
 				rigidBody: {
 					useGravity: false,
 					velocity: vel
-				}
+				},
+				subscriptions: ['transform'],
 			}
 		});
 
 		const ourBubble={
 			timeStamp: Date.now(),
 			actor: bubbleActor,
+			note: 0
 		};
 
 		this.availableBubbles.push(ourBubble);
@@ -267,43 +236,38 @@ export default class Spawner {
 		const velocityVec = spawnForVec.multiplyByFloats(speed, speed, speed);
 
 		const ourBubble = this.createBubble(spawnPos, spawnRot, scale, velocityVec, this.noteMaterials[noteNum]);
-
-		ourBubble.actor.rigidBody.velocity = {
-			x: velocityVec.x,
-			y: velocityVec.y,
-			z: velocityVec.z
-		};
+		ourBubble.note=note;
 
 		ourBubble.actor.collider.onCollision("collision-enter", (data: MRE.CollisionData) => {
 			const otherActor = data.otherActor;
 
 			if (this.allHands.includes(otherActor)) { //bubble touches hand
 
-				while(this.playingBubbles.length>this.polyphonyLimit){
-					this.ourApp.logMessage("culling bubble. enforcing polyphony limit of: " + this.polyphonyLimit);
-					const bubbleToCull=this.playingBubbles.shift();
-					bubbleToCull.actor.destroy();
-				}
-
-				ourBubble.actor.startSound(this.ourPiano.getSoundGUID(note), {
+				/*ourBubble.actor.startSound(this.ourPiano.getSoundGUID(note), {
 					doppler: 0,
 					pitch: 0.0,
 					looping: false,
 					paused: false,
-					volume: 1.0,
+					volume: 0.75,
 					rolloffStartDistance: 10.0
-				});
+				});*/
+
+				//TODO play sound here
+				this.ourApp.ourWavPlayer.playSound(note,127,ourBubble.actor.transform.app.position);
 
 				this.removeFromAvailable(ourBubble);
-				this.playingBubbles.push(ourBubble);
+				ourBubble.actor.destroy();
 
-				ourBubble.timeStamp = Date.now();
-				ourBubble.actor.collider.enabled = false;
-				ourBubble.actor.appearance.enabled = false;				
-				ourBubble.actor.rigidBody.enabled = false;
+				//this.playingBubbles.push(ourBubble);
+				//ourBubble.timeStamp = Date.now();
+				//ourBubble.actor.collider.enabled = false;
+				//ourBubble.actor.appearance.enabled = false;				
+				//ourBubble.actor.rigidBody.enabled = false;
 
 				this.ourApp.logMessage("play a sound for note: " + note);
 
+				this.ourApp.ourSender.send(`["/NoteOn",${ourBubble.note}]`);
+		
 			} else {
 				//this.ourApp.logMessage("sphere collided with: " + otherActor.name);
 			}

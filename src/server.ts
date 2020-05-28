@@ -9,6 +9,7 @@ import dotenv from 'dotenv';
 import { resolve as resolvePath } from 'path';
 import App from './app';
 import PianoReceiver from './receiver'
+import OscSender from './sender';
 
 /* eslint-disable no-console */
 process.on('uncaughtException', err => console.log('uncaughtException', err));
@@ -28,13 +29,16 @@ const server = new MRE.WebHost({
 });
 
 const ourReceiver: PianoReceiver = new PianoReceiver();
+const ourSender: OscSender = new OscSender();
 
+//const ourReceiver: PianoReceiver=null;
+//const ourSender: OscSender=null;
 // Handle new application sessions
 server.adapter.onConnection(context => {
 	const sessionId=context.sessionId;
 	const session=(server.adapter as MRE.MultipeerAdapter).sessions[sessionId];
-	
-	return new App(context, server.baseUrl, ourReceiver, session);
+
+	return new App(context, server.baseUrl, ourReceiver, ourSender, session);
 });
 
 

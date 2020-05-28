@@ -7,8 +7,6 @@ import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 
 export default class Piano {
 	private ourKeys: MRE.Actor[] = [];
-	private ourSounds: MRE.Sound[] = [];
-	private activeSounds: Map<number, MRE.MediaInstance> = new Map();
 	public keyboardParent: MRE.Actor;
 	
 	private inch = 0.0254;
@@ -102,11 +100,11 @@ export default class Piano {
 
 		for (let i = 21; i < 109; i++) {
 			let meshId: MRE.Guid = blackKeyMesh.id;
-			//let mattId: MRE.Guid = blackKeyMaterial.id;
+			let mattId: MRE.Guid = blackKeyMaterial.id;
 
 			if (this.zOffset[note] === 0) {
 				meshId = whiteKeyMesh.id;
-				//mattId = whiteKeyMaterial.id;
+				mattId = whiteKeyMaterial.id;
 			}
 
 			const keyPos = new MRE.Vector3(
@@ -124,7 +122,7 @@ export default class Piano {
 					appearance:
 					{
 						meshId: meshId,
-						materialId: this.redKeyMaterial.id
+						materialId: mattId //this.redKeyMaterial.id
 					},
 				}
 			});
@@ -138,33 +136,7 @@ export default class Piano {
 				octave++;
 			}
 		}
-	}
-
-	public async loadAllSounds() {
-		let octave = 0;
-		let note = 9;
-
-		for (let i = 21; i < 109; i++) {
-			const filename = `${this.baseUrl}/mono_5s_wav/` +
-				"Piano.ff." + this.noteOrder[note] +
-				octave.toString() + ".wav";
-
-			MRE.log.info("app", "trying to load: " + filename);
-			const newSound = this.assets.createSound("pianoKey" + i, {
-				uri: filename
-			});
-			await newSound.created;
-			MRE.log.info("app", " Loaded!");
-			this.setProperKeyColor(i);
-			this.ourSounds.push(newSound);
-
-			note = note + 1;
-			if (note === 12) {
-				note = 0;
-				octave++;
-			}
-		}
-	}
+	}	
 
 	public keyPressed(note: number) {
 		const adjustedMidiNote: number = note - 21;
@@ -184,31 +156,5 @@ export default class Piano {
 
 		this.ourKeys[adjustedMidiNote].transform.local.position =
 			new MRE.Vector3(currentPos.x, this.yOffset[noteNum], currentPos.z);
-	}
-
-	public getSoundGUID(note: number) {
-		const adjustedNote: number = note - 21;
-		return this.ourSounds[adjustedNote].id;
-	}
-
-	public playSound(note: number, vel: number) {
-	/*	const adjustedNote: number = note - 21;
-		const soundInstance: MRE.MediaInstance =
-			this.ourKeys[adjustedNote].startSound(this.getSoundGUID(note), {
-				doppler: 0,
-				pitch: 24.0,
-				looping: false,
-				volume: vel / 127
-			});
-		this.activeSounds.set(note, soundInstance);
-		*/
-	}
-
-	public stopSound(note: number) {
-		if (this.activeSounds.has(note)) {
-			const playingSoud: MRE.MediaInstance = this.activeSounds.get(note);
-			playingSoud.stop();
-			this.activeSounds.delete(note);
-		}
 	}
 }
