@@ -6,6 +6,7 @@
 import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 import Piano from './piano';
 import App from './app';
+import SpawnerGUI from './spawner_gui';
 
 interface BubbleProperties{
 	timeStamp: number;
@@ -43,6 +44,34 @@ export default class Spawner {
 
 	private bubbleLimit=50;
 
+	public timeOut=10.0;
+	public bubbleSize=0.05;
+	public bubbleSpeed=0.1;
+
+	/*public setTimeOut = (n: number): void => {
+		this.timeOut=n;
+	}
+
+	public setBubbleSize= (n: number): void => {
+		this.bubbleSize=n;
+	}
+	public setBubbleSpeed=(n: number): void => {
+		this.bubbleSpeed=n;
+	}*/
+
+	public setTimeOut(n: number): void {
+		this.timeOut=n;
+	}
+
+	public setBubbleSize(n: number): void {
+		this.bubbleSize=n;
+	}
+	public setBubbleSpeed(n: number): void {
+		this.bubbleSpeed=n;
+	}
+
+	private ourSpawnerGUI: SpawnerGUI=null;
+
 	private removeFromAvailable(ourBubble: BubbleProperties) {
 		const index = this.availableBubbles.indexOf(ourBubble);
 		if (index > -1) {
@@ -50,16 +79,14 @@ export default class Spawner {
 		}
 	}	
 
-	constructor(private context: MRE.Context, private baseUrl: string, private assets: MRE.AssetContainer,
-		private ourPiano: Piano, private allHands: MRE.Actor[], private ourApp: App) {
+	constructor(private ourApp: App) {
 
 		setInterval(() => { //cull bubbles that have been around too long
 			const currentTime = Date.now();
 			const listOfAvailableBubblesToDelete: BubbleProperties[]=[];
 
 			for (const ourBubble of this.availableBubbles) {
-				if (currentTime - ourBubble.timeStamp > 10000) {
-					//this.ourApp.logMessage("10 seconds has expired, pulling unplayed bubble");
+				if (currentTime - ourBubble.timeStamp > (this.timeOut*1000)) {
 					ourBubble.actor.destroy();
 					listOfAvailableBubblesToDelete.push(ourBubble);
 				}
@@ -71,7 +98,7 @@ export default class Spawner {
 	
 			const timeNow=new Date(Date.now());			
 
-			this.ourApp.logMessage(
+			this.ourApp.ourConsole.logMessage(
 				`Time: ${this.ourApp.pad(timeNow.getHours(),2,'0')}:`+
 				`${this.ourApp.pad(timeNow.getMinutes(),2,'0')}:` +
 				`${this.ourApp.pad(timeNow.getSeconds(),2,'0')} - ` +
@@ -81,10 +108,10 @@ export default class Spawner {
 	}
 
 	public async createAsyncItems() {
-		this.boxMesh = this.assets.createBoxMesh('boxMesh', 1.0, 1.0, 1.0);
+		this.boxMesh = this.ourApp.assets.createBoxMesh('boxMesh', 1.0, 1.0, 1.0);
 		await this.boxMesh.created;
 
-		this.ourSpawner = MRE.Actor.Create(this.context, {
+		this.ourSpawner = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
 				name: 'spawner',
 				transform: {
@@ -107,7 +134,7 @@ export default class Spawner {
 		this.ourSpawner.grabbable = true; //so we can move it around
 		this.ourSpawner.subscribe('transform'); //so we can get pos updates
 
-		MRE.Actor.Create(this.context, {
+		MRE.Actor.Create(this.ourApp.context, {
 			actor: {
 				name: 'spawner',
 				parentId: this.ourSpawner.id,
@@ -124,21 +151,24 @@ export default class Spawner {
 		});
 
 		for (const noteColor of this.noteColors) {
-			const ourMat: MRE.Material = this.assets.createMaterial('bubblemat', {
+			const ourMat: MRE.Material = this.ourApp.assets.createMaterial('bubblemat', {
 				color: noteColor
 				//mainTextureId: this.sphereTexture.id
 			});
 			await ourMat.created;
 			this.noteMaterials.push(ourMat);
 		}
+		this.ourApp.ourConsole.logMessage("completed all spawner object creation");
 
-		this.ourApp.logMessage("complete all spawner object creation");
+		this.ourSpawnerGUI=new SpawnerGUI(this.ourApp, this);
+		await this.ourSpawnerGUI.createAsync();
+
 	}
 
 	private createBubble(pos: MRE.Vector3, rot: MRE.Quaternion, scale: number,
 		vel: MRE.Vector3, mat: MRE.Material): BubbleProperties {
 		
-		const bubbleActor = MRE.Actor.Create(this.context, {
+		const bubbleActor = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
 				name: 'sphere',
 				parentId: this.ourSpawner.id,
@@ -179,7 +209,7 @@ export default class Spawner {
 	}
 
 	private spawnParticleEffect(pos: MRE.Vector3) {
-		const particleActor = MRE.Actor.CreateFromLibrary(this.context, {
+		const particleActor = MRE.Actor.CreateFromLibrary(this.ourApp.context, {
 			resourceId: "artifact:1474401976627233047",
 			actor: {
 				name: 'particle burst',
@@ -194,7 +224,7 @@ export default class Spawner {
 			}
 		});
 		setTimeout(() => {
-			this.ourApp.logMessage("2 seconds has expired. deleting particle effect");
+			this.ourApp.ourConsole.logMessage("2 seconds has expired. deleting particle effect");
 			particleActor.destroy();
 		}, 2000);
 	}
@@ -209,14 +239,14 @@ export default class Spawner {
 	}
 
 	public spawnBubble(note: number, vel: number) {
-		this.ourApp.logMessage("trying to spawn bubble for: " + note);
+		this.ourApp.ourConsole.logMessage("trying to spawn bubble for: " + note);
 		//const octave = Math.floor(note / 12);
 		const noteNum = note % 12;
-		const scale = 0.05; //this.mapRange(note,21,108,1.0,0.1) * 0.04;
-		const speed = -0.1; //this.mapRange(note,21,108,0.1,1.0) * -0.5;
+		const scale = this.bubbleSize; //0.05; //this.mapRange(note,21,108,1.0,0.1) * 0.04;
+		const speed = this.bubbleSpeed; //0.1; //this.mapRange(note,21,108,0.1,1.0) * -0.5;
 
 		while(this.availableBubbles.length>this.bubbleLimit){
-			this.ourApp.logMessage("culling bubble. enforcing bubble limit of: " + this.bubbleLimit);
+			this.ourApp.ourConsole.logMessage("culling bubble. enforcing bubble limit of: " + this.bubbleLimit);
 			const bubbleToCull=this.availableBubbles.shift();
 			bubbleToCull.actor.destroy();
 		}
@@ -233,7 +263,7 @@ export default class Spawner {
 		const forVec = new MRE.Vector3(0, 0, 1);
 		const spawnForVec = new MRE.Vector3(0, 0, 0);
 		forVec.rotateByQuaternionToRef(spawnerRot, spawnForVec);
-		const velocityVec = spawnForVec.multiplyByFloats(speed, speed, speed);
+		const velocityVec = spawnForVec.multiplyByFloats(-speed, -speed, -speed);
 
 		const ourBubble = this.createBubble(spawnPos, spawnRot, scale, velocityVec, this.noteMaterials[noteNum]);
 		ourBubble.note=note;
@@ -241,7 +271,7 @@ export default class Spawner {
 		ourBubble.actor.collider.onCollision("collision-enter", (data: MRE.CollisionData) => {
 			const otherActor = data.otherActor;
 
-			if (this.allHands.includes(otherActor)) { //bubble touches hand
+			if (this.ourApp.allHands.includes(otherActor)) { //bubble touches hand
 
 				/*ourBubble.actor.startSound(this.ourPiano.getSoundGUID(note), {
 					doppler: 0,
@@ -264,12 +294,12 @@ export default class Spawner {
 				//ourBubble.actor.appearance.enabled = false;				
 				//ourBubble.actor.rigidBody.enabled = false;
 
-				this.ourApp.logMessage("play a sound for note: " + note);
+				this.ourApp.ourConsole.logMessage("play a sound for note: " + note);
 
 				this.ourApp.ourSender.send(`["/NoteOn",${ourBubble.note}]`);
 		
 			} else {
-				//this.ourApp.logMessage("sphere collided with: " + otherActor.name);
+				//this.ourApp.ourConsole.logMessage("sphere collided with: " + otherActor.name);
 			}
 		});
 	}

@@ -4,6 +4,7 @@
 
 //import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
+import App from './app';
 
 export default class Piano {
 	private ourKeys: MRE.Actor[] = [];
@@ -34,13 +35,13 @@ export default class Piano {
 	private noteOrder =
 		["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
 
-	private whiteKeyMaterial: MRE.Material = this.assets.createMaterial('cubemat', {
+	private whiteKeyMaterial: MRE.Material = this.ourApp.assets.createMaterial('cubemat', {
 		color: new MRE.Color4(1, 1, 1)
 	});
-	private blackKeyMaterial: MRE.Material = this.assets.createMaterial('cubemat', {
+	private blackKeyMaterial: MRE.Material = this.ourApp.assets.createMaterial('cubemat', {
 		color: new MRE.Color4(0, 0, 0)
 	});
-	private redKeyMaterial: MRE.Material = this.assets.createMaterial('cubemat', {
+	private redKeyMaterial: MRE.Material = this.ourApp.assets.createMaterial('cubemat', {
 		color: new MRE.Color4(1, 0, 0)
 	});
 
@@ -56,7 +57,7 @@ export default class Piano {
 		this.ourKeys[midiNote - 21].appearance.material = matt;
 	}
 
-	constructor(private context: MRE.Context, private baseUrl: string, private assets: MRE.AssetContainer) {
+	constructor(private ourApp: App) {
 
 	}
 
@@ -64,24 +65,24 @@ export default class Piano {
 		let octave = 0;
 		let note = 9;
 
-		const whiteKeyMesh = this.assets.createBoxMesh('box', this.inch * 0.9, this.inch, this.inch * 5.5);
+		const whiteKeyMesh = this.ourApp.assets.createBoxMesh('box', this.inch * 0.9, this.inch, this.inch * 5.5);
 		await whiteKeyMesh.created;
 
-		const blackKeyMesh = this.assets.createBoxMesh('box', this.halfinch, this.inch, this.inch * 3.5);
+		const blackKeyMesh = this.ourApp.assets.createBoxMesh('box', this.halfinch, this.inch, this.inch * 3.5);
 		await blackKeyMesh.created;
 
-		const whiteKeyMaterial: MRE.Material = this.assets.createMaterial('cubemat', {
+		const whiteKeyMaterial: MRE.Material = this.ourApp.assets.createMaterial('cubemat', {
 			color: new MRE.Color4(1, 1, 1)
 		});
 		await whiteKeyMaterial.created;
 
 
-		const blackKeyMaterial: MRE.Material = this.assets.createMaterial('cubemat', {
+		const blackKeyMaterial: MRE.Material = this.ourApp.assets.createMaterial('cubemat', {
 			color: new MRE.Color4(0, 0, 0)
 		});
 		await blackKeyMaterial.created;
 
-		this.keyboardParent = MRE.Actor.Create(this.context, {
+		this.keyboardParent = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
 				name: 'keyboard_parent',
 				transform: {
@@ -112,7 +113,7 @@ export default class Piano {
 				this.yOffset[note],
 				this.zOffset[note]);
 
-			const keyActor = MRE.Actor.Create(this.context, {
+			const keyActor = MRE.Actor.Create(this.ourApp.context, {
 				actor: {
 					name: 'PianoKey' + i,
 					parentId: this.keyboardParent.id,

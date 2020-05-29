@@ -28,15 +28,14 @@ export default class WavPlayer {
 		}
 	}	
 
-	constructor(private context: MRE.Context, private baseUrl: string,
-		private assets: MRE.AssetContainer, private ourApp: App) {
+	constructor(private ourApp: App) {
 		setInterval(() => { //cull bubbles that have been around too long
 			const currentTime = Date.now();
 			const listOfPlayingWavsToDelete: WavProperties[] = [];
 
 			for (const ourWave of this.playingWavs) {
 				if (currentTime - ourWave.timeStamp > 5000) {
-					//this.ourApp.logMessage("5 seconds has expired, pulling playing bubble");
+					//this.ourApp.ourConsole.logMessage("5 seconds has expired, pulling playing bubble");
 					ourWave.actor.destroy();
 					listOfPlayingWavsToDelete.push(ourWave);
 				}
@@ -48,7 +47,7 @@ export default class WavPlayer {
 
 			const timeNow = new Date(Date.now());
 
-			this.ourApp.logMessage(
+			this.ourApp.ourConsole.logMessage(
 				`Time: ${this.ourApp.pad(timeNow.getHours(), 2, '0')}:` +
 				`${this.ourApp.pad(timeNow.getMinutes(), 2, '0')}:` +
 				`${this.ourApp.pad(timeNow.getSeconds(), 2, '0')} - ` +
@@ -62,18 +61,18 @@ export default class WavPlayer {
 		let note = 9;
 
 		for (let i = 21; i < 109; i++) {
-			//const filename = `${this.baseUrl}/mono_5s_wav/` +
-			const filename = `${this.baseUrl}/mono_5s_ogg/` +
+			//const filename = `${this.ourApp.baseUrl}/mono_5s_wav/` +
+			const filename = `${this.ourApp.baseUrl}/mono_5s_ogg/` +
 
 				"Piano.ff." + this.noteOrder[note] +
 				octave.toString() + ".ogg";
 
-			this.ourApp.logMessage("trying to load: " + filename);
-			const newSound = this.assets.createSound("pianoKey" + i, {
+			this.ourApp.ourConsole.logMessage("trying to load: " + filename);
+			const newSound = this.ourApp.assets.createSound("pianoKey" + i, {
 				uri: filename
 			});
 			await newSound.created;
-			this.ourApp.logMessage(" all sounds Loaded!");
+			this.ourApp.ourConsole.logMessage(" all sounds Loaded!");
 			this.ourSounds.push(newSound);
 
 			note = note + 1;
@@ -93,12 +92,12 @@ export default class WavPlayer {
 		const adjustedNote: number = note - 21;
 
 		while(this.playingWavs.length>this.polyphonyLimit){
-			this.ourApp.logMessage("culling wav. enforcing polyphony limit of: " + this.polyphonyLimit);
+			this.ourApp.ourConsole.logMessage("culling wav. enforcing polyphony limit of: " + this.polyphonyLimit);
 			const wavToCull=this.playingWavs.shift();
 			wavToCull.actor.destroy();
 		}
 
-		const soundActor = MRE.Actor.Create(this.context, {
+		const soundActor = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
 				name: 'sound',
 				transform: {
