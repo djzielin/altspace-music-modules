@@ -39,25 +39,27 @@ export default class Spawner {
 	private availableBubbles: BubbleProperties[]=[]; 
 
 	private noteMaterials: MRE.Material[] = [];
-	private spawnerWidth=0.5;
+	public spawnerWidth=0.5;
+	public spawnerHeight=0.2;
 	private ourSpawner: MRE.Actor;
+	private spawnerActor: MRE.Actor;
 
 	private bubbleLimit=50;
 
 	public timeOut=10.0;
 	public bubbleSize=0.05;
 	public bubbleSpeed=0.1;
+	public doParticleEffect=false;
+	public doPosRandom=true;
+	public noFreezeRotation=true;
 
-	/*public setTimeOut = (n: number): void => {
-		this.timeOut=n;
+	public setEmitterWidth(n: number): void {
+		this.spawnerWidth=n;
+		this.spawnerActor.transform.local.scale=new MRE.Vector3(this.spawnerWidth, 0.01, 0.05);
 	}
-
-	public setBubbleSize= (n: number): void => {
-		this.bubbleSize=n;
+	public setEmitterHeight(n: number): void {
+		this.spawnerHeight=n;
 	}
-	public setBubbleSpeed=(n: number): void => {
-		this.bubbleSpeed=n;
-	}*/
 
 	public setTimeOut(n: number): void {
 		this.timeOut=n;
@@ -68,6 +70,18 @@ export default class Spawner {
 	}
 	public setBubbleSpeed(n: number): void {
 		this.bubbleSpeed=n;
+	}
+
+	public setDoParticleEffect(b: boolean): void {
+		this.doParticleEffect=b;
+	}
+
+	public setDoPosRandom(b: boolean): void {
+		this.doPosRandom=b;
+	}
+
+	public setNoFreezeRotation(b: boolean): void {
+		this.noFreezeRotation=b;
 	}
 
 	private ourSpawnerGUI: SpawnerGUI=null;
@@ -134,7 +148,7 @@ export default class Spawner {
 		this.ourSpawner.grabbable = true; //so we can move it around
 		this.ourSpawner.subscribe('transform'); //so we can get pos updates
 
-		MRE.Actor.Create(this.ourApp.context, {
+		this.spawnerActor=MRE.Actor.Create(this.ourApp.context, {
 			actor: {
 				name: 'spawner',
 				parentId: this.ourSpawner.id,
@@ -149,6 +163,7 @@ export default class Spawner {
 				}
 			}
 		});
+		await this.spawnerActor.created();
 
 		for (const noteColor of this.noteColors) {
 			const ourMat: MRE.Material = this.ourApp.assets.createMaterial('bubblemat', {
@@ -168,6 +183,12 @@ export default class Spawner {
 	private createBubble(pos: MRE.Vector3, rot: MRE.Quaternion, scale: number,
 		vel: MRE.Vector3, mat: MRE.Material): BubbleProperties {
 		
+		let constraints=[MRE.RigidBodyConstraints.None];
+
+		if(!this.noFreezeRotation){
+			constraints=[MRE.RigidBodyConstraints.FreezeRotation];
+		}
+
 		const bubbleActor = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
 				name: 'sphere',
@@ -191,11 +212,12 @@ export default class Spawner {
 				},
 				rigidBody: {
 					useGravity: false,
-					velocity: vel
+					velocity: vel,
+					constraints: constraints
 				},
 				subscriptions: ['transform'],
 			}
-		});
+		});		
 
 		const ourBubble={
 			timeStamp: Date.now(),
@@ -209,6 +231,10 @@ export default class Spawner {
 	}
 
 	private spawnParticleEffect(pos: MRE.Vector3) {
+		if(!this.doParticleEffect){
+			return;
+		}
+
 		const particleActor = MRE.Actor.CreateFromLibrary(this.ourApp.context, {
 			resourceId: "artifact:1474401976627233047",
 			actor: {
@@ -240,7 +266,7 @@ export default class Spawner {
 
 	public spawnBubble(note: number, vel: number) {
 		this.ourApp.ourConsole.logMessage("trying to spawn bubble for: " + note);
-		//const octave = Math.floor(note / 12);
+		const octave = Math.floor(note / 12);
 		const noteNum = note % 12;
 		const scale = this.bubbleSize; //0.05; //this.mapRange(note,21,108,1.0,0.1) * 0.04;
 		const speed = this.bubbleSpeed; //0.1; //this.mapRange(note,21,108,0.1,1.0) * -0.5;
@@ -251,10 +277,19 @@ export default class Spawner {
 			bubbleToCull.actor.destroy();
 		}
 
-		const spawnPos = new MRE.Vector3(
-			Math.random() * this.spawnerWidth - this.spawnerWidth * 0.5,
-			0.1 + Math.random() * 0.2,
-			0.0);
+		let spawnPos= new MRE.Vector3(0,0,0);
+
+		if (this.doPosRandom) {
+			spawnPos = new MRE.Vector3(
+				Math.random() * this.spawnerWidth - this.spawnerWidth * 0.5,
+				(scale * 2.0) + Math.random() * this.spawnerHeight,
+				0.0);
+		} else {
+			spawnPos = new MRE.Vector3(
+				this.spawnerWidth * (noteNum / 11) - this.spawnerWidth * 0.5,
+				(scale * 2.0) + (octave - 1) / 8 * this.spawnerHeight,
+				0.0);
+		}
 
 		const spawnRot =
 			MRE.Quaternion.FromEulerAngles(Math.random() * 360, Math.random() * 360, Math.random() * 360);
@@ -272,32 +307,13 @@ export default class Spawner {
 			const otherActor = data.otherActor;
 
 			if (this.ourApp.allHands.includes(otherActor)) { //bubble touches hand
-
-				/*ourBubble.actor.startSound(this.ourPiano.getSoundGUID(note), {
-					doppler: 0,
-					pitch: 0.0,
-					looping: false,
-					paused: false,
-					volume: 0.75,
-					rolloffStartDistance: 10.0
-				});*/
-
-				//TODO play sound here
 				this.ourApp.ourWavPlayer.playSound(note,127,ourBubble.actor.transform.app.position);
-
+				this.spawnParticleEffect(ourBubble.actor.transform.app.position);
+				this.ourApp.ourSender.send(`["/NoteOn",${ourBubble.note}]`);
+				
 				this.removeFromAvailable(ourBubble);
 				ourBubble.actor.destroy();
-
-				//this.playingBubbles.push(ourBubble);
-				//ourBubble.timeStamp = Date.now();
-				//ourBubble.actor.collider.enabled = false;
-				//ourBubble.actor.appearance.enabled = false;				
-				//ourBubble.actor.rigidBody.enabled = false;
-
-				this.ourApp.ourConsole.logMessage("play a sound for note: " + note);
-
-				this.ourApp.ourSender.send(`["/NoteOn",${ourBubble.note}]`);
-		
+				this.ourApp.ourConsole.logMessage("bubble popped for note: " + note);		
 			} else {
 				//this.ourApp.ourConsole.logMessage("sphere collided with: " + otherActor.name);
 			}

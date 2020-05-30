@@ -5,22 +5,42 @@
 //import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 import App from './app';
+import Button from './button';
 
 export default class Console {
 	private consoleTextActor: MRE.Actor = null;
 	private consoleText: string[] = [];
 	private consoleOn = true;
 	private consoleParent: MRE.Actor = null;
-
+	private consoleHolder: MRE.Actor=null;
+	
 	constructor(private ourApp: App) {
 		for (let i = 0; i < 25; i++) {
 			this.consoleText.push("");
 		}
 	}
 
+	public setConsoleOn(b: boolean): void {
+		this.consoleOn=b;
+		this.consoleParent.appearance.enabled = this.consoleOn;
+	}
+
 	private async createConsole() {
+		this.consoleHolder = MRE.Actor.Create(this.ourApp.context, {
+			actor: {
+				name: "hold_elements",
+				appearance: {
+				},
+				transform: {
+					local: {
+					}
+				}
+			}
+		});
+
 		this.consoleParent = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
+				parentId: this.consoleHolder.id,
 				name: "parent",
 				transform: {
 					local: {
@@ -80,63 +100,9 @@ export default class Console {
 
 	private async createConsoleToggleButton() {
 
-		const button = MRE.Actor.Create(this.ourApp.context, {
-			actor: {
-				//parentId: menu.id,
-				name: "consoleToggleButton",
-				appearance: {
-					meshId: this.ourApp.boxMesh.id,
-					materialId: this.ourApp.greenMat.id
-				},
-				collider: { geometry: { shape: MRE.ColliderType.Auto } },
-				transform: {
-					local: {
-						position: { x: 0, y: 0.05, z: 0.3 },
-						scale: new MRE.Vector3(0.75, 0.1, 0.1)
-					}
-				}
-			}
-		});
-
-		await button.created();
-
-		const buttonLabel = MRE.Actor.Create(this.ourApp.context, {
-			actor: {
-				name: 'label',
-				text: {
-					contents: "Console is On",
-					height: 0.1,
-					anchor: MRE.TextAnchorLocation.MiddleCenter
-				},
-				transform: {
-					local: {
-						position: { x: 0, y: 0.101, z: 0.3 },
-						rotation: MRE.Quaternion.FromEulerAngles(this.ourApp.degToRad(90), 0, 0)
-					}
-				}
-			}
-		});
-		await buttonLabel.created();
-
-		// Set a click handler on the button.
-		button.setBehavior(MRE.ButtonBehavior)
-			.onClick(() => {
-				if (this.consoleOn) {
-					this.consoleOn = false;
-					if (this.consoleParent) {
-						this.consoleParent.appearance.enabled = false;
-						button.appearance.material = this.ourApp.redMat;
-					}
-					buttonLabel.text.contents = "Console is Off";
-				} else {
-					this.consoleOn = true;
-					if (this.consoleParent) {
-						this.consoleParent.appearance.enabled = true;
-						button.appearance.material = this.ourApp.greenMat;
-					}
-					buttonLabel.text.contents = "Console is On";
-				}
-			});
+		const button=new Button(this.ourApp);
+		await button.createAsync(new MRE.Vector3(0,0,0.3),this.consoleHolder.id,"Console On","Console Off",
+			this.consoleOn, this.setConsoleOn.bind(this));
 	}
 
 	public async createAsyncItems() {

@@ -6,6 +6,7 @@
 import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 import App from './app';
 import PlusMinus from './plusminus';
+import Button from './button';
 import Spawner from './spawner';
 
 export default class SpawnerGui {
@@ -43,8 +44,8 @@ export default class SpawnerGui {
 				},
 				transform: {
 					local: {
-						position: { x: 0, y: 0.05, z: 0 },
-						scale: new MRE.Vector3(1, 0.1, 1)
+						position: { x: -0.025, y: 0.05, z: -0.25 },
+						scale: new MRE.Vector3(1.05, 0.1, 1.5)
 					}
 				}
 			}
@@ -78,25 +79,37 @@ export default class SpawnerGui {
 		
 		this.ourApp.ourConsole.logMessage("creating speed plus/minus");
 		const speedGUI=new PlusMinus(this.ourApp);
-		//TODO pass in real value
 		await speedGUI.createAsync(new MRE.Vector3(-0.5,0.1,0.3),this.guiParent.id,"speed",
 			this.ourSpawner.bubbleSpeed,0.01, this.ourSpawner.setBubbleSpeed.bind(this.ourSpawner)); 
 
 		const sizeGUI=new PlusMinus(this.ourApp);
-		//TODO pass in real value
 		await sizeGUI.createAsync(new MRE.Vector3(-0.5,0.1,0.15),this.guiParent.id,"size",
 			this.ourSpawner.bubbleSize,0.01, this.ourSpawner.setBubbleSize.bind(this.ourSpawner));
 
 		const timeoutGUI=new PlusMinus(this.ourApp);
-		//TODO pass in real value
 		await timeoutGUI.createAsync(new MRE.Vector3(-0.5,0.1,0.0),this.guiParent.id,"time",
 			this.ourSpawner.timeOut,1,this.ourSpawner.setTimeOut.bind(this.ourSpawner));
 
-		//size  +-
-		//timeout +-
-		//emitter width +-
-		
-		//positinioning: random / linear [stack octaves]
+		const button=new Button(this.ourApp);
+		await button.createAsync(new MRE.Vector3(0.0,0.025,-0.2),this.guiParent.id,"Particle On","ParticleOff",
+			this.ourSpawner.doParticleEffect, this.ourSpawner.setDoParticleEffect.bind(this.ourSpawner));
+
+		const randButton=new Button(this.ourApp);
+		await randButton.createAsync(new MRE.Vector3(0.0,0.025,-0.35),this.guiParent.id,"Pos Rand","Pos Lin",
+			this.ourSpawner.doPosRandom, this.ourSpawner.setDoPosRandom.bind(this.ourSpawner));
+
+		const freezeButton=new Button(this.ourApp);
+		await freezeButton.createAsync(new MRE.Vector3(0.0,0.025,-0.5),this.guiParent.id,"rot ok","no rot",
+			this.ourSpawner.noFreezeRotation, this.ourSpawner.setNoFreezeRotation.bind(this.ourSpawner));
+
+		const emitWidth=new PlusMinus(this.ourApp);
+		await emitWidth.createAsync(new MRE.Vector3(-0.5,0.1,-0.65),this.guiParent.id,"width",
+			this.ourSpawner.spawnerWidth,0.05,this.ourSpawner.setEmitterWidth.bind(this.ourSpawner));
+
+		const emitHeight=new PlusMinus(this.ourApp);
+		await emitHeight.createAsync(new MRE.Vector3(-0.5,0.1,-0.80),this.guiParent.id,"height",
+			this.ourSpawner.spawnerHeight,0.05,this.ourSpawner.setEmitterHeight.bind(this.ourSpawner));
+
 		//limit rotation?
 	}
 }
