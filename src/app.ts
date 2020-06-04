@@ -68,6 +68,16 @@ export default class App {
 		this.context.onStarted(() => this.started());
 		this.context.onUserLeft(user => this.userLeft(user));
 		this.context.onUserJoined(user => this.userJoined(user));
+	}	
+	//from functional-tests / user-test.ts
+	private formatProperties(props: { [key: string]: string }): string {
+		let output = "";
+		for (const k in props) {
+			if (Object.prototype.hasOwnProperty.call(props, k)) {
+				output += `\n   ${k}: ${props[k]}`;
+			}
+		}
+		return output;
 	}
 
 	private userJoined(user: MRE.User) {
@@ -78,6 +88,9 @@ export default class App {
 		const lHand = this.createHand('left-hand', user.id, new MRE.Vector3(0, 0, 0.1),
 			new MRE.Vector3(0.06, 0.06, 0.14));
 
+		this.ourConsole.logMessage("user properties: " + this.formatProperties(user.properties));
+
+	
 		this.allHands.push(rHand);
 		this.allHands.push(lHand);
 
