@@ -26,18 +26,6 @@ export default class Console {
 	}
 
 	private async createConsole() {
-		this.consoleHolder = MRE.Actor.Create(this.ourApp.context, {
-			actor: {
-				name: "hold_elements",
-				appearance: {
-				},
-				transform: {
-					local: {
-					}
-				}
-			}
-		});
-
 		this.consoleParent = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
 				parentId: this.consoleHolder.id,
@@ -105,7 +93,9 @@ export default class Console {
 			this.consoleOn, this.setConsoleOn.bind(this));
 	}
 
-	public async createAsyncItems() {
+	public async createAsyncItems(consoleHolder: MRE.Actor) {
+		this.consoleHolder=consoleHolder;
+
 		await this.createConsole();
 		await this.createConsoleToggleButton();
 	}

@@ -72,7 +72,7 @@ export default class WavPlayer {
 				uri: filename
 			});
 			await newSound.created;
-			this.ourApp.ourConsole.logMessage(" all sounds Loaded!");
+			this.ourApp.ourConsole.logMessage(" success! " + ((i-20)/109*100.0).toFixed(1) +"% loaded!");
 			this.ourSounds.push(newSound);
 
 			note = note + 1;

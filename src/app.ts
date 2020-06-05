@@ -273,7 +273,7 @@ export default class App {
 		});
 
 		this.ourConsole.logMessage("creating console");
-		await this.ourConsole.createAsyncItems();
+		await this.ourConsole.createAsyncItems(this.menuBase);
 
 		this.ourConsole.logMessage("Creating Reset Button ");
 		const button=new Button(this);
