@@ -115,7 +115,7 @@ export default class PlusMinus {
 			}
 		});
 
-		this.updateDisplayValue(this.ourValue);
+		this.updateDisplayValue();
 		await this.buttonValueDisplay.created();
 
 		const buttonP = MRE.Actor.Create(this.ourApp.context, {
@@ -159,22 +159,30 @@ export default class PlusMinus {
 
 		// Set a click handler on the button.
 		buttonM.setBehavior(MRE.ButtonBehavior)
-			.onButton("released",() => {
-				this.ourValue-=this.ourChangeAmount;
-				this.updateDisplayValue(this.ourValue);
-				callback(this.ourValue);
-			});	
+			.onButton("released", (user: MRE.User) => {				
+				const ourRoles = user.properties["altspacevr-roles"];
+				if (ourRoles.includes("moderator") ||
+					ourRoles.includes("presenter") || ourRoles.includes("terraformer")) {
+					this.ourValue -= this.ourChangeAmount;
+					this.updateDisplayValue();
+					callback(this.ourValue);
+				}
+			});
 		buttonP.setBehavior(MRE.ButtonBehavior)
-			.onButton("released",() => {
-				this.ourValue+=this.ourChangeAmount;
-				this.updateDisplayValue(this.ourValue);
-				callback(this.ourValue);
+			.onButton("released", (user: MRE.User) => {
+				const ourRoles = user.properties["altspacevr-roles"];
+				if (ourRoles.includes("moderator") ||
+					ourRoles.includes("presenter") || ourRoles.includes("terraformer")) {
+					this.ourValue += this.ourChangeAmount;
+					this.updateDisplayValue();
+					callback(this.ourValue);
+				}
 			});	
 	
 	}
 
-	private updateDisplayValue(displayVal: number) {
-		this.ourApp.ourConsole.logMessage(this.ourLabel + " is now: " + displayVal);
-		this.buttonValueDisplay.text.contents= displayVal.toFixed(2);
+	private updateDisplayValue() {
+		this.ourApp.ourConsole.logMessage(this.ourLabel + " is now: " + this.ourValue);
+		this.buttonValueDisplay.text.contents= this.ourValue.toFixed(2);
 	}
 }
