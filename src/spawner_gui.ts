@@ -22,7 +22,7 @@ export default class SpawnerGui {
 				name: "parent",
 				transform: {
 					local: {
-						position: { x: -1.0, y: 0.0, z: 0 },
+						position: { x: -2.0, y: 0.0, z: 0 },
 					}
 				}
 			}

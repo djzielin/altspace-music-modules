@@ -142,12 +142,12 @@ export default class App {
 			const ourUser = this.allUsers[i];
 			if(!ourUser.ourButton){
 				const ourButton=new Button(this);
-				ourButton.createAsync(new MRE.Vector3(0,0,0.5),this.menuBase.id,ourUser.name,ourUser.name,
+				ourButton.createAsync(new MRE.Vector3(0-0.6,0,0.5),this.menuBase.id,ourUser.name,ourUser.name,
 					false, this.makeAuthoritative.bind(this,ourUser));
 				ourUser.ourButton=ourButton;
 			}
 
-			ourUser.ourButton.ourHolder.transform.local.position = new MRE.Vector3(0, 0, -0.15 - i * 0.15);
+			ourUser.ourButton.ourHolder.transform.local.position = new MRE.Vector3(0-0.6, 0, -0.15 - i * 0.15);
 			if (ourUser.userID === authoritativeUserID) {
 				ourUser.ourButton.setGreen();
 			} else {
@@ -261,14 +261,38 @@ export default class App {
 	}
 
 	private async loadAsyncItems() {
+
+		const filename = `${this.baseUrl}/` + "hand_grey.png"; 
+		
+		const handTexture=this.assets.createTexture("hand", {
+			uri: filename
+		});
+
+		const handMat = this.assets.createMaterial('handMat', {
+			color: new MRE.Color4(1, 1, 1),
+			mainTextureId: handTexture.id
+		});
+
 		this.menuBase = MRE.Actor.Create(this.context, {
 			actor: {
-				name: "menuBase",
+				name: "menuGrabber",
 				transform: {
 					local: {
-						
+						position: { x: 2, y: 0.1, z: 0 },
+
 					}
-				}
+				},
+				appearance: {
+					meshId: this.assets.createBoxMesh('boxMesh', 0.25, 0.1, 0.25).id,
+					materialId: handMat.id
+				},
+				collider: {
+					geometry: {
+						shape: MRE.ColliderType.Box
+					},
+					isTrigger: false
+				},
+				grabbable: true
 			}
 		});
 
@@ -277,7 +301,7 @@ export default class App {
 
 		this.ourConsole.logMessage("Creating Reset Button ");
 		const button=new Button(this);
-		await button.createAsync(new MRE.Vector3(0,0,0.5),this.menuBase.id,"Reset","Reset",
+		await button.createAsync(new MRE.Vector3(0-0.6,0,0.5),this.menuBase.id,"Reset","Reset",
 			false, this.doReset.bind(this));
 
 		const authLabel = MRE.Actor.Create(this.context, {
@@ -291,7 +315,7 @@ export default class App {
 				},
 				transform: {
 					local: {
-						position: { x: 0, y: 0.101, z: 0.0 },
+						position: { x: 0-0.6, y: 0.101, z: 0.0 },
 						rotation: MRE.Quaternion.FromEulerAngles(this.degToRad(90), 0, 0)
 					}
 				}
