@@ -13,6 +13,7 @@ import { User } from '../../mixed-reality-extension-sdk/packages/sdk/';
 import OscSender from './sender';
 import WavPlayer from './wavplayer';
 import Console from './console';
+import Button from './button';
 
 /**
  * The main class of this app. All the logic goes here.
@@ -22,9 +23,7 @@ interface UserProperties {
 	name: string;
 	userID: MRE.Guid;
 	id: MRE.Guid;
-	parentActor: MRE.Actor;
-	buttonActor: MRE.Actor;
-	labelActor: MRE.Actor;
+	ourButton: Button;
 }
 
 export default class App {
@@ -34,7 +33,8 @@ export default class App {
 	public ourSpawner: any = null;
 	public ourWavPlayer: WavPlayer = null;
 	public ourConsole: Console = null;
-
+	public menuBase: MRE.Actor = null;
+	
 	public boxMesh: MRE.Mesh;
 	public redMat: MRE.Material;
 	public greenMat: MRE.Material;
@@ -69,6 +69,7 @@ export default class App {
 		this.context.onUserLeft(user => this.userLeft(user));
 		this.context.onUserJoined(user => this.userJoined(user));
 	}	
+
 	//from functional-tests / user-test.ts
 	private formatProperties(props: { [key: string]: string }): string {
 		let output = "";
@@ -83,81 +84,23 @@ export default class App {
 	private userJoined(user: MRE.User) {
 		this.ourConsole.logMessage("user joined. name: " + user.name + " id: " + user.id);
 
+		const ourRoles = user.properties["altspacevr-roles"];
+		if (!ourRoles.includes("moderator") &&
+			!ourRoles.includes("presenter") && !ourRoles.includes("terraformer")) {
+			this.ourConsole.logMessage("user doesn't have enough roles to have hands added!");
+			return;
+		}
+
+		//TODO allow us to add in hands later (if user it made moderator for instance)
 		const rHand = this.createHand('right-hand', user.id, new MRE.Vector3(0, 0, 0.1),
 			new MRE.Vector3(0.06, 0.06, 0.14));
 		const lHand = this.createHand('left-hand', user.id, new MRE.Vector3(0, 0, 0.1),
 			new MRE.Vector3(0.06, 0.06, 0.14));
 
-		this.ourConsole.logMessage("user properties: " + this.formatProperties(user.properties));
-
-	
 		this.allHands.push(rHand);
 		this.allHands.push(lHand);
 
 		this.ourConsole.logMessage("  hand array is now size: " + this.allHands.length);
-
-		const buttonParent = MRE.Actor.Create(this.context, {
-			actor: {
-				name: "userButtonbParent",
-				appearance: {},
-
-				transform: {
-					local: {
-						position: { x: 0, y: 0, z: 0 },
-					}
-				}
-			}
-		});
-
-		const button = MRE.Actor.Create(this.context, {
-			actor: {
-				parentId: buttonParent.id,
-				name: "userButton",
-				appearance: { meshId: this.boxMesh.id },
-				collider: { geometry: { shape: MRE.ColliderType.Auto } },
-				transform: {
-					local: {
-						position: { x: 0, y: 0.05, z: 0 },
-						scale: new MRE.Vector3(0.75, 0.1, 0.1)
-					}
-				}
-			}
-		});
-
-		const buttonLabel = MRE.Actor.Create(this.context, {
-			actor: {
-				parentId: buttonParent.id,
-				name: 'label',
-				text: {
-					contents: user.name,
-					height: 0.1,
-					anchor: MRE.TextAnchorLocation.MiddleCenter
-				},
-				transform: {
-					local: {
-						position: { x: 0, y: 0.101, z: 0 },
-						rotation: MRE.Quaternion.FromEulerAngles(this.degToRad(90), 0, 0)
-					}
-				}
-			}
-		});
-
-		MRE.Actor.Create(this.context, {
-			actor: {
-				name: 'authoritativeLabel',
-				text: {
-					contents: "Authoritative:",
-					height: 0.1,
-					anchor: MRE.TextAnchorLocation.MiddleCenter
-				},
-				transform: {
-					local: {
-						position: { x: 0, y: 0.101, z: 0.0 },
-						rotation: MRE.Quaternion.FromEulerAngles(this.degToRad(90), 0, 0)
-					}
-				}
-			}
-		});
 
 		let id = MRE.ZeroGuid;
 		const clients = this.session.clients;
@@ -166,41 +109,49 @@ export default class App {
 				id = client.id;
 				break;
 			}
-		}
+		}	
 
 		const ourUser = {
 			name: user.name,
 			userID: user.id,
 			id: id,
-			parentActor: buttonParent,
-			buttonActor: button,
-			labelActor: buttonLabel
+			ourButton: null as Button
 		}
-
 		this.allUsers.push(ourUser);
 
-		button.setBehavior(MRE.ButtonBehavior)
-			.onClick(() => {
-				this.ourConsole.logMessage("making user: " + ourUser.name + " authoritative!");
-				this.session.setAuthoritativeClient(ourUser.id); //can't be user.id! needs to be id!
-				this.updateUserDisplay();
-			});
-
-
-		this.updateUserDisplay();
+		this.updateAuthUserDisplay();
 	}
 
-	private updateUserDisplay() {
+	private makeAuthoritative(ourUser: UserProperties)
+	{
+		this.ourConsole.logMessage("making user: " + ourUser.name + " authoritative!");
+		this.session.setAuthoritativeClient(ourUser.id); //can't be user.id! needs to be id!
+		this.updateAuthUserDisplay();
+	}
+
+	private updateAuthUserDisplay() {
+		if(!this.menuBase){
+			return;
+		}
+
 		const authoritativeUserID = this.session.authoritativeClient.userId;
 		this.ourConsole.logMessage("authoritative user is currently id: " + authoritativeUserID);
 		this.ourConsole.logMessage("number of users: "+ this.allUsers.length);
+
 		for (let i = 0; i < this.allUsers.length; i++) {
 			const ourUser = this.allUsers[i];
-			ourUser.parentActor.transform.local.position = new MRE.Vector3(0, 0, -0.15 - i * 0.15);
+			if(!ourUser.ourButton){
+				const ourButton=new Button(this);
+				ourButton.createAsync(new MRE.Vector3(0,0,0.5),this.menuBase.id,ourUser.name,ourUser.name,
+					false, this.makeAuthoritative.bind(this,ourUser));
+				ourUser.ourButton=ourButton;
+			}
+
+			ourUser.ourButton.ourHolder.transform.local.position = new MRE.Vector3(0, 0, -0.15 - i * 0.15);
 			if (ourUser.userID === authoritativeUserID) {
-				ourUser.buttonActor.appearance.material = this.greenMat;
+				ourUser.ourButton.setGreen();
 			} else {
-				ourUser.buttonActor.appearance.material = this.redMat;
+				ourUser.ourButton.setRed();
 			}
 		}
 	}
@@ -232,18 +183,14 @@ export default class App {
 		for (let i=0; i < this.allUsers.length; i++) {
 			const ourUser = this.allUsers[i];
 			if (ourUser.userID === user.id) {
-				ourUser.labelActor.destroy();
-				ourUser.buttonActor.destroy();
-				ourUser.parentActor.destroy();
+				ourUser.ourButton.destroy();
 				this.allUsers.splice(i, 1);
-				this.updateUserDisplay();
+				this.updateAuthUserDisplay();
 				break;
 			}
 		}
 
 		this.ourConsole.logMessage("  user array is now size: " + this.allUsers.length);
-
-
 	}
 
 	private PianoReceiveCallback(note: number, vel: number): void {
@@ -303,52 +250,8 @@ export default class App {
 		const pi = Math.PI;
 		return degrees * (pi / 180);
 	}	
-
-	private async createResetButton() {
-
-		const button = MRE.Actor.Create(this.context, {
-			actor: {
-				//parentId: menu.id,
-				name: "resetButton",
-				appearance: { meshId: this.boxMesh.id },
-				collider: { geometry: { shape: MRE.ColliderType.Auto } },
-				transform: {
-					local: {
-						position: { x: 0, y: 0.05, z: 0.5 },
-						scale: new MRE.Vector3(0.75, 0.1, 0.1)
-					}
-				}
-			}
-		});
-
-		await button.created();
-
-		// Set a click handler on the button.
-		// TODO: maybe have extra prompt?
-		// TODO: check user to to make sure performer
-		button.setBehavior(MRE.ButtonBehavior)
-			.onClick(() => {
-				process.exit(0);
-			});
-
-
-		const buttonLabel = MRE.Actor.Create(this.context, {
-			actor: {
-				name: 'label',
-				text: {
-					contents: "Reset",
-					height: 0.1,
-					anchor: MRE.TextAnchorLocation.MiddleCenter
-				},
-				transform: {
-					local: {
-						position: { x: 0, y: 0.101, z: 0.5 },
-						rotation: MRE.Quaternion.FromEulerAngles(this.degToRad(90), 0, 0)
-					}
-				}
-			}
-		});
-		await buttonLabel.created();
+	private doReset(){
+		process.exit(0);
 	}
 
 	public vector2String(v: MRE.Vector3, precision: number) {
@@ -358,23 +261,57 @@ export default class App {
 	}
 
 	private async loadAsyncItems() {
+		this.menuBase = MRE.Actor.Create(this.context, {
+			actor: {
+				name: "menuBase",
+				transform: {
+					local: {
+						
+					}
+				}
+			}
+		});
+
 		this.ourConsole.logMessage("creating console");
 		await this.ourConsole.createAsyncItems();
 
 		this.ourConsole.logMessage("Creating Reset Button ");
-		await this.createResetButton();
+		const button=new Button(this);
+		await button.createAsync(new MRE.Vector3(0,0,0.5),this.menuBase.id,"Reset","Reset",
+			false, this.doReset.bind(this));
+
+		const authLabel = MRE.Actor.Create(this.context, {
+			actor: {
+				parentId: this.menuBase.id,
+				name: 'authoritativeLabel',
+				text: {
+					contents: "Authoritative:",
+					height: 0.1,
+					anchor: MRE.TextAnchorLocation.MiddleCenter
+				},
+				transform: {
+					local: {
+						position: { x: 0, y: 0.101, z: 0.0 },
+						rotation: MRE.Quaternion.FromEulerAngles(this.degToRad(90), 0, 0)
+					}
+				}
+			}
+		});
+		await authLabel.created();
 
 		this.ourConsole.logMessage("Creating Wav Player");
 		this.ourWavPlayer=new WavPlayer(this);
 		await this.ourWavPlayer.loadAllSounds();
 
-		this.ourConsole.logMessage("creating piano keys");
+		this.ourConsole.logMessage("creating piano keys"); 
 		this.ourPiano = new Piano(this);
 		await this.ourPiano.createAllKeys();
 
 		this.ourConsole.logMessage("Loading spawner items");
 		this.ourSpawner = new Spawner(this); 
 		await this.ourSpawner.createAsyncItems();
+
+		this.updateAuthUserDisplay();
 	}
 
 	private started() {

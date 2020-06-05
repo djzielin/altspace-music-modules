@@ -13,9 +13,16 @@ export default class Button {
 
 	private buttonActor: MRE.Actor=null;
 	private buttonText: MRE.Actor=null;
+	public ourHolder: MRE.Actor=null;
 
 	constructor(private ourApp: App) {
 		
+	}
+
+	public destroy(){
+		this.buttonActor.destroy();
+		this.buttonText.destroy();
+		this.ourHolder.destroy();
 	}
 
 	public async createAsync(pos: MRE.Vector3, parentId: MRE.Guid, labelOn: 
@@ -24,7 +31,7 @@ export default class Button {
 		this.ourLabelOn=labelOn;
 		this.ourLabelOff=labelOff;
 
-		const ourHolder = MRE.Actor.Create(this.ourApp.context, {
+		this.ourHolder = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
 				parentId: parentId,
 				name: "hold_elements",
@@ -40,7 +47,7 @@ export default class Button {
 
 		this.buttonActor = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
-				parentId: ourHolder.id,
+				parentId: this.ourHolder.id,
 				name: "toggleButton",
 				appearance: {
 					meshId: this.ourApp.boxMesh.id,
@@ -60,7 +67,7 @@ export default class Button {
 
 		this.buttonText = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
-				parentId: ourHolder.id,
+				parentId: this.ourHolder.id,
 				name: 'label',
 				text: {
 					contents: "",
@@ -97,15 +104,23 @@ export default class Button {
 			});
 	}
 
+	public setGreen(){
+		this.buttonActor.appearance.materialId=this.ourApp.greenMat.id;
+	}
+
+	public setRed(){
+		this.buttonActor.appearance.materialId=this.ourApp.redMat.id;
+	}
+
 	private updateDisplayValue() {
 		if(this.ourValue) {
 			this.buttonText.text.contents=this.ourLabelOn;
 			this.ourApp.ourConsole.logMessage("button toggled. now: " + this.ourLabelOn);
-			this.buttonActor.appearance.materialId=this.ourApp.greenMat.id;
+			this.setGreen();
 		} else{
 			this.buttonText.text.contents=this.ourLabelOff;
 			this.ourApp.ourConsole.logMessage("button toggled. now: " + this.ourLabelOff);
-			this.buttonActor.appearance.materialId=this.ourApp.redMat.id;
+			this.setRed();
 		}
 	}
 }
