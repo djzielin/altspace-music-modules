@@ -88,7 +88,7 @@ export default class WavPlayer {
 		return this.ourSounds[adjustedNote].id;
 	}
 
-	public playSound(note: number, vel: number, pos: MRE.Vector3) {
+	public playSound(note: number, vel: number, pos: MRE.Vector3, audioRange: number) {
 		const adjustedNote: number = note - 21;
 
 		while(this.playingWavs.length>this.polyphonyLimit){
@@ -114,7 +114,7 @@ export default class WavPlayer {
 			looping: false,
 			paused: false,
 			volume: 0.75,
-			rolloffStartDistance: 10.0 //TODO: make this a GUI parameters
+			rolloffStartDistance: audioRange 
 		});	
 
 		const ourWave={

@@ -52,6 +52,7 @@ export default class Spawner {
 	public doParticleEffect=false;
 	public doPosRandom=true;
 	public noFreezeRotation=true;
+	public audioRange=10;
 
 	public setEmitterWidth(n: number): void {
 		this.spawnerWidth=n;
@@ -68,8 +69,13 @@ export default class Spawner {
 	public setBubbleSize(n: number): void {
 		this.bubbleSize=n;
 	}
+
 	public setBubbleSpeed(n: number): void {
 		this.bubbleSpeed=n;
+	}
+
+	public setAudioRange(n: number): void {
+		this.audioRange=n;
 	}
 
 	public setDoParticleEffect(b: boolean): void {
@@ -307,7 +313,7 @@ export default class Spawner {
 			const otherActor = data.otherActor;
 
 			if (this.ourApp.allHands.includes(otherActor)) { //bubble touches hand
-				this.ourApp.ourWavPlayer.playSound(note,127,ourBubble.actor.transform.app.position);
+				this.ourApp.ourWavPlayer.playSound(note,127,ourBubble.actor.transform.app.position, this.audioRange);
 				this.spawnParticleEffect(ourBubble.actor.transform.app.position);
 				this.ourApp.ourSender.send(`["/NoteOn",${ourBubble.note}]`);
 				
