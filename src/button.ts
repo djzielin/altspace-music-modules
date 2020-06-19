@@ -20,9 +20,14 @@ export default class Button {
 	}
 
 	public destroy(){
-		this.buttonActor.destroy();
-		this.buttonText.destroy();
-		this.ourHolder.destroy();
+		//this.buttonActor.destroy();
+		//this.buttonText.destroy();
+		//this.ourHolder.appearance.enabled=false; //hide
+		this.ourHolder.destroy(); //will this destroy children?
+	}
+
+	public setPos(pos: MRE.Vector3){
+		this.ourHolder.transform.local.position=pos;
 	}
 
 	public async createAsync(pos: MRE.Vector3, parentId: MRE.Guid, labelOn: 
@@ -94,21 +99,29 @@ export default class Button {
 					ourRoles.includes("presenter") || ourRoles.includes("terraformer")) {
 
 					if (this.ourValue) {
-						this.ourValue = false;
+						this.setValue(false);
 					} else {
-						this.ourValue = true;
+						this.setValue(true);
 					}
-					this.updateDisplayValue();
 					callback(this.ourValue);
 				}
 			});
 	}
 
-	public setGreen(){
+	public setValue(val: boolean){
+		if(this.ourValue===val){ //no change
+			return;
+		}
+
+		this.ourValue=val;
+		this.updateDisplayValue();
+	}
+
+	private setGreen(){
 		this.buttonActor.appearance.materialId=this.ourApp.greenMat.id;
 	}
 
-	public setRed(){
+	private setRed(){
 		this.buttonActor.appearance.materialId=this.ourApp.redMat.id;
 	}
 

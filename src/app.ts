@@ -22,7 +22,7 @@ import Button from './button';
 interface UserProperties {
 	name: string;
 	userID: MRE.Guid;
-	id: MRE.Guid;
+	clientId: MRE.Guid;
 	ourButton: Button;
 }
 
@@ -114,7 +114,7 @@ export default class App {
 		const ourUser = {
 			name: user.name,
 			userID: user.id,
-			id: id,
+			clientId: id,
 			ourButton: null as Button
 		}
 		this.allUsers.push(ourUser);
@@ -125,7 +125,7 @@ export default class App {
 	private makeAuthoritative(ourUser: UserProperties)
 	{
 		this.ourConsole.logMessage("making user: " + ourUser.name + " authoritative!");
-		this.session.setAuthoritativeClient(ourUser.id); //can't be user.id! needs to be id!
+		this.session.setAuthoritativeClient(ourUser.clientId); //can't be user.id! needs to be client.id!
 		this.updateAuthUserDisplay();
 	}
 
@@ -140,18 +140,22 @@ export default class App {
 
 		for (let i = 0; i < this.allUsers.length; i++) {
 			const ourUser = this.allUsers[i];
-			if(!ourUser.ourButton){
+
+			const pos= new MRE.Vector3(0-0.6, 0, -0.15 - i * 0.15);
+
+			if(!ourUser.ourButton){ //create a button if we don't already have one
 				const ourButton=new Button(this);
-				ourButton.createAsync(new MRE.Vector3(0-0.6,0,0.5),this.menuBase.id,ourUser.name,ourUser.name,
+				ourButton.createAsync(pos,this.menuBase.id,ourUser.name,ourUser.name,
 					false, this.makeAuthoritative.bind(this,ourUser));
 				ourUser.ourButton=ourButton;
+			} else{
+				ourUser.ourButton.setPos(pos);
 			}
 
-			ourUser.ourButton.ourHolder.transform.local.position = new MRE.Vector3(0-0.6, 0, -0.15 - i * 0.15);
 			if (ourUser.userID === authoritativeUserID) {
-				ourUser.ourButton.setGreen();
+				ourUser.ourButton.setValue(true);
 			} else {
-				ourUser.ourButton.setRed();
+				ourUser.ourButton.setValue(false);
 			}
 		}
 	}
