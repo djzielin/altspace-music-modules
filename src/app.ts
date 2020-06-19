@@ -343,7 +343,7 @@ export default class App {
 	private started() {
 		this.loadAsyncItems().then(() => {
 			this.ourConsole.logMessage("all async items created/loaded!");
-			this.ourReceiver.ourCallback = this.PianoReceiveCallback.bind(this);
+			this.ourReceiver.ourCallback = this.PianoReceiveCallback.bind(this);			
 		});
 
 	}
