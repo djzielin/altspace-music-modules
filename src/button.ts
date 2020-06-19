@@ -114,6 +114,7 @@ export default class Button {
 		}
 
 		this.ourValue=val;
+
 		this.updateDisplayValue();
 	}
 
@@ -128,11 +129,11 @@ export default class Button {
 	private updateDisplayValue() {
 		if(this.ourValue) {
 			this.buttonText.text.contents=this.ourLabelOn;
-			this.ourApp.ourConsole.logMessage("button toggled. now: " + this.ourLabelOn);
+			this.ourApp.ourConsole.logMessage("button ON. Label now: " + this.ourLabelOn);
 			this.setGreen();
 		} else{
 			this.buttonText.text.contents=this.ourLabelOff;
-			this.ourApp.ourConsole.logMessage("button toggled. now: " + this.ourLabelOff);
+			this.ourApp.ourConsole.logMessage("button OFF. Label now: " + this.ourLabelOff);
 			this.setRed();
 		}
 	}

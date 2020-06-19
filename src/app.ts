@@ -38,7 +38,8 @@ export default class App {
 	public boxMesh: MRE.Mesh;
 	public redMat: MRE.Material;
 	public greenMat: MRE.Material;
-
+	public handGrabMat: MRE.Material;
+	
 	public allUsers: UserProperties[] = [];
 	public allHands: MRE.Actor[] = [];
 
@@ -140,22 +141,19 @@ export default class App {
 
 		for (let i = 0; i < this.allUsers.length; i++) {
 			const ourUser = this.allUsers[i];
+			const areWeAuthoritative=(ourUser.userID === authoritativeUserID);
 
 			const pos= new MRE.Vector3(0-0.6, 0, -0.15 - i * 0.15);
 
 			if(!ourUser.ourButton){ //create a button if we don't already have one
 				const ourButton=new Button(this);
 				ourButton.createAsync(pos,this.menuBase.id,ourUser.name,ourUser.name,
-					false, this.makeAuthoritative.bind(this,ourUser));
-				ourUser.ourButton=ourButton;
+					false, this.makeAuthoritative.bind(this,ourUser)).then(() => {
+					ourUser.ourButton=ourButton;
+				});
 			} else{
 				ourUser.ourButton.setPos(pos);
-			}
-
-			if (ourUser.userID === authoritativeUserID) {
-				ourUser.ourButton.setValue(true);
-			} else {
-				ourUser.ourButton.setValue(false);
+				ourUser.ourButton.setValue(areWeAuthoritative);
 			}
 		}
 	}
@@ -272,7 +270,7 @@ export default class App {
 			uri: filename
 		});
 
-		const handMat = this.assets.createMaterial('handMat', {
+		this.handGrabMat = this.assets.createMaterial('handMat', {
 			color: new MRE.Color4(1, 1, 1),
 			mainTextureId: handTexture.id
 		});
@@ -288,7 +286,7 @@ export default class App {
 				},
 				appearance: {
 					meshId: this.assets.createBoxMesh('boxMesh', 0.25, 0.1, 0.25).id,
-					materialId: handMat.id
+					materialId: this.handGrabMat.id
 				},
 				collider: {
 					geometry: {
