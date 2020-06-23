@@ -38,7 +38,7 @@ server.adapter.onConnection(context => {
 	const sessionId=context.sessionId;
 	const session=(server.adapter as MRE.MultipeerAdapter).sessions[sessionId];
 
-	return new App(context, server.baseUrl, ourReceiver, ourSender, session);
+	return new App(context, server.baseUrl, server.baseDir, ourReceiver, ourSender, session);
 });
 
 

@@ -33,6 +33,7 @@ export default class App {
 	public ourSpawner: any = null;
 	public ourSpawner2: any = null;
 	public ourWavPlayer: WavPlayer = null;
+	public ourWavPlayer2: WavPlayer = null;
 	public ourConsole: Console = null;
 	public menuBase: MRE.Actor = null;
 	
@@ -52,7 +53,7 @@ export default class App {
 		return n.length >= maxWidth ? n : new Array(maxWidth - n.length + 1).join(padChar) + n;
 	}
 	
-	constructor(public context: MRE.Context, public baseUrl: string,
+	constructor(public context: MRE.Context, public baseUrl: string, public baseDir: string,
 		public ourReceiver: PianoReceiver, public ourSender: OscSender, public session: Session) {
 		this.ourConsole=new Console(this);
 
@@ -329,7 +330,13 @@ export default class App {
 
 		this.ourConsole.logMessage("Creating Wav Player");
 		this.ourWavPlayer=new WavPlayer(this);
-		await this.ourWavPlayer.loadAllSounds();
+		await this.ourWavPlayer.loadAllSounds("piano");
+
+		this.ourConsole.logMessage("Creating Wav Player2");
+		this.ourWavPlayer2=new WavPlayer(this);
+		this.ourWavPlayer2.volume=0.25;
+		this.ourWavPlayer2.cullTime=10000;
+		await this.ourWavPlayer2.loadAllSounds("vibes");
 
 		this.ourConsole.logMessage("creating piano keys"); 
 		this.ourPiano = new Piano(this);
@@ -337,10 +344,12 @@ export default class App {
 
 		this.ourConsole.logMessage("Loading spawner items");
 		this.ourSpawner = new Spawner(this); 
+		this.ourSpawner.ourWavPlayer=this.ourWavPlayer;
 		await this.ourSpawner.createAsyncItems(new MRE.Vector3(0,1.3,0));
 
 		this.ourConsole.logMessage("Loading spawner2 items");
 		this.ourSpawner2 = new Spawner(this); 
+		this.ourSpawner2.ourWavPlayer=this.ourWavPlayer2;
 		await this.ourSpawner2.createAsyncItems(new MRE.Vector3(-2,1.3,0));
 
 		this.updateAuthUserDisplay();

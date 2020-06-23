@@ -100,20 +100,23 @@ export default class Console {
 		await this.createConsoleToggleButton();
 	}
 
-	public logMessage(message: string) { 
+	public logMessage(message: string) {
 		MRE.log.info("app", message);
 
-		this.consoleText.push(message);
-		this.consoleText.shift();
+		if (this.consoleOn) {
 
-		if (this.consoleTextActor) {
-			let combinedText = "";
+			this.consoleText.push(message);
+			this.consoleText.shift();
 
-			for (const s of this.consoleText) {
-				combinedText += s.substr(0, 80);
-				combinedText += "\n";
+			if (this.consoleTextActor) {
+				let combinedText = "";
+
+				for (const s of this.consoleText) {
+					combinedText += s.substr(0, 80);
+					combinedText += "\n";
+				}
+				this.consoleTextActor.text.contents = combinedText;
 			}
-			this.consoleTextActor.text.contents = combinedText;
 		}
 	}
 }

@@ -5,6 +5,7 @@
 //import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 import App from './app';
+import fs from 'fs';
 
 interface WavProperties{
 	timeStamp: number;
@@ -13,10 +14,14 @@ interface WavProperties{
 }
 
 export default class WavPlayer {
-	private ourSounds: MRE.Sound[] = [];
+	//private ourSounds: MRE.Sound[] = [];
+	private ourSounds: Map<number, MRE.Sound> = new Map();
+
 	private playingWavs: WavProperties[]=[]; 
 
 	private polyphonyLimit=20; //TODO: allow these to be set in in-world GUI
+	public volume=0.75;
+	public cullTime=5000;
 
 	private noteOrder =
 		["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
@@ -34,7 +39,7 @@ export default class WavPlayer {
 			const listOfPlayingWavsToDelete: WavProperties[] = [];
 
 			for (const ourWave of this.playingWavs) {
-				if (currentTime - ourWave.timeStamp > 5000) {
+				if (currentTime - ourWave.timeStamp > this.cullTime) {
 					//this.ourApp.ourConsole.logMessage("5 seconds has expired, pulling playing bubble");
 					ourWave.actor.destroy();
 					listOfPlayingWavsToDelete.push(ourWave);
@@ -56,24 +61,33 @@ export default class WavPlayer {
 		}, 1000);
 	}
 
-	public async loadAllSounds() {
+	public async loadAllSounds(subdir: string) {
 		let octave = 0;
 		let note = 9;
 
-		for (let i = 21; i < 109; i++) {
-			//const filename = `${this.ourApp.baseUrl}/mono_5s_wav/` +
-			const filename = `${this.ourApp.baseUrl}/mono_5s_ogg/` +
+		for (let i = 0; i < 128; i++) {
+			//const filename =` +
+			const filename = `${subdir}/${i}.ogg`;
+			const URL = `${this.ourApp.baseUrl}/` + filename;
+			const diskLocation=`${this.ourApp.baseDir}/` + filename;
 
-				"Piano.ff." + this.noteOrder[note] +
-				octave.toString() + ".ogg";
+			try {
+				if (fs.existsSync(diskLocation)) {
+					this.ourApp.ourConsole.logMessage("found a ogg file for midi note: " + i);
+				} else {
+					continue;
+				}
+			} catch (err) {
+				continue;
+			}			
 
-			this.ourApp.ourConsole.logMessage("trying to load: " + filename);
 			const newSound = this.ourApp.assets.createSound("pianoKey" + i, {
-				uri: filename
+				uri: URL
 			});
 			await newSound.created;
-			this.ourApp.ourConsole.logMessage(" success! " + ((i-20)/109*100.0).toFixed(1) +"% loaded!");
-			this.ourSounds.push(newSound);
+			this.ourApp.ourConsole.logMessage(" success!");
+			//this.ourSounds.push(newSound);
+			this.ourSounds.set(i,newSound);
 
 			note = note + 1;
 			if (note === 12) {
@@ -83,13 +97,21 @@ export default class WavPlayer {
 		}
 	}	
 
-	public getSoundGUID(note: number) {
-		const adjustedNote: number = note - 21;
+	/*public getSoundGUID(note: number) {
+		//const adjustedNote: number = note - 21;
+		
 		return this.ourSounds[adjustedNote].id;
-	}
+	}*/
 
 	public playSound(note: number, vel: number, pos: MRE.Vector3, audioRange: number) {
-		const adjustedNote: number = note - 21;
+		//const adjustedNote: number = note - 21;
+
+		if (!this.ourSounds.has(note)) {
+			this.ourApp.ourConsole.logMessage("cant play midi note: " +
+				note + " as wav set doesnt contain a ogg for it!");
+		}
+
+		const ourSound=this.ourSounds.get(note);
 
 		while(this.playingWavs.length>this.polyphonyLimit){
 			this.ourApp.ourConsole.logMessage("culling wav. enforcing polyphony limit of: " + this.polyphonyLimit);
@@ -108,12 +130,12 @@ export default class WavPlayer {
 			}
 		});
 
-		soundActor.startSound(this.ourSounds[adjustedNote].id, {
+		soundActor.startSound(ourSound.id, {
 			doppler: 0,
 			pitch: 0.0,
 			looping: false,
 			paused: false,
-			volume: 0.75,
+			volume: this.volume,
 			rolloffStartDistance: audioRange 
 		});	
 

@@ -7,6 +7,7 @@ import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 import Piano from './piano';
 import App from './app';
 import SpawnerGUI from './spawner_gui';
+import WavPlayer from './wavplayer';
 
 interface BubbleProperties{
 	timeStamp: number;
@@ -53,7 +54,8 @@ export default class Spawner {
 	public doPosRandom=true;
 	public noFreezeRotation=true;
 	public audioRange=10;
-
+	public ourWavPlayer: WavPlayer;
+	
 	public setEmitterWidth(n: number): void {
 		this.spawnerWidth=n;
 		this.spawnerActor.transform.local.scale=new MRE.Vector3(this.spawnerWidth, 0.01, 0.05);
@@ -314,7 +316,7 @@ export default class Spawner {
 			const otherActor = data.otherActor;
 
 			if (this.ourApp.allHands.includes(otherActor)) { //bubble touches hand
-				this.ourApp.ourWavPlayer.playSound(note,127,ourBubble.actor.transform.app.position, this.audioRange);
+				this.ourWavPlayer.playSound(note,127,ourBubble.actor.transform.app.position, this.audioRange);
 				this.spawnParticleEffect(ourBubble.actor.transform.app.position);
 				this.ourApp.ourSender.send(`["/NoteOn",${ourBubble.note}]`);
 				
