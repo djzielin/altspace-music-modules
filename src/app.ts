@@ -31,6 +31,7 @@ export default class App {
 
 	public ourPiano: Piano = null;
 	public ourSpawner: any = null;
+	public ourSpawner2: any = null;
 	public ourWavPlayer: WavPlayer = null;
 	public ourConsole: Console = null;
 	public menuBase: MRE.Actor = null;
@@ -202,6 +203,7 @@ export default class App {
 			//this.ourPiano.playSound(note, vel);
 			this.ourPiano.keyPressed(note);
 			this.ourSpawner.spawnBubble(note, vel);
+			this.ourSpawner2.spawnBubble(note, vel);
 
 		} else {
 			//this.ourPiano.stopSound(note);
@@ -335,7 +337,11 @@ export default class App {
 
 		this.ourConsole.logMessage("Loading spawner items");
 		this.ourSpawner = new Spawner(this); 
-		await this.ourSpawner.createAsyncItems();
+		await this.ourSpawner.createAsyncItems(new MRE.Vector3(0,1.3,0));
+
+		this.ourConsole.logMessage("Loading spawner2 items");
+		this.ourSpawner2 = new Spawner(this); 
+		await this.ourSpawner2.createAsyncItems(new MRE.Vector3(-2,1.3,0));
 
 		this.updateAuthUserDisplay();
 	}

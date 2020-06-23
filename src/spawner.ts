@@ -127,7 +127,7 @@ export default class Spawner {
 		}, 1000);
 	}
 
-	public async createAsyncItems() {
+	public async createAsyncItems(pos: MRE.Vector3) {
 		this.boxMesh = this.ourApp.assets.createBoxMesh('boxMesh', 1.0, 1.0, 1.0);
 		await this.boxMesh.created;
 
@@ -135,7 +135,7 @@ export default class Spawner {
 			actor: {
 				name: 'spawner',
 				transform: {
-					app: { position: new MRE.Vector3(0,1.3,0) },
+					app: { position: pos },
 				}
 			}
 		});
@@ -182,7 +182,8 @@ export default class Spawner {
 		this.ourApp.ourConsole.logMessage("completed all spawner object creation");
 
 		this.ourSpawnerGUI=new SpawnerGUI(this.ourApp, this);
-		await this.ourSpawnerGUI.createAsync();
+		const guiPos=new MRE.Vector3(pos.x-2,0,pos.z);
+		await this.ourSpawnerGUI.createAsync(guiPos);
 
 	}
 

@@ -17,25 +17,14 @@ export default class SpawnerGui {
 		
 	}
 
-	private async createBackground() {
-		/*this.guiParent = MRE.Actor.Create(this.ourApp.context, {
-			actor: {
-				name: "parent",
-				transform: {
-					local: {
-						position: { x: -2.0, y: 0.0, z: 0 },
-					}
-				}
-			}
-		});*/
-
-
+	private async createBackground(pos: MRE.Vector3) {
+		
 		this.guiParent = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
 				name: "menuGrabber",
 				transform: {
 					local: {
-						position: { x: -2.0, y: 0.0, z: 0 },
+						position: pos
 
 					}
 				},
@@ -99,10 +88,10 @@ export default class SpawnerGui {
 		await guiTextActor.created();
 	}
 
-	public async createAsync() {
+	public async createAsync(pos: MRE.Vector3) {
 		this.ourApp.ourConsole.logMessage("creating spawner gui");
 
-		await this.createBackground();	
+		await this.createBackground(pos);	
 		
 		this.ourApp.ourConsole.logMessage("creating speed plus/minus");
 		const speedGUI=new PlusMinus(this.ourApp);
