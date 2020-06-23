@@ -19,7 +19,7 @@ export default class WavPlayer {
 
 	private playingWavs: WavProperties[]=[]; 
 
-	private polyphonyLimit=20; //TODO: allow these to be set in in-world GUI
+	private polyphonyLimit=10; //TODO: allow these to be set in in-world GUI
 	public volume=0.75;
 	public cullTime=5000;
 
