@@ -125,15 +125,14 @@ export default class App {
 		this.updateAuthUserDisplay();
 	}
 
-	private makeAuthoritative(ourUser: UserProperties)
-	{
+	private makeAuthoritative(ourUser: UserProperties) {
 		this.ourConsole.logMessage("making user: " + ourUser.name + " authoritative!");
 		this.session.setAuthoritativeClient(ourUser.clientId); //can't be user.id! needs to be client.id!
 		this.updateAuthUserDisplay();
 	}
 
 	private updateAuthUserDisplay() {
-		if(!this.menuBase){
+		if(!this.menuBase || this.allUsers.length<1){
 			return;
 		}
 
@@ -358,8 +357,23 @@ export default class App {
 	private started() {
 		this.loadAsyncItems().then(() => {
 			this.ourConsole.logMessage("all async items created/loaded!");
-			this.ourReceiver.ourCallback = this.PianoReceiveCallback.bind(this);			
-		});
+			this.ourReceiver.ourCallback = this.PianoReceiveCallback.bind(this);
 
+			setInterval(() => { //cull bubbles that have been around too long
+				const pianoPlayable = this.ourSpawner.availableBubbles.length;
+				const vibesPlayable = this.ourSpawner2.availableBubbles.length;
+				const pianoPlaying = this.ourWavPlayer.playingWavs.length;
+				const vibesPlaying = this.ourWavPlayer2.playingWavs.length;
+
+				const timeNow=new Date(Date.now());			
+
+				this.ourConsole.logMessage(
+					`Time: ${this.pad(timeNow.getHours(), 2, '0')}:` +
+					`${this.pad(timeNow.getMinutes(), 2, '0')}:` +
+					`${this.pad(timeNow.getSeconds(), 2, '0')} - ` +
+					`[piano playing: ${pianoPlaying} playable: ${pianoPlayable}] - ` +
+					`[vibes playing: ${vibesPlaying} playable: ${vibesPlayable}]`);
+			}, 2000);
+		});
 	}
 }

@@ -34,10 +34,25 @@ export default class Spawner {
 		new MRE.Color4(255 / 255, 255 / 255, 153 / 255),
 		new MRE.Color4(177 / 255, 89 / 255, 40 / 255)];
 
+	private particleEffects: string [] = [
+		"artifact:1502544138917118217",
+		"artifact:1502544125159801091",
+		"artifact:1502544152556994829",
+		"artifact:1502544200791490851",
+		"artifact:1502544158974279955",
+		"artifact:1502544131971350791",
+		"artifact:1502544211017204009",
+		"artifact:1502544145477009675",
+		"artifact:1502544192268665119",
+		"artifact:1502544182571434268",
+		"artifact:1502544165660000535",
+		"artifact:1502544173000032538"
+	]
+
 	private sphereMesh: MRE.Mesh;
 	private boxMesh: MRE.Mesh;
 
-	private availableBubbles: BubbleProperties[]=[]; 
+	public availableBubbles: BubbleProperties[]=[]; 
 
 	private noteMaterials: MRE.Material[] = [];
 	public spawnerWidth=0.5;
@@ -118,14 +133,14 @@ export default class Spawner {
 				this.removeFromAvailable(ourBubble);
 			}		
 	
-			const timeNow=new Date(Date.now());			
+			//const timeNow=new Date(Date.now());			
 
-			this.ourApp.ourConsole.logMessage(
+			/*this.ourApp.ourConsole.logMessage(
 				`Time: ${this.ourApp.pad(timeNow.getHours(),2,'0')}:`+
 				`${this.ourApp.pad(timeNow.getMinutes(),2,'0')}:` +
 				`${this.ourApp.pad(timeNow.getSeconds(),2,'0')} - ` +
 				`${this.availableBubbles.length} playable `+
-				`(${listOfAvailableBubblesToDelete.length} culled)`);
+				`(${listOfAvailableBubblesToDelete.length} culled)`);*/
 		}, 1000);
 	}
 
@@ -239,13 +254,15 @@ export default class Spawner {
 		return ourBubble;
 	}
 
-	private spawnParticleEffect(pos: MRE.Vector3) {
+	private spawnParticleEffect(pos: MRE.Vector3, colorIndex: number) {
 		if(!this.doParticleEffect){
 			return;
 		}
+		const particleScale=this.bubbleSize*2.0;
 
+		//this.ourApp.ourConsole.logMessage("creating particle at: " + pos);
 		const particleActor = MRE.Actor.CreateFromLibrary(this.ourApp.context, {
-			resourceId: "artifact:1474401976627233047",
+			resourceId: this.particleEffects[colorIndex],
 			actor: {
 				name: 'particle burst',
 				transform: {
@@ -253,15 +270,15 @@ export default class Spawner {
 						position: pos
 					},
 					local: {
-						scale: { x: 1.0, y: 1.0, z: 1.0 }
+						scale: { x: particleScale, y: particleScale, z: particleScale }
 					}
 				}
 			}
 		});
 		setTimeout(() => {
-			this.ourApp.ourConsole.logMessage("2 seconds has expired. deleting particle effect");
+			this.ourApp.ourConsole.logMessage("3 seconds has expired. deleting particle effect");
 			particleActor.destroy();
-		}, 2000);
+		}, 3000);
 	}
 
 	private mapRange(input: number, inputLow: number, inputHigh: number, outputLow: number, outputHigh: number) {
@@ -314,10 +331,12 @@ export default class Spawner {
 
 		ourBubble.actor.collider.onCollision("collision-enter", (data: MRE.CollisionData) => {
 			const otherActor = data.otherActor;
+			const collisionPos=data.contacts[0].point; //ourBubble.actor.transform.app.position
+
 
 			if (this.ourApp.allHands.includes(otherActor)) { //bubble touches hand
-				this.ourWavPlayer.playSound(note,127,ourBubble.actor.transform.app.position, this.audioRange);
-				this.spawnParticleEffect(ourBubble.actor.transform.app.position);
+				this.ourWavPlayer.playSound(note,127,collisionPos, this.audioRange);
+				this.spawnParticleEffect(collisionPos, noteNum);
 				this.ourApp.ourSender.send(`["/NoteOn",${ourBubble.note}]`);
 				
 				this.removeFromAvailable(ourBubble);

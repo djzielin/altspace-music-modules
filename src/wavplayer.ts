@@ -6,6 +6,7 @@
 import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 import App from './app';
 import fs from 'fs';
+//import { isRegExp } from 'util';
 
 interface WavProperties{
 	timeStamp: number;
@@ -17,11 +18,14 @@ export default class WavPlayer {
 	//private ourSounds: MRE.Sound[] = [];
 	private ourSounds: Map<number, MRE.Sound> = new Map();
 
-	private playingWavs: WavProperties[]=[]; 
+	public playingWavs: WavProperties[]=[]; 
 
 	private polyphonyLimit=10; //TODO: allow these to be set in in-world GUI
 	public volume=0.75;
 	public cullTime=5000;
+
+	private lowestNote=-1;
+	private highestNote=-1;
 
 	private noteOrder =
 		["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
@@ -50,14 +54,14 @@ export default class WavPlayer {
 				this.removeFromPlaying(ourWave);
 			}
 
-			const timeNow = new Date(Date.now());
+			//const timeNow = new Date(Date.now());
 
-			this.ourApp.ourConsole.logMessage(
+			/*this.ourApp.ourConsole.logMessage(
 				`Time: ${this.ourApp.pad(timeNow.getHours(), 2, '0')}:` +
 				`${this.ourApp.pad(timeNow.getMinutes(), 2, '0')}:` +
 				`${this.ourApp.pad(timeNow.getSeconds(), 2, '0')} - ` +
 				`${this.playingWavs.length} playing ` +
-				`(${listOfPlayingWavsToDelete.length} culled)`);
+				`(${listOfPlayingWavsToDelete.length} culled)`);*/
 		}, 1000);
 	}
 
@@ -80,6 +84,19 @@ export default class WavPlayer {
 			} catch (err) {
 				continue;
 			}			
+
+			if(this.lowestNote===-1){
+				this.lowestNote=i;
+			}
+			if(this.highestNote===-1){
+				this.highestNote=i;
+			}
+			if(i<this.lowestNote){
+				this.lowestNote=i;
+			}
+			if(i>this.highestNote){
+				this.highestNote=i;
+			}
 
 			const newSound = this.ourApp.assets.createSound("pianoKey" + i, {
 				uri: URL
@@ -109,6 +126,19 @@ export default class WavPlayer {
 		if (!this.ourSounds.has(note)) {
 			this.ourApp.ourConsole.logMessage("cant play midi note: " +
 				note + " as wav set doesnt contain a ogg for it!");
+			if(note<this.lowestNote){				
+				do{
+					note+=12;
+				} while(!this.ourSounds.has(note));
+
+			} else if(note>this.lowestNote){
+				do{
+					note-=12;
+				} while(!this.ourSounds.has(note));
+			} else{
+				this.ourApp.ourConsole.logMessage("not supporting more complicated interpolation at the moment!");
+				return;
+			}
 		}
 
 		const ourSound=this.ourSounds.get(note);
