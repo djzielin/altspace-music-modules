@@ -10,7 +10,7 @@ export default class Button {
 	private ourValue=true;
 	private ourLabelOn="";
 	private ourLabelOff="";
-
+    public doVisualUpdates=true;
 	private buttonActor: MRE.Actor=null;
 	private buttonText: MRE.Actor=null;
 	public ourHolder: MRE.Actor=null;
@@ -20,10 +20,9 @@ export default class Button {
 	}
 
 	public destroy(){
-		//this.buttonActor.destroy();
-		//this.buttonText.destroy();
-		//this.ourHolder.appearance.enabled=false; //hide
-		this.ourHolder.destroy(); //will this destroy children?
+		this.buttonActor.destroy();
+		this.buttonText.destroy();
+		this.ourHolder.destroy(); 
 	}
 
 	public setPos(pos: MRE.Vector3){
@@ -99,9 +98,13 @@ export default class Button {
 					ourRoles.includes("presenter") || ourRoles.includes("terraformer")) {
 
 					if (this.ourValue) {
-						this.setValue(false);
+						this.ourValue=false;
 					} else {
-						this.setValue(true);
+						this.ourValue=true;
+					}
+
+					if(this.doVisualUpdates){
+						this.updateDisplayValue();
 					}
 					callback(this.ourValue);
 				}
@@ -109,13 +112,12 @@ export default class Button {
 	}
 
 	public setValue(val: boolean){
-		if(this.ourValue===val){ //no change
-			return;
-		}
-
 		this.ourValue=val;
+		this.updateDisplayValue();		
+	}
 
-		this.updateDisplayValue();
+	public getValue(){
+		return this.ourValue;
 	}
 
 	private setGreen(){

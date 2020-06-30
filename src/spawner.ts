@@ -18,8 +18,23 @@ interface BubbleProperties{
 export default class Spawner {
 
 	/**************
-	   https://colorbrewer2.org/#type=qualitative&scheme=Paired&n=12
+  	 https://colorbrewer2.org/#type=qualitative&scheme=Paired&n=12
 	****************/
+	/*
+	A6CEE3
+	1F78B4
+	B2DF8A
+	33A02C
+	FB9A99
+	E31A1C
+	FDBF6F
+	FF7F00
+	CAB2D6
+	6A3D9A
+	FFFF99
+	B15928
+	*/
+	
 	private noteColors: MRE.Color4[] = [
 		new MRE.Color4(166 / 255, 206 / 255, 227 / 255),
 		new MRE.Color4(31 / 255, 120 / 255, 180 / 255),
@@ -331,10 +346,15 @@ export default class Spawner {
 
 		ourBubble.actor.collider.onCollision("collision-enter", (data: MRE.CollisionData) => {
 			const otherActor = data.otherActor;
-			const collisionPos=data.contacts[0].point; //ourBubble.actor.transform.app.position
 
 
-			if (this.ourApp.allHands.includes(otherActor)) { //bubble touches hand
+			if (otherActor.name.includes('SpawnerUserHand')) { //bubble touches hand
+				//const impulseVec: MRE.Vector3=data.impulse;
+				//const impMag=MRE.Vector3.Distance(MRE.Vector3.Zero(),impulseVec); //not sure why length() doesn't work
+				//this.ourApp.ourConsole.logMessage("impulse of collision: " + impMag);	
+				
+				const collisionPos=data.contacts[0].point; //ourBubble.actor.transform.app.position
+
 				this.ourWavPlayer.playSound(note,127,collisionPos, this.audioRange);
 				this.spawnParticleEffect(collisionPos, noteNum);
 				this.ourApp.ourSender.send(`["/NoteOn",${ourBubble.note}]`);

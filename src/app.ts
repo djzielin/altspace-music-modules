@@ -23,7 +23,11 @@ interface UserProperties {
 	name: string;
 	userID: MRE.Guid;
 	clientId: MRE.Guid;
-	ourButton: Button;
+	authButton: Button;
+	handButton: Button;
+	lHand: MRE.Actor;
+	rHand: MRE.Actor;
+	isModerator: boolean;
 }
 
 export default class App {
@@ -43,7 +47,7 @@ export default class App {
 	public handGrabMat: MRE.Material;
 	
 	public allUsers: UserProperties[] = [];
-	public allHands: MRE.Actor[] = [];
+	//public allHands: MRE.Actor[] = [];
 
 	/*
 		https://stackoverflow.com/questions/10073699/pad-a-number-with-leading-zeros-in-javascript	
@@ -68,6 +72,8 @@ export default class App {
 			color: new MRE.Color4(0, 1, 0)
 		});
 
+		this.createMenuBase();
+
 		this.context.onStarted(() => this.started());
 		this.context.onUserLeft(user => this.userLeft(user));
 		this.context.onUserJoined(user => this.userJoined(user));
@@ -87,23 +93,27 @@ export default class App {
 	private userJoined(user: MRE.User) {
 		this.ourConsole.logMessage("user joined. name: " + user.name + " id: " + user.id);
 
+		let isModerator=false
+
 		const ourRoles = user.properties["altspacevr-roles"];
-		if (!ourRoles.includes("moderator") &&
-			!ourRoles.includes("presenter") && !ourRoles.includes("terraformer")) {
-			this.ourConsole.logMessage("user doesn't have enough roles to have hands added!");
-			return;
+		if (ourRoles.includes("moderator") ||
+			ourRoles.includes("presenter") || 
+			ourRoles.includes("terraformer")) {
+			this.ourConsole.logMessage("  user is a moderator!");
+			isModerator=true;
 		}
 
-		//TODO allow us to add in hands later (if user it made moderator for instance)
-		const rHand = this.createHand('right-hand', user.id, new MRE.Vector3(0, 0, 0.1),
-			new MRE.Vector3(0.06, 0.06, 0.14));
-		const lHand = this.createHand('left-hand', user.id, new MRE.Vector3(0, 0, 0.1),
-			new MRE.Vector3(0.06, 0.06, 0.14));
+		const rHand: MRE.Actor = null;
+		const lHand: MRE.Actor = null;
+		
+		/*if(isModerator){
+		
+		}*/
 
-		this.allHands.push(rHand);
-		this.allHands.push(lHand);
+		//this.allHands.push(rHand);
+		//this.allHands.push(lHand);
 
-		this.ourConsole.logMessage("  hand array is now size: " + this.allHands.length);
+		//this.ourConsole.logMessage("  hand array is now size: " + this.allHands.length);
 
 		let id = MRE.ZeroGuid;
 		const clients = this.session.clients;
@@ -118,77 +128,98 @@ export default class App {
 			name: user.name,
 			userID: user.id,
 			clientId: id,
-			ourButton: null as Button
+			authButton: null as Button,
+			handButton: null as Button,
+			rHand: rHand,
+			lHand: lHand,
+			isModerator: isModerator
 		}
 		this.allUsers.push(ourUser);
 
-		this.updateAuthUserDisplay();
+		this.updateUserButtons();
 	}
 
 	private makeAuthoritative(ourUser: UserProperties) {
 		this.ourConsole.logMessage("making user: " + ourUser.name + " authoritative!");
 		this.session.setAuthoritativeClient(ourUser.clientId); //can't be user.id! needs to be client.id!
-		this.updateAuthUserDisplay();
+		this.updateUserButtons();
 	}
 
-	private updateAuthUserDisplay() {
-		if(!this.menuBase || this.allUsers.length<1){
-			return;
+	private updateUserHands(ourUser: UserProperties) {
+		if(ourUser.handButton.getValue()){
+			ourUser.rHand = this.createHand('right-hand', ourUser.userID, new MRE.Vector3(0, 0, 0.1),
+				new MRE.Vector3(0.06, 0.06, 0.14));
+			ourUser.lHand = this.createHand('left-hand', ourUser.userID, new MRE.Vector3(0, 0, 0.1),
+				new MRE.Vector3(0.06, 0.06, 0.14));
+		} else{
+			ourUser.rHand.destroy();
+			ourUser.lHand.destroy();
+			ourUser.rHand=null;
+			ourUser.lHand=null;
 		}
+	}
 
+	private updateUserButtons() {
+		this.ourConsole.logMessage("updating user buttons");
 		const authoritativeUserID = this.session.authoritativeClient.userId;
-		this.ourConsole.logMessage("authoritative user is currently id: " + authoritativeUserID);
-		this.ourConsole.logMessage("number of users: "+ this.allUsers.length);
+		this.ourConsole.logMessage("  authoritative user is currently id: " + authoritativeUserID);
+		this.ourConsole.logMessage("  number of users: "+ this.allUsers.length);
 
+		let userCount=0;
 		for (let i = 0; i < this.allUsers.length; i++) {
 			const ourUser = this.allUsers[i];
-			const areWeAuthoritative=(ourUser.userID === authoritativeUserID);
 
-			const pos= new MRE.Vector3(0-0.6, 0, -0.15 - i * 0.15);
+			if (ourUser.isModerator) {
+				const authButtonPos = new MRE.Vector3(0.6, 0, 0.35 - userCount * 0.15);
+				const areWeAuthoritative = (ourUser.userID === authoritativeUserID);
 
-			if(!ourUser.ourButton){ //create a button if we don't already have one
-				const ourButton=new Button(this);
-				ourButton.createAsync(pos,this.menuBase.id,ourUser.name,ourUser.name,
-					false, this.makeAuthoritative.bind(this,ourUser)).then(() => {
-					ourUser.ourButton=ourButton;
-				});
-			} else{
-				ourUser.ourButton.setPos(pos);
-				ourUser.ourButton.setValue(areWeAuthoritative);
+				this.ourConsole.logMessage("  user: "+ ourUser.name + " is Auth: " + areWeAuthoritative);
+				if (!ourUser.authButton) { //create a button if we don't already have one
+					this.ourConsole.logMessage("  user needs an Auth button: " + ourUser.name);
+					const ourButton = new Button(this);
+					ourButton.createAsync(authButtonPos, this.menuBase.id, ourUser.name, ourUser.name,
+						areWeAuthoritative, this.makeAuthoritative.bind(this, ourUser)).then(() => {
+							ourUser.authButton = ourButton;
+							ourButton.doVisualUpdates = false; //we'll handle toggling
+						});
+				} else {
+					ourUser.authButton.setPos(authButtonPos);
+					ourUser.authButton.setValue(areWeAuthoritative);
+				}
+
+				userCount++;
+			}
+
+			const handButtonPos = new MRE.Vector3(1.5+Math.floor(i/10)*1.0, 0, 0.35+ -(i%10) * 0.15); 
+
+			if (!ourUser.handButton) { //create a button if we don't already have one
+				this.ourConsole.logMessage("  user needs an Hand button: " + ourUser.name);
+				const ourButton = new Button(this);
+				ourButton.createAsync(handButtonPos, this.menuBase.id, ourUser.name, ourUser.name,
+					false, this.updateUserHands.bind(this, ourUser)).then(() => {
+						ourUser.handButton = ourButton;
+					});
+			} else {
+				ourUser.handButton.setPos(handButtonPos);
 			}
 		}
 	}
 
 	private userLeft(user: MRE.User) {
 		this.ourConsole.logMessage("user left. name: " + user.name + " id: " + user.id);
-
-		const handsToDelete: MRE.Actor[] = [];
-
-		for (let i = 0; i < this.allHands.length; i++) {
-			const hand = this.allHands[i];
-			const userID = hand.attachment.userId;
-			if (userID === user.id) {
-				this.ourConsole.logMessage("  found one of the users hands: " + this.allHands[i].name);
-				handsToDelete.push(hand);
-			}
-		}
-
-		for (const hand of handsToDelete) {
-			const hIndex = this.allHands.indexOf(hand);
-			if (hIndex > -1) {
-				this.allHands.splice(hIndex, 1);
-				this.ourConsole.logMessage("  removed " + hand.name);
-			}
-		}
-
-		this.ourConsole.logMessage("  hand array is now size: " + this.allHands.length);
-		
-		for (let i=0; i < this.allUsers.length; i++) {
+		this.ourConsole.logMessage("  user array pre-deletion is size: " + this.allUsers.length);
+		for (let i = 0; i < this.allUsers.length; i++) {
 			const ourUser = this.allUsers[i];
+
 			if (ourUser.userID === user.id) {
-				ourUser.ourButton.destroy();
+				if (ourUser.authButton) {
+					ourUser.authButton.destroy();
+				}
+				if (ourUser.handButton) {
+					ourUser.handButton.destroy();
+				}
 				this.allUsers.splice(i, 1);
-				this.updateAuthUserDisplay();
+				this.updateUserButtons();
 				break;
 			}
 		}
@@ -214,7 +245,7 @@ export default class App {
 	private createHand(aPoint: string, userID: MRE.Guid, handPos: MRE.Vector3, handScale: MRE.Vector3) {
 		const hand = MRE.Actor.Create(this.context, {
 			actor: {
-				name: aPoint + userID,
+				name: 'SpawnerUserHand',
 				transform: {
 					local: {
 						position: handPos,
@@ -264,11 +295,14 @@ export default class App {
 			" Z: " + v.z.toFixed(precision) + "}";
 	}
 
-	private async loadAsyncItems() {
-
-		const filename = `${this.baseUrl}/` + "hand_grey.png"; 
+	public setupMenuBase(){
 		
-		const handTexture=this.assets.createTexture("hand", {
+	}
+
+	private createMenuBase() {
+		const filename = `${this.baseUrl}/` + "hand_grey.png";
+
+		const handTexture = this.assets.createTexture("hand", {
 			uri: filename
 		});
 
@@ -299,7 +333,10 @@ export default class App {
 				grabbable: true
 			}
 		});
+	}
 
+
+	private async loadAsyncItems() {
 		this.ourConsole.logMessage("creating console");
 		await this.ourConsole.createAsyncItems(this.menuBase);
 
@@ -319,13 +356,32 @@ export default class App {
 				},
 				transform: {
 					local: {
-						position: { x: 0-0.6, y: 0.101, z: 0.0 },
+						position: { x: 0.6, y: 0.101, z: 0.5 },
 						rotation: MRE.Quaternion.FromEulerAngles(this.degToRad(90), 0, 0)
 					}
 				}
 			}
 		});
 		await authLabel.created();
+
+		const handLabel = MRE.Actor.Create(this.context, {
+			actor: {
+				parentId: this.menuBase.id,
+				name: 'hasHandsLabel',
+				text: {
+					contents: "Has Hands:",
+					height: 0.1,
+					anchor: MRE.TextAnchorLocation.MiddleCenter
+				},
+				transform: {
+					local: {
+						position: { x: 1.5, y: 0.101, z: 0.5 },
+						rotation: MRE.Quaternion.FromEulerAngles(this.degToRad(90), 0, 0)
+					}
+				}
+			}
+		});
+		await handLabel.created();
 
 		this.ourConsole.logMessage("Creating Wav Player");
 		this.ourWavPlayer=new WavPlayer(this);
@@ -350,8 +406,6 @@ export default class App {
 		this.ourSpawner2 = new Spawner(this); 
 		this.ourSpawner2.ourWavPlayer=this.ourWavPlayer2;
 		await this.ourSpawner2.createAsyncItems(new MRE.Vector3(-2,1.3,0));
-
-		this.updateAuthUserDisplay();
 	}
 
 	private started() {
@@ -359,7 +413,7 @@ export default class App {
 			this.ourConsole.logMessage("all async items created/loaded!");
 			this.ourReceiver.ourCallback = this.PianoReceiveCallback.bind(this);
 
-			setInterval(() => { //cull bubbles that have been around too long
+			setInterval(() => { 
 				const pianoPlayable = this.ourSpawner.availableBubbles.length;
 				const vibesPlayable = this.ourSpawner2.availableBubbles.length;
 				const pianoPlaying = this.ourWavPlayer.playingWavs.length;
