@@ -11,8 +11,8 @@ export default class Console {
 	private consoleTextActor: MRE.Actor = null;
 	private consoleText: string[] = [];
 	private consoleOn = true;
-	private consoleParent: MRE.Actor = null;
-	private consoleHolder: MRE.Actor=null;
+	private consoleParent: MRE.Actor=null;
+	private consoleHolder: MRE.Guid;
 	
 	constructor(private ourApp: App) {
 		for (let i = 0; i < 25; i++) {
@@ -28,7 +28,7 @@ export default class Console {
 	private async createConsole() {
 		this.consoleParent = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
-				parentId: this.consoleHolder.id,
+				parentId: this.consoleHolder,
 				name: "parent",
 				transform: {
 					local: {
@@ -89,11 +89,11 @@ export default class Console {
 	private async createConsoleToggleButton() {
 
 		const button=new Button(this.ourApp);
-		await button.createAsync(new MRE.Vector3(0-0.6,0,0.3),this.consoleHolder.id,"Console On","Console Off",
+		await button.createAsync(new MRE.Vector3(0-0.6,0,0.3),this.consoleHolder,"Console On","Console Off",
 			this.consoleOn, this.setConsoleOn.bind(this));
 	}
 
-	public async createAsyncItems(consoleHolder: MRE.Actor) {
+	public async createAsyncItems(consoleHolder: MRE.Guid) {
 		this.consoleHolder=consoleHolder;
 
 		await this.createConsole();

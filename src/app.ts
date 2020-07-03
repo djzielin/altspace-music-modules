@@ -14,6 +14,7 @@ import OscSender from './sender';
 import WavPlayer from './wavplayer';
 import Console from './console';
 import Button from './button';
+import GrabButton from './grabbutton';
 
 /**
  * The main class of this app. All the logic goes here.
@@ -39,7 +40,8 @@ export default class App {
 	public ourWavPlayer: WavPlayer = null;
 	public ourWavPlayer2: WavPlayer = null;
 	public ourConsole: Console = null;
-	public menuBase: MRE.Actor = null;
+	//public menuBase: MRE.Actor = null;
+	public menuGrabber: GrabButton=null;
 	
 	public boxMesh: MRE.Mesh;
 	public redMat: MRE.Material;
@@ -139,6 +141,18 @@ export default class App {
 		this.updateUserButtons();
 	}
 
+	public findUserRecord(userID: MRE.Guid): UserProperties{
+		for(let i=0;i<this.allUsers.length;i++){
+			const ourUser=this.allUsers[i];
+			if(ourUser.userID===userID){
+				return ourUser;
+			}
+		}
+
+		this.ourConsole.logMessage("ERROR: can't find userID: " + userID);
+		return null;
+	}
+
 	private makeAuthoritative(ourUser: UserProperties) {
 		this.ourConsole.logMessage("making user: " + ourUser.name + " authoritative!");
 		this.session.setAuthoritativeClient(ourUser.clientId); //can't be user.id! needs to be client.id!
@@ -177,7 +191,7 @@ export default class App {
 				if (!ourUser.authButton) { //create a button if we don't already have one
 					this.ourConsole.logMessage("  user needs an Auth button: " + ourUser.name);
 					const ourButton = new Button(this);
-					ourButton.createAsync(authButtonPos, this.menuBase.id, ourUser.name, ourUser.name,
+					ourButton.createAsync(authButtonPos, this.menuGrabber.getGUID(), ourUser.name, ourUser.name,
 						areWeAuthoritative, this.makeAuthoritative.bind(this, ourUser)).then(() => {
 							ourUser.authButton = ourButton;
 							ourButton.doVisualUpdates = false; //we'll handle toggling
@@ -195,7 +209,7 @@ export default class App {
 			if (!ourUser.handButton) { //create a button if we don't already have one
 				this.ourConsole.logMessage("  user needs an Hand button: " + ourUser.name);
 				const ourButton = new Button(this);
-				ourButton.createAsync(handButtonPos, this.menuBase.id, ourUser.name, ourUser.name,
+				ourButton.createAsync(handButtonPos, this.menuGrabber.getGUID(), ourUser.name, ourUser.name,
 					false, this.updateUserHands.bind(this, ourUser)).then(() => {
 						ourUser.handButton = ourButton;
 					});
@@ -300,7 +314,7 @@ export default class App {
 	}
 
 	private createMenuBase() {
-		const filename = `${this.baseUrl}/` + "hand_grey.png";
+		/*const filename = `${this.baseUrl}/` + "hand_grey.png";
 
 		const handTexture = this.assets.createTexture("hand", {
 			uri: filename
@@ -333,21 +347,24 @@ export default class App {
 				grabbable: true
 			}
 		});
+		*/
+		this.menuGrabber=new GrabButton(this);
+		this.menuGrabber.create(new MRE.Vector3(2, 0.1, 0));
 	}
 
 
 	private async loadAsyncItems() {
 		this.ourConsole.logMessage("creating console");
-		await this.ourConsole.createAsyncItems(this.menuBase);
+		await this.ourConsole.createAsyncItems(this.menuGrabber.getGUID());
 
 		this.ourConsole.logMessage("Creating Reset Button ");
 		const button=new Button(this);
-		await button.createAsync(new MRE.Vector3(0-0.6,0,0.5),this.menuBase.id,"Reset","Reset",
+		await button.createAsync(new MRE.Vector3(0-0.6,0,0.5),this.menuGrabber.getGUID(),"Reset","Reset",
 			false, this.doReset.bind(this));
 
 		const authLabel = MRE.Actor.Create(this.context, {
 			actor: {
-				parentId: this.menuBase.id,
+				parentId: this.menuGrabber.getGUID(),
 				name: 'authoritativeLabel',
 				text: {
 					contents: "Authoritative:",
@@ -366,7 +383,7 @@ export default class App {
 
 		const handLabel = MRE.Actor.Create(this.context, {
 			actor: {
-				parentId: this.menuBase.id,
+				parentId: this.menuGrabber.getGUID(),
 				name: 'hasHandsLabel',
 				text: {
 					contents: "Has Hands:",
@@ -406,6 +423,7 @@ export default class App {
 		this.ourSpawner2 = new Spawner(this); 
 		this.ourSpawner2.ourWavPlayer=this.ourWavPlayer2;
 		await this.ourSpawner2.createAsyncItems(new MRE.Vector3(-2,1.3,0));
+		
 	}
 
 	private started() {
