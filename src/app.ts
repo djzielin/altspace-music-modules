@@ -177,9 +177,9 @@ export default class App {
 		this.ourConsole.logMessage("updating user buttons");
 		const authoritativeUserID = this.session.authoritativeClient.userId;
 		this.ourConsole.logMessage("  authoritative user is currently id: " + authoritativeUserID);
-		this.ourConsole.logMessage("  number of users: "+ this.allUsers.length);
+		this.ourConsole.logMessage("  number of users: " + this.allUsers.length);
 
-		let userCount=0;
+		let userCount = 0;
 		for (let i = 0; i < this.allUsers.length; i++) {
 			const ourUser = this.allUsers[i];
 
@@ -187,7 +187,7 @@ export default class App {
 				const authButtonPos = new MRE.Vector3(0.6, 0, 0.35 - userCount * 0.15);
 				const areWeAuthoritative = (ourUser.userID === authoritativeUserID);
 
-				this.ourConsole.logMessage("  user: "+ ourUser.name + " is Auth: " + areWeAuthoritative);
+				this.ourConsole.logMessage("  user: " + ourUser.name + " is Auth: " + areWeAuthoritative);
 				if (!ourUser.authButton) { //create a button if we don't already have one
 					this.ourConsole.logMessage("  user needs an Auth button: " + ourUser.name);
 					const ourButton = new Button(this);
@@ -204,7 +204,7 @@ export default class App {
 				userCount++;
 			}
 
-			const handButtonPos = new MRE.Vector3(1.5+Math.floor(i/10)*1.0, 0, 0.35+ -(i%10) * 0.15); 
+			const handButtonPos = new MRE.Vector3(1.5 + Math.floor(i / 10) * 1.0, 0, 0.35 + -(i % 10) * 0.15);
 
 			if (!ourUser.handButton) { //create a button if we don't already have one
 				this.ourConsole.logMessage("  user needs an Hand button: " + ourUser.name);

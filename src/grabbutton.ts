@@ -5,11 +5,14 @@
 //import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 import App from './app';
-import { MreArgumentError } from '../../mixed-reality-extension-sdk/packages/sdk/';
+//import { MreArgumentError } from '../../mixed-reality-extension-sdk/packages/sdk/';
+import Button from './button';
 
 export default class GrabButton {
 	private buttonActor: MRE.Actor = null;
-
+	private lockButton: Button = null;
+	private unLocked = false;
+	
 	static handMesh: MRE.Mesh = null;
 	static handTexture: MRE.Texture = null;
 	static handMaterial: MRE.Material = null;
@@ -20,8 +23,18 @@ export default class GrabButton {
 
 	public destroy() {
 		this.buttonActor.destroy();
+		this.lockButton.destroy();
 	}
 
+	public setUnlocked(b: boolean): void {
+		this.unLocked=b;
+
+		if(this.unLocked){
+			this.buttonActor.grabbable=true;
+		}else{
+			this.buttonActor.grabbable=false;
+		}
+	}
 
 	public createAssets() {
 		if (GrabButton.handMesh) {
@@ -42,12 +55,11 @@ export default class GrabButton {
 		GrabButton.handMesh = this.ourApp.assets.createBoxMesh('boxMesh', 0.25, 0.1, 0.25);
 	}
 
-	public getGUID(): MRE.Guid
-	{
+	public getGUID(): MRE.Guid {
 		return this.buttonActor.id;
 	}
 
-	public create(pos: MRE.Vector3) {
+	public create(pos: MRE.Vector3) { //TODO: should this be async?
 		this.createAssets();
 
 		this.buttonActor = MRE.Actor.Create(this.ourApp.context, {
@@ -68,9 +80,17 @@ export default class GrabButton {
 					},
 					isTrigger: false
 				},
-				grabbable: true
+				//grabbable: true
 			}
 		});
+
+		if(this.unLocked){
+			this.buttonActor.grabbable=true;
+		}
+
+		this.lockButton=new Button(this.ourApp);
+		this.lockButton.createAsync(new MRE.Vector3(0.0,0.0,-0.3),this.buttonActor.id,"unlocked","locked",
+			this.unLocked, this.setUnlocked.bind(this),0.4);
 
 		/*this.buttonActor.setBehavior(MRE.ButtonBehavior)
 			.onButton("pressed", (user: MRE.User) => {

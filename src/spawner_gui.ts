@@ -8,18 +8,20 @@ import App from './app';
 import PlusMinus from './plusminus';
 import Button from './button';
 import Spawner from './spawner';
+import GrabButton from './grabbutton';
 
 export default class SpawnerGui {
-	private guiParent: MRE.Actor=null;
+	//private guiParent: MRE.Actor=null;
 	private guiBackground: MRE.Actor=null;
-	
+	private guiGrabber: GrabButton=null;
+
 	constructor(private ourApp: App, private ourSpawner: Spawner) {
 		
 	}
 
 	private async createBackground(pos: MRE.Vector3) {
 		
-		this.guiParent = MRE.Actor.Create(this.ourApp.context, {
+		/*this.guiParent = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
 				name: "menuGrabber",
 				transform: {
@@ -40,10 +42,13 @@ export default class SpawnerGui {
 				},
 				grabbable: true
 			}
-		});
+		});*/
 
-		await this.guiParent.created();
+		//await this.guiParent.created();
 
+		this.guiGrabber=new GrabButton(this.ourApp);
+		this.guiGrabber.create(pos);
+		
 		const consoleMat = this.ourApp.assets.createMaterial('consolemat', {
 			color: new MRE.Color3(0.5, 0.5, 0.5) //TODO move material over to app
 		});
@@ -51,7 +56,7 @@ export default class SpawnerGui {
 
 		this.guiBackground = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
-				parentId: this.guiParent.id,
+				parentId: this.guiGrabber.getGUID(),
 				name: "consoleBackground",
 				appearance: {
 					meshId: this.ourApp.boxMesh.id,
@@ -69,7 +74,7 @@ export default class SpawnerGui {
 
 		const guiTextActor = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
-				parentId: this.guiParent.id,
+				parentId: this.guiGrabber.getGUID(),
 				name: 'consoleText',
 				text: {
 					contents: "Spawner",
@@ -95,40 +100,44 @@ export default class SpawnerGui {
 		
 		this.ourApp.ourConsole.logMessage("creating speed plus/minus");
 		const speedGUI=new PlusMinus(this.ourApp);
-		await speedGUI.createAsync(new MRE.Vector3(-0.5-0.75,0.1,0.3),this.guiParent.id,"speed",
+		await speedGUI.createAsync(new MRE.Vector3(-0.5-0.75,0.1,0.3),
+			this.guiGrabber.getGUID(),"speed",
 			this.ourSpawner.bubbleSpeed,0.01, this.ourSpawner.setBubbleSpeed.bind(this.ourSpawner)); 
 
 		const sizeGUI=new PlusMinus(this.ourApp);
-		await sizeGUI.createAsync(new MRE.Vector3(-0.5-0.75,0.1,0.15),this.guiParent.id,"size",
+		await sizeGUI.createAsync(new MRE.Vector3(-0.5-0.75,0.1,0.15),
+			this.guiGrabber.getGUID(),"size",
 			this.ourSpawner.bubbleSize,0.01, this.ourSpawner.setBubbleSize.bind(this.ourSpawner));
 
 		const timeoutGUI=new PlusMinus(this.ourApp);
-		await timeoutGUI.createAsync(new MRE.Vector3(-0.5-0.75,0.1,0.0),this.guiParent.id,"time",
+		await timeoutGUI.createAsync(new MRE.Vector3(-0.5-0.75,0.1,0.0),
+			this.guiGrabber.getGUID(),"time",
 			this.ourSpawner.timeOut,1,this.ourSpawner.setTimeOut.bind(this.ourSpawner));
 
 
 		const randButton=new Button(this.ourApp);
-		await randButton.createAsync(new MRE.Vector3(0.0-0.75,0.025,-0.2),this.guiParent.id,"Pos Rand","Pos Lin",
+		await randButton.createAsync(new MRE.Vector3(0.0-0.75,0.025,-0.2),
+			this.guiGrabber.getGUID(),"Pos Rand","Pos Lin",
 			this.ourSpawner.doPosRandom, this.ourSpawner.setDoPosRandom.bind(this.ourSpawner));
 
 		const button=new Button(this.ourApp);
-		await button.createAsync(new MRE.Vector3(0.0-0.75,0.025,-0.4),this.guiParent.id,"Particle On","ParticleOff",
+		await button.createAsync(new MRE.Vector3(0.0-0.75,0.025,-0.4),
+			this.guiGrabber.getGUID(),"Particle On","ParticleOff",
 			this.ourSpawner.doParticleEffect, this.ourSpawner.setDoParticleEffect.bind(this.ourSpawner));
 
-		//const freezeButton=new Button(this.ourApp);
-		//await freezeButton.createAsync(new MRE.Vector3(0.0,0.025,-0.5),this.guiParent.id,"rot ok","no rot",
-		//	this.ourSpawner.noFreezeRotation, this.ourSpawner.setNoFreezeRotation.bind(this.ourSpawner));
-
 		const emitWidth=new PlusMinus(this.ourApp);
-		await emitWidth.createAsync(new MRE.Vector3(-0.5-0.75,0.1,-0.6),this.guiParent.id,"width",
+		await emitWidth.createAsync(new MRE.Vector3(-0.5-0.75,0.1,-0.6),
+			this.guiGrabber.getGUID(),"width",
 			this.ourSpawner.spawnerWidth,0.05,this.ourSpawner.setEmitterWidth.bind(this.ourSpawner));
 
 		const emitHeight=new PlusMinus(this.ourApp);
-		await emitHeight.createAsync(new MRE.Vector3(-0.5-0.75,0.1,-0.75),this.guiParent.id,"height",
+		await emitHeight.createAsync(new MRE.Vector3(-0.5-0.75,0.1,-0.75),
+			this.guiGrabber.getGUID(),"height",
 			this.ourSpawner.spawnerHeight,0.05,this.ourSpawner.setEmitterHeight.bind(this.ourSpawner));
 
 		const audioDistance=new PlusMinus(this.ourApp);
-		await audioDistance.createAsync(new MRE.Vector3(-0.5-0.75,0.1,-0.9),this.guiParent.id,"a rng",
+		await audioDistance.createAsync(new MRE.Vector3(-0.5-0.75,0.1,-0.9),
+			this.guiGrabber.getGUID(),"a rng",
 			this.ourSpawner.audioRange,1,this.ourSpawner.setAudioRange.bind(this.ourSpawner));
 	}
 }
