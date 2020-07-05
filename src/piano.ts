@@ -5,11 +5,13 @@
 //import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 import App from './app';
+import GrabButton from './grabbutton';
 
 export default class Piano {
 	private ourKeys: MRE.Actor[] = [];
-	public keyboardParent: MRE.Actor;
-	
+	//public keyboardParent: MRE.Actor;
+	private pianoGrabber: GrabButton=null;
+
 	private inch = 0.0254;
 	private halfinch = this.inch * 0.5;
 	private xOffset =
@@ -82,7 +84,7 @@ export default class Piano {
 		});
 		await blackKeyMaterial.created;
 
-		this.keyboardParent = MRE.Actor.Create(this.ourApp.context, {
+		/*this.keyboardParent = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
 				name: 'keyboard_parent',
 				transform: {
@@ -90,14 +92,16 @@ export default class Piano {
 					app: { position: new MRE.Vector3(0, 1, 0) }
 				}
 			}
-		});
+		});*/
+		this.pianoGrabber=new GrabButton(this.ourApp);
+		this.pianoGrabber.create(new MRE.Vector3(1.0, 1, 0));
 
-		await this.keyboardParent.created();
+		//await this.keyboardParent.created();
 
-		this.keyboardParent.setCollider(MRE.ColliderType.Box, false,
-			new MRE.Vector3(this.octaveSize * 8, this.inch * 2.0, this.inch * 6.0));
+		//this.keyboardParent.setCollider(MRE.ColliderType.Box, false,
+		//	new MRE.Vector3(this.octaveSize * 8, this.inch * 2.0, this.inch * 6.0));
 
-		this.keyboardParent.grabbable = true;
+		//this.keyboardParent.grabbable = true;
 
 		for (let i = 21; i < 109; i++) {
 			let meshId: MRE.Guid = blackKeyMesh.id;
@@ -109,14 +113,14 @@ export default class Piano {
 			}
 
 			const keyPos = new MRE.Vector3(
-				-this.octaveSize * 4 + octave * this.octaveSize + this.xOffset[note],
+				-this.octaveSize * 4 + octave * this.octaveSize + this.xOffset[note] -1.0,
 				this.yOffset[note],
 				this.zOffset[note]);
 
 			const keyActor = MRE.Actor.Create(this.ourApp.context, {
 				actor: {
 					name: 'PianoKey' + i,
-					parentId: this.keyboardParent.id,
+					parentId: this.pianoGrabber.getGUID(),
 					transform: {
 						local: { position: keyPos }
 					},
