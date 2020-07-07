@@ -37,7 +37,7 @@ export default class Spawner {
 	B15928
 	*/
 	
-	private noteColors: MRE.Color4[] = [
+	/*private noteColors: MRE.Color4[] = [
 		new MRE.Color4(166 / 255, 206 / 255, 227 / 255),
 		new MRE.Color4(31 / 255, 120 / 255, 180 / 255),
 		new MRE.Color4(178 / 255, 223 / 255, 138 / 255),
@@ -50,6 +50,21 @@ export default class Spawner {
 		new MRE.Color4(106 / 255, 61 / 255, 154 / 255),
 		new MRE.Color4(255 / 255, 255 / 255, 153 / 255),
 		new MRE.Color4(177 / 255, 89 / 255, 40 / 255)];
+*/
+
+	private noteColors: MRE.Color4[] = [
+		new MRE.Color4(229 / 255, 60 / 255, 81 / 255), //C
+		new MRE.Color4(229 / 255, 60 / 255, 81 / 255), //C#
+		new MRE.Color4(243 / 255, 124 / 255, 59 / 255), //D
+		new MRE.Color4(243 / 255, 124 / 255, 59 / 255), //D#
+		new MRE.Color4(255 / 255, 165 / 255, 44 / 255), //E
+		new MRE.Color4(110 / 255, 200 / 255, 80 / 255), //F
+		new MRE.Color4(110 / 255, 200 / 255, 80 / 255), //F#
+		new MRE.Color4(66 / 255, 184 / 255, 212 / 255), //G
+		new MRE.Color4(66 / 255, 184 / 255, 212 / 255), //G#
+		new MRE.Color4(96 / 255, 96 / 255, 186 / 255), //A
+		new MRE.Color4(96 / 255, 96 / 255, 186 / 255), //A#
+		new MRE.Color4(178 / 255, 96 / 255, 178 / 255)]; //B
 
 	private particleEffects: string [] = [
 		"artifact:1502544138917118217",
@@ -78,8 +93,8 @@ export default class Spawner {
 	public availableBubbles: BubbleProperties[]=[]; 
 
 	private noteZpos: Map<number,number>=new Map();
-	private noteMaterials: MRE.Material[] = [];
-	public spawnerWidth=3.0;
+	public noteMaterials: MRE.Material[] = [];
+	public spawnerWidth=4.0;
 	public spawnerHeight=1.5;
 
 	//private bubbleLimit=50;
@@ -110,7 +125,7 @@ export default class Spawner {
 		*/
 	}
 
-	public async createAsyncItems(pos: MRE.Vector3) {
+	public async createAsyncItems(pos: MRE.Vector3, rot=new MRE.Quaternion()) {
 		this.boxMesh = this.ourApp.assets.createBoxMesh('boxMesh', 1.0, 1.0, 1.0);
 		await this.boxMesh.created;
 
@@ -118,7 +133,7 @@ export default class Spawner {
 		await this.sphereMesh.created;
 
 		this.staffGrabber=new GrabButton(this.ourApp);
-		this.staffGrabber.create(pos);
+		this.staffGrabber.create(pos,rot);
 
 		const consoleMat = this.ourApp.assets.createMaterial('consolemat', {
 			color: new MRE.Color3(1.0,1.0,1.0) //TODO move material over to app
@@ -131,7 +146,7 @@ export default class Spawner {
 				name: "staffBackground",
 				appearance: {
 					meshId: this.ourApp.boxMesh.id,
-					materialId: consoleMat.id,
+					materialId: this.ourApp.whiteMat.id,
 					enabled: true
 				},
 				transform: {
@@ -144,15 +159,15 @@ export default class Spawner {
 		});
 		await this.staffBackground.created();
 
-		const zSpacing=this.spawnerHeight/(this.staffMidi.length+2);
-		const zBase= -(this.spawnerHeight/2.0)+zSpacing;
+		const zSpacing = this.spawnerHeight / (this.staffMidi.length + 2);
+		const zBase = -(this.spawnerHeight / 2.0) + zSpacing;
 
-		for(let i=0;i<this.staffMidi.length;i++){
-			this.noteZpos.set(this.staffMidi[i],zBase+(i+1)*zSpacing);
+		for (let i = 0; i < this.staffMidi.length; i++) {
+			this.noteZpos.set(this.staffMidi[i], zBase + (i + 1) * zSpacing);
 		}
 
-		for(let i=0;i<this.staffLineIndex.length;i++){
-			const z=this.noteZpos.get(this.staffLineIndex[i]);
+		for (let i = 0; i < this.staffLineIndex.length; i++) {
+			const z = this.noteZpos.get(this.staffLineIndex[i]);
 
 			const staffLine = MRE.Actor.Create(this.ourApp.context, {
 				actor: {
@@ -160,7 +175,7 @@ export default class Spawner {
 					name: "staffLine",
 					appearance: {
 						meshId: this.ourApp.boxMesh.id,
-						materialId: this.ourApp.blackMat.id
+						materialId: this.ourApp.blackMat.id //this.ourApp.whiteMat.id 
 					},
 					transform: {
 						local: {
@@ -217,8 +232,19 @@ export default class Spawner {
 		let bonusLineActor: MRE.Actor=null;
 		let bonusLineActor2: MRE.Actor=null;
 
-		if(note===36 || note===40 || note===60 || note===81 || note===84){
-			//const z=this.noteZpos.get(note);
+		if(note===36 || note===40 || note===60 || note===81 || note===84 || note===83 || note===38){
+			const pos2=pos.clone();			
+
+			if(note===38){
+				const note2=40;
+				const z=this.noteZpos.get(note2);
+				pos2.z=z;
+			}
+			if(note===83){
+				const note2=81;
+				const z=this.noteZpos.get(note2);
+				pos2.z=z;
+			}
 
 			bonusLineActor = MRE.Actor.Create(this.ourApp.context, {
 				actor: {
@@ -230,7 +256,7 @@ export default class Spawner {
 					},
 					transform: {
 						local: {
-							position: pos,
+							position: pos2,
 							scale: new MRE.Vector3(scale*2.0, 0.015, 0.01)
 						}
 					}
@@ -314,7 +340,7 @@ export default class Spawner {
 		this.ourApp.ourConsole.logMessage("trying to spawn staff note for: " + note);
 		//const octave = Math.floor(note / 12);
 		const noteNum = note % 12;
-		const scale = (this.spawnerHeight/(this.noteZpos.size+2))*1.5; 
+		const scale = (this.spawnerHeight/(this.noteZpos.size+2))*1.75; 
 
 		/*while(this.availableBubbles.length>this.bubbleLimit){
 			this.ourApp.ourConsole.logMessage("culling bubble. enforcing bubble limit of: " + this.bubbleLimit);

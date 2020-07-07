@@ -6,11 +6,16 @@
 import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 import App from './app';
 import GrabButton from './grabbutton';
+import WavPlayer from './wavplayer';
+import Staff from './staff';
 
 export default class Piano {
-	private ourKeys: MRE.Actor[] = [];
+	//private ourKeys: MRE.Actor[] = [];
+	private ourKeys: Map<number,MRE.Actor>=new Map();
 	public keyboardParent: MRE.Actor;
 	private pianoGrabber: GrabButton=null;
+	public ourWavPlayer: WavPlayer;
+	public ourStaff: Staff;
 
 	private inch = 0.0254;
 	private halfinch = this.inch * 0.5;
@@ -32,20 +37,20 @@ export default class Piano {
 	private zOffset =
 		[0, this.inch - 0.001, 0, this.inch - 0.001, 0, 0, this.inch - 0.001, 0, this.inch - 0.001, 0, 
 			this.inch - 0.001, 0];
+	private zOffsetCollision =
+		[-this.inch * 1.75, this.inch - 0.001, -this.inch * 1.75, this.inch - 0.001, -this.inch * 1.75,
+			-this.inch * 1.75, this.inch - 0.001, -this.inch * 1.75, this.inch - 0.001, -this.inch * 1.75,
+			this.inch - 0.001, -this.inch * 1.75];
 	private octaveSize = this.inch * 7.0;
 
 	private noteOrder =
 		["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
 
-	private whiteKeyMaterial: MRE.Material = this.ourApp.assets.createMaterial('cubemat', {
-		color: new MRE.Color4(1, 1, 1)
-	});
-	private blackKeyMaterial: MRE.Material = this.ourApp.assets.createMaterial('cubemat', {
-		color: new MRE.Color4(0, 0, 0)
-	});
-	private redKeyMaterial: MRE.Material = this.ourApp.assets.createMaterial('cubemat', {
-		color: new MRE.Color4(1, 0, 0)
-	});
+	private whiteKeyMaterial: MRE.Material = null;
+	private blackKeyMaterial: MRE.Material = null;
+	private redKeyMaterial: MRE.Material= null;
+
+	private keyLocations: Map<number,MRE.Vector3>=new Map();
 
 	public setProperKeyColor(midiNote: number) {
 		const note = midiNote % 12;
@@ -56,19 +61,35 @@ export default class Piano {
 			matt = this.whiteKeyMaterial;
 		}
 
-		this.ourKeys[midiNote - 21].appearance.material = matt;
+		this.ourKeys.get(midiNote).appearance.material = matt;
+	}
+
+	public setFancyKeyColor(midiNote: number) {
+		const note = midiNote % 12;
+
+		if (this.ourStaff) {
+			const materialID = this.ourStaff.noteMaterials[note].id;
+			if (this.ourKeys.has(midiNote)) {
+				this.ourKeys.get(midiNote).appearance.materialId = materialID;
+			}
+		}
 	}
 
 	constructor(private ourApp: App) {
-
+		this.whiteKeyMaterial = this.ourApp.assets.createMaterial('cubemat', {
+			color: new MRE.Color4(1, 1, 1)
+		});
+		this.blackKeyMaterial = this.ourApp.assets.createMaterial('cubemat', {
+			color: new MRE.Color4(0, 0, 0)
+		});
 	}
 
-	public async createAllKeys() {
-		let octave = 0;
-		let note = 9;
-
+	public async createAllKeys(pos: MRE.Vector3,rot=new MRE.Quaternion()) {
 		const whiteKeyMesh = this.ourApp.assets.createBoxMesh('box', this.inch * 0.9, this.inch, this.inch * 5.5);
 		await whiteKeyMesh.created;
+		const whiteKeyCollisionMesh = this.ourApp.assets.createBoxMesh('box', this.inch * 0.9, 
+			this.inch, this.inch * 2.0);
+		await whiteKeyCollisionMesh.created;
 
 		const blackKeyMesh = this.ourApp.assets.createBoxMesh('box', this.halfinch, this.inch, this.inch * 3.5);
 		await blackKeyMesh.created;
@@ -86,7 +107,7 @@ export default class Piano {
 
 		
 		this.pianoGrabber=new GrabButton(this.ourApp);
-		this.pianoGrabber.create(new MRE.Vector3(1.0, 1, 0));
+		this.pianoGrabber.create(pos,rot);
 
 		this.keyboardParent = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
@@ -95,7 +116,7 @@ export default class Piano {
 				transform: {
 					local: {
 						position: new MRE.Vector3(0, 0, 0),
-						scale: new MRE.Vector3(2, 2, 2)
+						scale: new MRE.Vector3(5, 5, 5)
 					}
 				}
 			}
@@ -107,19 +128,33 @@ export default class Piano {
 
 		//this.keyboardParent.grabbable = true;
 
-		for (let i = 21; i < 109; i++) {
+		//21 to 109
+		for (let i = 36; i < 85; i++) {
 			let meshId: MRE.Guid = blackKeyMesh.id;
 			let mattId: MRE.Guid = blackKeyMaterial.id;
+			const note = i % 12;
+			const octave = Math.floor(i / 12);
+
+
+			let collisionMeshID: MRE.Guid = blackKeyMesh.id;
 
 			if (this.zOffset[note] === 0) {
 				meshId = whiteKeyMesh.id;
 				mattId = whiteKeyMaterial.id;
+				collisionMeshID=whiteKeyCollisionMesh.id;
 			}
 
 			const keyPos = new MRE.Vector3(
-				-this.octaveSize * 4 + octave * this.octaveSize + this.xOffset[note] -1.0,
+				-this.octaveSize * 2 + octave * this.octaveSize + this.xOffset[note] -1.0,
 				this.yOffset[note],
 				this.zOffset[note]);
+
+			this.keyLocations.set(note,keyPos); //TODO, wont be accurate if moved
+
+			const keyPosCollision = new MRE.Vector3(
+					-this.octaveSize * 2 + octave * this.octaveSize + this.xOffset[note] -1.0,
+					this.yOffset[note],
+					this.zOffsetCollision[note]);
 
 			const keyActor = MRE.Actor.Create(this.ourApp.context, {
 				actor: {
@@ -131,39 +166,97 @@ export default class Piano {
 					appearance:
 					{
 						meshId: meshId,
-						materialId: mattId //this.redKeyMaterial.id
+						materialId: mattId 
 					},
 				}
 			});
 
 			await keyActor.created();
 
-			this.ourKeys.push(keyActor);
-			note = note + 1;
-			if (note === 12) {
-				note = 0;
-				octave++;
-			}
+			const keyCollisionActor = MRE.Actor.Create(this.ourApp.context, {
+				actor: {
+					name: 'CollisionPianoKey' + i,
+					parentId: this.keyboardParent.id,
+					transform: {
+						local: { position: keyPosCollision }
+					},
+					appearance:
+					{
+						meshId: collisionMeshID,
+						materialId: this.ourApp.redMat.id,
+						enabled: false
+					},
+					collider: {
+						geometry: {
+							shape: MRE.ColliderType.Box
+						},
+						isTrigger: true
+					}
+				}
+			});
+
+			keyCollisionActor.collider.onTrigger("trigger-enter", (otherActor: MRE.Actor) => {
+				this.ourApp.ourConsole.logMessage("trigger enter on piano note!");				
+
+				if (otherActor.name.includes('SpawnerUserHand')) { //bubble touches hand
+					this.keyPressed(i);
+
+					if (this.ourStaff) {
+						this.ourStaff.receiveNote(i, 127);
+					}
+
+				} else {
+					//this.ourApp.ourConsole.logMessage("sphere collided with: " + otherActor.name);
+				}
+			});
+			keyCollisionActor.collider.onTrigger("trigger-exit", (otherActor: MRE.Actor) => {
+				this.ourApp.ourConsole.logMessage("trigger enter on piano note!");				
+
+				if (otherActor.name.includes('SpawnerUserHand')) { //bubble touches hand
+					this.keyReleased(i);
+
+				} else {
+					//this.ourApp.ourConsole.logMessage("sphere collided with: " + otherActor.name);
+				}
+			});
+
+			await keyCollisionActor.created();
+
+			//TODO: setup action here
+
+			this.ourKeys.set(i,keyActor);
 		}
 	}	
 
 	public keyPressed(note: number) {
-		const adjustedMidiNote: number = note - 21;
+		if(!this.ourKeys.has(note)){
+			return;
+		}
 
-		//maybe use pitch (x axis) rotation instead?
-		const currentPos = this.ourKeys[adjustedMidiNote].transform.local.position;
+		const currentPos = this.ourKeys.get(note).transform.local.position;
 
-		this.ourKeys[adjustedMidiNote].transform.local.position =
+		this.ourKeys.get(note).transform.local.position =
 			new MRE.Vector3(currentPos.x, currentPos.y - 0.01, currentPos.z);
+			
+		if(this.ourWavPlayer){
+			this.ourWavPlayer.playSound(note,127,new MRE.Vector3(0,0,0), 20.0);
+		}
+
+		this.setFancyKeyColor(note);
+
 	}
 
 	public keyReleased(note: number) {
-		const adjustedMidiNote: number = note - 21;
+		if(!this.ourKeys.has(note)){
+			return;
+		}
 		const noteNum = note % 12;
 
-		const currentPos = this.ourKeys[adjustedMidiNote].transform.local.position;
+		const currentPos = this.ourKeys.get(note).transform.local.position;
 
-		this.ourKeys[adjustedMidiNote].transform.local.position =
+		this.ourKeys.get(note).transform.local.position =
 			new MRE.Vector3(currentPos.x, this.yOffset[noteNum], currentPos.z);
+
+		this.setProperKeyColor(note);
 	}
 }

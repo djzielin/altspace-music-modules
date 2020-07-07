@@ -9,7 +9,7 @@ import { Session } from '../../mixed-reality-extension-sdk/packages/sdk/built/in
 import PianoReceiver from './receiver'
 import Piano from './piano'
 import Spawner from './spawner'
-import { User } from '../../mixed-reality-extension-sdk/packages/sdk/';
+import { User, Quaternion } from '../../mixed-reality-extension-sdk/packages/sdk/';
 import OscSender from './sender';
 import WavPlayer from './wavplayer';
 import Console from './console';
@@ -36,17 +36,22 @@ export default class App {
 	public assets: MRE.AssetContainer;
 
 	public ourPiano: Piano = null;
+	public ourStaff: Staff=null;
+
+	//public ourPiano2: Piano = null;
+	//public ourStaff2: Staff=null;
+
 	public ourSpawner: any = null;
 	public ourSpawner2: any = null;
 	public ourWavPlayer: WavPlayer = null;
 	public ourWavPlayer2: WavPlayer = null;
 	public ourConsole: Console = null;
 	public menuGrabber: GrabButton=null;
-	public ourStaff: Staff=null;
 
 	public boxMesh: MRE.Mesh;
 	public redMat: MRE.Material;
 	public greenMat: MRE.Material;
+	public whiteMat: MRE.Material;
 	public blackMat: MRE.Material;
 	public handGrabMat: MRE.Material;
 	
@@ -78,6 +83,10 @@ export default class App {
 		this.blackMat = this.assets.createMaterial('blackMat', {
 			color: new MRE.Color4(0, 0, 0)
 		});
+		this.whiteMat = this.assets.createMaterial('whiteMat', {
+			color: new MRE.Color4(1, 1, 1)
+		});
+
 
 		this.menuGrabber=new GrabButton(this);
 		this.menuGrabber.create(new MRE.Vector3(1, 0.1, 0));
@@ -158,15 +167,30 @@ export default class App {
 
 	private updateUserHands(ourUser: UserProperties) {
 		if(ourUser.handButton.getValue()){
-			ourUser.rHand = this.createHand('right-hand', ourUser.userID, new MRE.Vector3(0, 0, 0.1),
+			/*ourUser.rHand = this.createHand('right-hand', ourUser.userID, new MRE.Vector3(0, 0, 0.1),
 				new MRE.Vector3(0.06, 0.06, 0.14));
 			ourUser.lHand = this.createHand('left-hand', ourUser.userID, new MRE.Vector3(0, 0, 0.1),
-				new MRE.Vector3(0.06, 0.06, 0.14));
+				new MRE.Vector3(0.06, 0.06, 0.14));*/
+			this.ourConsole.logMessage("creating hands for: " + ourUser.name);
+
+	
+			ourUser.rHand = this.createHand('right-hand', ourUser.userID, new MRE.Vector3(0, 0, 0.1),
+				new MRE.Vector3(0.03, 0.03, 0.14));
+			ourUser.lHand = this.createHand('left-hand', ourUser.userID, new MRE.Vector3(0, 0, 0.1),
+				new MRE.Vector3(0.03, 0.03, 0.14));
+
 		} else{
-			ourUser.rHand.destroy();
-			ourUser.lHand.destroy();
-			ourUser.rHand=null;
-			ourUser.lHand=null;
+			this.ourConsole.logMessage("removing hands for: " + ourUser.name);
+
+			if(ourUser.rHand){
+				ourUser.rHand.destroy();
+				ourUser.rHand=null;
+			}
+
+			if(ourUser.lHand){
+				ourUser.lHand.destroy();
+				ourUser.lHand=null;
+			}
 		}
 	}
 
@@ -242,9 +266,9 @@ export default class App {
 		this.ourConsole.logMessage(`App received - note: ${note} vel: ${vel}`);
 
 		if (vel > 0) {
-			if(this.ourWavPlayer){
-				this.ourWavPlayer.playSound(note,127,new MRE.Vector3(0,0,0), 20.0);
-			}
+			//if(this.ourWavPlayer){
+			//	this.ourWavPlayer.playSound(note,127,new MRE.Vector3(0,0,0), 20.0);
+			//}
 			if (this.ourPiano) {
 				this.ourPiano.keyPressed(note);
 			}
@@ -379,13 +403,35 @@ export default class App {
 */
 		this.ourConsole.logMessage("creating piano keys"); 
 		this.ourPiano = new Piano(this);
-		await this.ourPiano.createAllKeys();
+		await this.ourPiano.createAllKeys(new MRE.Vector3(2, 1, 0),
+			Quaternion.FromEulerAngles(-30* Math.PI / 180,0,0));
+
+		this.ourPiano.ourWavPlayer=this.ourWavPlayer;
+
 
 		this.ourConsole.logMessage("Loading staff items");
 		this.ourStaff = new Staff(this); 
 		this.ourStaff.ourWavPlayer=this.ourWavPlayer;
-		await this.ourStaff.createAsyncItems(new MRE.Vector3(4,1,0));
+		await this.ourStaff.createAsyncItems(new MRE.Vector3(2,2,0.5), 
+			Quaternion.FromEulerAngles(-90* Math.PI / 180,0,0));
 		this.ourStaff.ourWavPlayer=this.ourWavPlayer;
+
+		this.ourPiano.ourStaff=this.ourStaff;
+
+
+	/*	this.ourConsole.logMessage("creating piano keys"); 
+		this.ourPiano2 = new Piano(this);
+		await this.ourPiano2.createAllKeys(new MRE.Vector3(1.0, 1, 3));
+		this.ourPiano2.ourWavPlayer=this.ourWavPlayer;
+
+
+		this.ourConsole.logMessage("Loading staff items");
+		this.ourStaff2 = new Staff(this); 
+		this.ourStaff2.ourWavPlayer=this.ourWavPlayer;
+		await this.ourStaff2.createAsyncItems(new MRE.Vector3(-4,1,0));
+		this.ourStaff2.ourWavPlayer=this.ourWavPlayer;
+
+		this.ourPiano2.ourStaff=this.ourStaff2;*/
 /*
 		this.ourConsole.logMessage("Loading spawner items");
 		this.ourSpawner = new Spawner(this); 

@@ -59,7 +59,7 @@ export default class GrabButton {
 		return this.buttonActor.id;
 	}
 
-	public create(pos: MRE.Vector3) { //TODO: should this be async?
+	public create(pos: MRE.Vector3,rot=new MRE.Quaternion()) { //TODO: should this be async?
 		this.createAssets();
 
 		this.buttonActor = MRE.Actor.Create(this.ourApp.context, {
@@ -68,6 +68,7 @@ export default class GrabButton {
 				transform: {
 					local: {
 						position: pos,
+						rotation: rot
 					}
 				},
 				appearance: {
