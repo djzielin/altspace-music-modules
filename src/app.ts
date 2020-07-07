@@ -14,6 +14,7 @@ import OscSender from './sender';
 import WavPlayer from './wavplayer';
 import Console from './console';
 import Button from './button';
+import Staff from './staff';
 import GrabButton from './grabbutton';
 
 /**
@@ -40,12 +41,13 @@ export default class App {
 	public ourWavPlayer: WavPlayer = null;
 	public ourWavPlayer2: WavPlayer = null;
 	public ourConsole: Console = null;
-	//public menuBase: MRE.Actor = null;
 	public menuGrabber: GrabButton=null;
-	
+	public ourStaff: Staff=null;
+
 	public boxMesh: MRE.Mesh;
 	public redMat: MRE.Material;
 	public greenMat: MRE.Material;
+	public blackMat: MRE.Material;
 	public handGrabMat: MRE.Material;
 	
 	public allUsers: UserProperties[] = [];
@@ -73,8 +75,12 @@ export default class App {
 		this.greenMat = this.assets.createMaterial('redmat', {
 			color: new MRE.Color4(0, 1, 0)
 		});
+		this.blackMat = this.assets.createMaterial('blackMat', {
+			color: new MRE.Color4(0, 0, 0)
+		});
 
-		this.createMenuBase();
+		this.menuGrabber=new GrabButton(this);
+		this.menuGrabber.create(new MRE.Vector3(1, 0.1, 0));
 
 		this.context.onStarted(() => this.started());
 		this.context.onUserLeft(user => this.userLeft(user));
@@ -108,15 +114,6 @@ export default class App {
 		const rHand: MRE.Actor = null;
 		const lHand: MRE.Actor = null;
 		
-		/*if(isModerator){
-		
-		}*/
-
-		//this.allHands.push(rHand);
-		//this.allHands.push(lHand);
-
-		//this.ourConsole.logMessage("  hand array is now size: " + this.allHands.length);
-
 		let id = MRE.ZeroGuid;
 		const clients = this.session.clients;
 		for (const client of clients) {
@@ -245,14 +242,26 @@ export default class App {
 		this.ourConsole.logMessage(`App received - note: ${note} vel: ${vel}`);
 
 		if (vel > 0) {
-			//this.ourPiano.playSound(note, vel);
-			this.ourPiano.keyPressed(note);
-			this.ourSpawner.spawnBubble(note, vel);
-			this.ourSpawner2.spawnBubble(note, vel);
-
+			if(this.ourWavPlayer){
+				this.ourWavPlayer.playSound(note,127,new MRE.Vector3(0,0,0), 20.0);
+			}
+			if (this.ourPiano) {
+				this.ourPiano.keyPressed(note);
+			}
+			if (this.ourSpawner) {
+				this.ourSpawner.spawnBubble(note, vel);
+			}
+			if (this.ourSpawner2) {
+				this.ourSpawner2.spawnBubble(note, vel);
+			}
+			if (this.ourStaff) {
+				this.ourStaff.receiveNote(note, vel);
+			}
 		} else {
 			//this.ourPiano.stopSound(note);
-			this.ourPiano.keyReleased(note);
+			if (this.ourPiano) {
+				this.ourPiano.keyReleased(note);
+			}
 		}
 	}
 
@@ -309,50 +318,6 @@ export default class App {
 			" Z: " + v.z.toFixed(precision) + "}";
 	}
 
-	public setupMenuBase(){
-		
-	}
-
-	private createMenuBase() {
-		/*const filename = `${this.baseUrl}/` + "hand_grey.png";
-
-		const handTexture = this.assets.createTexture("hand", {
-			uri: filename
-		});
-
-		this.handGrabMat = this.assets.createMaterial('handMat', {
-			color: new MRE.Color4(1, 1, 1),
-			mainTextureId: handTexture.id
-		});
-
-		this.menuBase = MRE.Actor.Create(this.context, {
-			actor: {
-				name: "menuGrabber",
-				transform: {
-					local: {
-						position: { x: 2, y: 0.1, z: 0 },
-
-					}
-				},
-				appearance: {
-					meshId: this.assets.createBoxMesh('boxMesh', 0.25, 0.1, 0.25).id,
-					materialId: this.handGrabMat.id
-				},
-				collider: {
-					geometry: {
-						shape: MRE.ColliderType.Box
-					},
-					isTrigger: false
-				},
-				grabbable: true
-			}
-		});
-		*/
-		this.menuGrabber=new GrabButton(this);
-		this.menuGrabber.create(new MRE.Vector3(2, 0.1, 0));
-	}
-
-
 	private async loadAsyncItems() {
 		this.ourConsole.logMessage("creating console");
 		await this.ourConsole.createAsyncItems(this.menuGrabber.getGUID());
@@ -373,7 +338,7 @@ export default class App {
 				},
 				transform: {
 					local: {
-						position: { x: 0.6, y: 0.101, z: 0.5 },
+						position: { x: 0.5, y: 0.101, z: 0.5 },
 						rotation: MRE.Quaternion.FromEulerAngles(this.degToRad(90), 0, 0)
 					}
 				}
@@ -400,20 +365,28 @@ export default class App {
 		});
 		await handLabel.created();
 
+		
+
 		this.ourConsole.logMessage("Creating Wav Player");
 		this.ourWavPlayer=new WavPlayer(this);
 		await this.ourWavPlayer.loadAllSounds("piano");
-
+/*
 		this.ourConsole.logMessage("Creating Wav Player2");
 		this.ourWavPlayer2=new WavPlayer(this);
 		this.ourWavPlayer2.volume=0.25;
 		this.ourWavPlayer2.cullTime=10000;
 		await this.ourWavPlayer2.loadAllSounds("vibes");
-
+*/
 		this.ourConsole.logMessage("creating piano keys"); 
 		this.ourPiano = new Piano(this);
 		await this.ourPiano.createAllKeys();
 
+		this.ourConsole.logMessage("Loading staff items");
+		this.ourStaff = new Staff(this); 
+		this.ourStaff.ourWavPlayer=this.ourWavPlayer;
+		await this.ourStaff.createAsyncItems(new MRE.Vector3(4,1,0));
+		this.ourStaff.ourWavPlayer=this.ourWavPlayer;
+/*
 		this.ourConsole.logMessage("Loading spawner items");
 		this.ourSpawner = new Spawner(this); 
 		this.ourSpawner.ourWavPlayer=this.ourWavPlayer;
@@ -423,6 +396,8 @@ export default class App {
 		this.ourSpawner2 = new Spawner(this); 
 		this.ourSpawner2.ourWavPlayer=this.ourWavPlayer2;
 		await this.ourSpawner2.createAsyncItems(new MRE.Vector3(-2,1.3,0));
+
+*/
 		
 	}
 
@@ -432,10 +407,26 @@ export default class App {
 			this.ourReceiver.ourCallback = this.PianoReceiveCallback.bind(this);
 
 			setInterval(() => { 
-				const pianoPlayable = this.ourSpawner.availableBubbles.length;
-				const vibesPlayable = this.ourSpawner2.availableBubbles.length;
-				const pianoPlaying = this.ourWavPlayer.playingWavs.length;
-				const vibesPlaying = this.ourWavPlayer2.playingWavs.length;
+				let pianoPlayable=0;
+				let vibesPlayable = 0;
+				let pianoPlaying = 0;
+				let vibesPlaying =0;
+
+				if (this.ourSpawner) { //prevent errors, in case this isn't setup yet
+					pianoPlayable = this.ourSpawner.availableBubbles.length;
+				}
+
+				if (this.ourSpawner2) {
+					vibesPlayable = this.ourSpawner2.availableBubbles.length;
+				}
+
+				if (this.ourWavPlayer) {
+					pianoPlaying = this.ourWavPlayer.playingWavs.length;
+				}
+
+				if (this.ourWavPlayer2) {
+					vibesPlaying = this.ourWavPlayer2.playingWavs.length;
+				}
 
 				const timeNow=new Date(Date.now());			
 

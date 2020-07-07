@@ -9,7 +9,7 @@ import GrabButton from './grabbutton';
 
 export default class Piano {
 	private ourKeys: MRE.Actor[] = [];
-	//public keyboardParent: MRE.Actor;
+	public keyboardParent: MRE.Actor;
 	private pianoGrabber: GrabButton=null;
 
 	private inch = 0.0254;
@@ -84,18 +84,22 @@ export default class Piano {
 		});
 		await blackKeyMaterial.created;
 
-		/*this.keyboardParent = MRE.Actor.Create(this.ourApp.context, {
-			actor: {
-				name: 'keyboard_parent',
-				transform: {
-					local: { position: new MRE.Vector3(0, 0, 0) },
-					app: { position: new MRE.Vector3(0, 1, 0) }
-				}
-			}
-		});*/
+		
 		this.pianoGrabber=new GrabButton(this.ourApp);
 		this.pianoGrabber.create(new MRE.Vector3(1.0, 1, 0));
 
+		this.keyboardParent = MRE.Actor.Create(this.ourApp.context, {
+			actor: {
+				name: 'keyboard_parent',
+				parentId: this.pianoGrabber.getGUID(),
+				transform: {
+					local: {
+						position: new MRE.Vector3(0, 0, 0),
+						scale: new MRE.Vector3(2, 2, 2)
+					}
+				}
+			}
+		});
 		//await this.keyboardParent.created();
 
 		//this.keyboardParent.setCollider(MRE.ColliderType.Box, false,
@@ -120,7 +124,7 @@ export default class Piano {
 			const keyActor = MRE.Actor.Create(this.ourApp.context, {
 				actor: {
 					name: 'PianoKey' + i,
-					parentId: this.pianoGrabber.getGUID(),
+					parentId: this.keyboardParent.id,
 					transform: {
 						local: { position: keyPos }
 					},
