@@ -7,10 +7,12 @@ import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 import App from './app';
 import WavPlayer from './wavplayer';
 import GrabButton from './grabbutton';
+import StaffSharp from './staffsharp';
 
 interface BubbleProperties{
 	timeStamp: number;
 	actor: MRE.Actor;
+	sharp: StaffSharp;
 	bonusLine: MRE.Actor;
 	bonusLine2: MRE.Actor;
 	pos: MRE.Vector3;
@@ -297,6 +299,7 @@ export default class Spawner {
 		const ourBubble={
 			timeStamp: Date.now(),
 			actor: bubbleActor,
+			sharp: null as StaffSharp,
 			bonusLine: bonusLineActor,
 			bonusLine2: bonusLineActor2,
 			pos: pos,
@@ -352,9 +355,20 @@ export default class Spawner {
 			this.staffRootTime=Date.now();
 		}
 
+		let isAccidental=false;
+
 		if(!this.noteZpos.has(note)){
-			this.ourApp.ourConsole.logMessage("note out of range!");
-			return;
+			if(note<this.staffMidi[0]){
+				this.ourApp.ourConsole.logMessage("note is lower then staff, need 8VB support!");
+				return;
+			}
+			if(note>this.staffMidi[this.staffMidi.length-1]){
+				this.ourApp.ourConsole.logMessage("note is high then staff, need 8VA support!");
+				return;
+			}
+
+			this.ourApp.ourConsole.logMessage("note must be accidental");
+			isAccidental=true;
 		}
 
 		let timeDiffSeconds=(Date.now()-this.staffRootTime)/1000.0;
@@ -370,6 +384,9 @@ export default class Spawner {
 				if (oldBubble.bonusLine2) {
 					oldBubble.bonusLine2.destroy();
 				}
+				if(oldBubble.sharp){
+					oldBubble.sharp.destroy();
+				}
 			}
 			this.availableBubbles=[]; //clear array
 			this.staffRootTime=Date.now();
@@ -377,13 +394,28 @@ export default class Spawner {
 		}
 		const xPos=(timeDiffSeconds/5.0)*this.spawnerWidth*0.9;
 
+		let zPos=0;
+		if(isAccidental){
+			zPos=this.noteZpos.get(note-1); //go one lower so we can sharp up to it
+		} else{
+			zPos=this.noteZpos.get(note);
+		}
+
 		const spawnPos = new MRE.Vector3(-(this.spawnerWidth*0.5+0.5)-
 			(this.spawnerWidth*0.5)*0.9+xPos,
-			0.0,this.noteZpos.get(note));
+			0.0,zPos);
 		this.ourApp.ourConsole.logMessage("going to create note at pos: " + spawnPos);
 
 		const ourBubble = this.createBubble(note,spawnPos, scale, this.noteMaterials[noteNum]);
 		ourBubble.note=note;
+
+		if(isAccidental){
+			const ourSharp=new StaffSharp(this.ourApp, this);
+			const sharpPos=spawnPos.clone();
+			sharpPos.x-=scale;
+			ourSharp.create(sharpPos,this.staffGrabber.getGUID(),scale,this.noteMaterials[noteNum].id);
+			ourBubble.sharp=ourSharp;
+		}
 
 		ourBubble.actor.collider.onTrigger("trigger-enter", (otherActor: MRE.Actor) => {
 			this.ourApp.ourConsole.logMessage("trigger enter on staff note!");
