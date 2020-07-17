@@ -9,6 +9,8 @@ import WavPlayer from './wavplayer';
 import GrabButton from './grabbutton';
 import StaffSharp from './staffsharp';
 import StaffFlat from './staffflat';
+import { Collider, Quaternion } from '../../mixed-reality-extension-sdk/packages/sdk/';
+import { timeStamp } from 'console';
 
 interface BubbleProperties{
 	timeStamp: number;
@@ -95,6 +97,7 @@ export default class Spawner {
 	private staffGrabber: GrabButton=null;
 
 	public availableBubbles: BubbleProperties[]=[]; 
+	private annotationList: MRE.Actor[]=[];
 
 	private noteZpos: Map<number,number>=new Map();
 	public noteMaterials: MRE.Material[] = [];
@@ -120,6 +123,70 @@ export default class Spawner {
 
 	constructor(private ourApp: App) {
 
+	}
+
+	private isDrawing=false;
+	private drawStartPos: MRE.Vector3;
+
+	private drawStart(pos: MRE.Vector3){
+		if(this.isDrawing){
+			return;
+		}
+		this.drawStartPos=pos;
+		
+
+		this.isDrawing=true;
+	}
+
+	private convertPosBackToGrabberReference(pos: MRE.Vector3){
+		let x=pos.x*this.spawnerWidth;
+		const z=pos.z*this.spawnerHeight
+
+		x-=(this.spawnerWidth * 0.5 + 0.5);
+
+		return new MRE.Vector3(x,0,z);
+	}	
+
+	private drawEnd(pos: MRE.Vector3, parentID: MRE.Guid){
+		const sPos=this.convertPosBackToGrabberReference(this.drawStartPos);
+		const ePos=this.convertPosBackToGrabberReference(pos);
+
+		const halfPos=(sPos.add(ePos)).multiply(new MRE.Vector3(0.5,0.5,0.5));	
+		const length=(sPos.subtract(ePos)).length();
+
+		const y=ePos.z-sPos.z;
+		const x=ePos.x-sPos.x;
+
+		//this.ourApp.ourConsole.logMessage(`hyp: ${length} opp: ${opposite}`);
+
+		const tah=Math.atan2(y,x);
+		this.ourApp.ourConsole.logMessage(`tah: ${tah}`);
+
+
+		const rot=MRE.Quaternion.FromEulerAngles(0,-tah,0);
+		const scale=(this.spawnerHeight/(this.noteZpos.size+2))*1.75*0.2;
+
+		const drawSegment = MRE.Actor.Create(this.ourApp.context, {
+			actor: {
+				parentId: this.staffGrabber.getGUID(),
+				name: "annotations",
+				appearance: {
+					meshId: this.ourApp.boxMesh.id,
+					materialId: this.ourApp.blackMat.id,
+					enabled: true
+				},
+				transform: {
+					local: {
+						position: halfPos,
+						rotation: rot,
+						scale: new MRE.Vector3(length,scale,scale)
+					}
+				}
+			}
+		});
+
+		this.annotationList.push(drawSegment);
+		this.isDrawing=false;
 	}
 
 	public async createAsyncItems(pos: MRE.Vector3, rot=new MRE.Quaternion()) {
@@ -148,12 +215,38 @@ export default class Spawner {
 				},
 				transform: {
 					local: {
-						position: { x: -(this.spawnerWidth*0.5+0.5), y: 0, z: 0},
+						position: { x: -(this.spawnerWidth * 0.5 + 0.5), y: 0, z: 0 },
 						scale: new MRE.Vector3(this.spawnerWidth, 0.005, this.spawnerHeight)
+					}
+				},
+				collider: {
+					geometry: {
+						shape: MRE.ColliderType.Auto
 					}
 				}
 			}
 		});
+
+		
+		const buttonBehavior = this.staffBackground.setBehavior(MRE.ButtonBehavior);
+		buttonBehavior.onButton("pressed", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
+			
+			//TODO add user checks here
+			const pos = buttonData.targetedPoints[0].localSpacePoint;
+			const posVector3=new MRE.Vector3(pos.x,pos.y,pos.z);
+
+			this.ourApp.ourConsole.logMessage("user pressed on staff at: " + posVector3);
+			this.drawStart(posVector3);
+		});
+
+		buttonBehavior.onButton("released", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
+			//TODO add user checks here
+			const pos = buttonData.targetedPoints[0].localSpacePoint;
+			const posVector3=new MRE.Vector3(pos.x,pos.y,pos.z);
+			this.ourApp.ourConsole.logMessage("user released on staff at: " + posVector3);
+			this.drawEnd(posVector3, this.staffBackground.id);
+		});
+
 		await this.staffBackground.created();
 
 		const zSpacing = this.spawnerHeight / (this.staffMidi.length + 2);
@@ -392,10 +485,8 @@ export default class Spawner {
 		});
 
 		if (isAccidental) {
-			this.ourApp.ourConsole.logMessage("trying to setup button click interaction on note");
 			ourBubble.actor.setBehavior(MRE.ButtonBehavior)
 				.onButton("released", (user: MRE.User) => {
-					this.ourApp.ourConsole.logMessage("user wants to toggle sharp/flat");
 					const ourRoles = user.properties["altspacevr-roles"];
 					if (ourRoles.includes("moderator") ||
 						ourRoles.includes("presenter") || ourRoles.includes("terraformer")) {
@@ -458,7 +549,11 @@ export default class Spawner {
 			for (const oldBubble of this.availableBubbles) {
 				this.destroyBubble(oldBubble);
 			}
+			for (const annotations of this.annotationList) {
+				annotations.destroy();
+			}
 			this.availableBubbles=[]; //clear array
+			this.annotationList=[];
 			this.staffRootTime=Date.now();
 			timeDiffSeconds=0;
 		}
