@@ -8,7 +8,7 @@ import App from './app';
 import Staff from './staff';
 import { Quaternion } from '../../mixed-reality-extension-sdk/packages/sdk/';
 
-export default class StaffSharp {
+export default class StaffFlat {
 	
 	private line1: MRE.Actor=null;
 	private line2: MRE.Actor=null;
@@ -16,7 +16,8 @@ export default class StaffSharp {
 	private line4: MRE.Actor=null;
 
 	public ourHolder: MRE.Actor=null;
-
+	public position: MRE.Vector3;
+	
 	constructor(private ourApp: App, private ourStaff: Staff) {
 		
 	}
@@ -39,6 +40,7 @@ export default class StaffSharp {
 	}
 
 	public setPos(pos: MRE.Vector3){
+		this.position=pos;
 		this.ourHolder.transform.local.position=pos;
 	}
 
@@ -75,7 +77,7 @@ export default class StaffSharp {
 				
 				transform: {
 					local: {
-						position: { x: -scale*0.175, y: 0.0, z: -scale*0.1 },
+						position: { x: -scale*0.175, y: 0.0, z: scale*0.35 },
 						scale: new MRE.Vector3(scale*0.1, scale*0.1, scale*1.5)
 					}
 				}
@@ -85,7 +87,7 @@ export default class StaffSharp {
 		this.line2 = MRE.Actor.Create(this.ourApp.context, { //right vertical line
 			actor: {
 				parentId: this.ourHolder.id,
-				name: "line1",
+				name: "line2",
 				appearance: {
 					meshId: this.ourApp.boxMesh.id,
 					materialId: materialID
@@ -94,7 +96,7 @@ export default class StaffSharp {
 				transform: {
 					local: {
 						position: { x: scale*0.175, y: 0.0, z: scale*0.1 },
-						scale: new MRE.Vector3(scale*0.1, scale*0.1, scale*1.5)
+						scale: new MRE.Vector3(scale*0.1, scale*0.1, scale*0.5)
 					}
 				}
 			}
@@ -103,7 +105,7 @@ export default class StaffSharp {
 		this.line3 = MRE.Actor.Create(this.ourApp.context, { //top horizontal
 			actor: {
 				parentId: this.ourHolder.id,
-				name: "line1",
+				name: "line3",
 				appearance: {
 					meshId: this.ourApp.boxMesh.id,
 					materialId: materialID
@@ -112,17 +114,17 @@ export default class StaffSharp {
 				transform: {
 					local: {
 						position: { x: 0.0, y: 0.0, z: scale*0.25 },
-						rotation: MRE.Quaternion.FromEulerAngles(0,this.ourApp.degToRad(-15),0),
-						scale: new MRE.Vector3(scale*1, scale*0.1, scale*0.2)
+						rotation: MRE.Quaternion.FromEulerAngles(0,this.ourApp.degToRad(-25),0),
+						scale: new MRE.Vector3(scale*0.4, scale*0.1, scale*0.1)
 					}
 				}
 			}
 		});
 
-		this.line4 = MRE.Actor.Create(this.ourApp.context, { //bottom horizontal
+		this.line4 = MRE.Actor.Create(this.ourApp.context, { //top horizontal
 			actor: {
 				parentId: this.ourHolder.id,
-				name: "line1",
+				name: "line4",
 				appearance: {
 					meshId: this.ourApp.boxMesh.id,
 					materialId: materialID
@@ -131,8 +133,8 @@ export default class StaffSharp {
 				transform: {
 					local: {
 						position: { x: 0.0, y: 0.0, z: -scale*0.25 },
-						rotation: MRE.Quaternion.FromEulerAngles(0,this.ourApp.degToRad(-15),0),
-						scale:new MRE.Vector3(scale*1, scale*0.1, scale*0.2)
+						rotation: MRE.Quaternion.FromEulerAngles(0,this.ourApp.degToRad(-35),0),
+						scale:new MRE.Vector3(scale*0.4, scale*0.1, scale*0.1)
 					}
 				}
 			}

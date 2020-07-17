@@ -8,11 +8,13 @@ import App from './app';
 import WavPlayer from './wavplayer';
 import GrabButton from './grabbutton';
 import StaffSharp from './staffsharp';
+import StaffFlat from './staffflat';
 
 interface BubbleProperties{
 	timeStamp: number;
 	actor: MRE.Actor;
 	sharp: StaffSharp;
+	flat: StaffFlat;
 	bonusLine: MRE.Actor;
 	bonusLine2: MRE.Actor;
 	pos: MRE.Vector3;
@@ -109,22 +111,15 @@ export default class Spawner {
 	
 	//private ourSpawnerGUI: SpawnerGUI=null;
 
-	private removeFromAvailable(ourBubble: BubbleProperties) {
+	/*private removeFromAvailable(ourBubble: BubbleProperties) {
 		const index = this.availableBubbles.indexOf(ourBubble);
 		if (index > -1) {
 			this.availableBubbles.splice(index, 1);
 		}
-	}	
+	}*/	
 
 	constructor(private ourApp: App) {
 
-		//TODO - update play head here
-		/*
-		setTimeout(() => {
-			this.ourApp.ourConsole.logMessage("3 seconds has expired. deleting particle effect");
-			particleActor.destroy();
-		}, 3000); 
-		*/
 	}
 
 	public async createAsyncItems(pos: MRE.Vector3, rot=new MRE.Quaternion()) {
@@ -205,8 +200,33 @@ export default class Spawner {
 		*/
 	}
 
-	private createBubble(note: number, pos: MRE.Vector3, scale: number, mat: MRE.Material): BubbleProperties {
+	private spawnParticleEffect(pos: MRE.Vector3, scale: number, colorIndex: number) {
+		if(!this.doParticleEffect){
+			return;
+		}
+		const particleScale=scale*1.0;
 
+		this.ourApp.ourConsole.logMessage("creating particle at: " + pos + " with scale: " + scale);
+		const particleActor = MRE.Actor.CreateFromLibrary(this.ourApp.context, {
+			resourceId: this.particleEffects[colorIndex],
+			actor: {
+				name: 'particle burst',
+				parentId: this.staffGrabber.getGUID(),
+				transform: {
+					local: {
+						position: pos,
+						scale: { x: particleScale, y: particleScale, z: particleScale }
+					}
+				}
+			}
+		});
+		setTimeout(() => {
+			this.ourApp.ourConsole.logMessage("3 seconds has expired. deleting particle effect");
+			particleActor.destroy();
+		}, 3000);
+	}
+
+	private createBubble(note: number, pos: MRE.Vector3, scale: number, mat: MRE.Material): BubbleProperties {
 
 		const bubbleActor = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
@@ -234,6 +254,7 @@ export default class Spawner {
 		let bonusLineActor: MRE.Actor=null;
 		let bonusLineActor2: MRE.Actor=null;
 
+		//1st bonus line
 		if(note===36 || note===40 || note===60 || note===81 || note===84 || note===83 || note===38){
 			const pos2=pos.clone();			
 
@@ -266,7 +287,8 @@ export default class Spawner {
 			});
 		}
 
-		if(note===36 || note===84){
+		//2nd bonus line
+		if(note===36 || note===84){ 
 			let note2=0;
 			if(note===36){
 				note2=40;
@@ -300,6 +322,7 @@ export default class Spawner {
 			timeStamp: Date.now(),
 			actor: bubbleActor,
 			sharp: null as StaffSharp,
+			flat: null as StaffFlat,
 			bonusLine: bonusLineActor,
 			bonusLine2: bonusLineActor2,
 			pos: pos,
@@ -310,46 +333,104 @@ export default class Spawner {
 
 		return ourBubble;
 	}
-
 	
-	private spawnParticleEffect(pos: MRE.Vector3, scale: number, colorIndex: number) {
-		if(!this.doParticleEffect){
-			return;
-		}
-		const particleScale=scale*1.0;
 
-		this.ourApp.ourConsole.logMessage("creating particle at: " + pos + " with scale: " + scale);
-		const particleActor = MRE.Actor.CreateFromLibrary(this.ourApp.context, {
-			resourceId: this.particleEffects[colorIndex],
-			actor: {
-				name: 'particle burst',
-				parentId: this.staffGrabber.getGUID(),
-				transform: {
-					local: {
-						position: pos,
-						scale: { x: particleScale, y: particleScale, z: particleScale }
-					}
+
+	public createNoteAndAccidental(note: number, isAccidental: boolean, isSharp: boolean, xPos: number, scale: number) {
+		let adjustedNote=note;
+		if(isAccidental){
+			if(isSharp){			
+				adjustedNote=note-1;
+			}else{
+				adjustedNote=note+1;
+			}
+		} 
+		
+		const zPos=this.noteZpos.get(adjustedNote);
+	
+		const spawnPos = new MRE.Vector3(-(this.spawnerWidth*0.5+0.5)-
+			(this.spawnerWidth*0.5)*0.9+xPos,
+			0.0,zPos);
+		this.ourApp.ourConsole.logMessage("going to create note at pos: " + spawnPos);
+
+		const noteNum = adjustedNote % 12;
+		const ourBubble = this.createBubble(adjustedNote,spawnPos, scale, this.noteMaterials[noteNum]);
+		ourBubble.note=note;
+
+		if(isAccidental){
+			if(isSharp){
+				const ourSharp=new StaffSharp(this.ourApp, this);
+				const sharpPos=spawnPos.clone();
+				sharpPos.x-=scale*1.0;
+				sharpPos.y+=scale*0.1;
+				ourSharp.create(sharpPos,this.staffGrabber.getGUID(),scale,this.noteMaterials[noteNum].id);
+				ourBubble.sharp=ourSharp;
+			}
+			else{
+				const ourFlat=new StaffFlat(this.ourApp, this);
+				const flatPos=spawnPos.clone();
+				flatPos.x-=scale*0.85;
+				flatPos.y+=scale*0.1;
+				ourFlat.create(flatPos,this.staffGrabber.getGUID(),scale,this.noteMaterials[noteNum].id);
+				ourBubble.flat=ourFlat;
+			}
+		}
+
+		ourBubble.actor.collider.onTrigger("trigger-enter", (otherActor: MRE.Actor) => {
+			this.ourApp.ourConsole.logMessage("trigger enter on staff note!");
+
+			if (otherActor.name.includes('SpawnerUserHand')) { //bubble touches hand
+				if(this.ourWavPlayer){
+					this.ourWavPlayer.playSound(note,127,spawnPos, this.audioRange);
 				}
+				this.spawnParticleEffect(spawnPos, scale, noteNum);
+				this.ourApp.ourSender.send(`["/NoteOn",${ourBubble.note}]`);
+						
+			} else {
+				//this.ourApp.ourConsole.logMessage("sphere collided with: " + otherActor.name);
 			}
 		});
-		setTimeout(() => {
-			this.ourApp.ourConsole.logMessage("3 seconds has expired. deleting particle effect");
-			particleActor.destroy();
-		}, 3000);
+
+		if (isAccidental) {
+			this.ourApp.ourConsole.logMessage("trying to setup button click interaction on note");
+			ourBubble.actor.setBehavior(MRE.ButtonBehavior)
+				.onButton("released", (user: MRE.User) => {
+					this.ourApp.ourConsole.logMessage("user wants to toggle sharp/flat");
+					const ourRoles = user.properties["altspacevr-roles"];
+					if (ourRoles.includes("moderator") ||
+						ourRoles.includes("presenter") || ourRoles.includes("terraformer")) {
+						this.ourApp.ourConsole.logMessage("user is authorized to toggle sharp/flat");
+
+						this.destroyBubble(ourBubble);
+						this.createNoteAndAccidental(note, isAccidental, !isSharp, xPos, scale);
+					}
+				});
+		}
 	}
 
+	public destroyBubble(oldBubble: BubbleProperties) {
+		if (oldBubble.actor) {
+			oldBubble.actor.destroy();
+		}
+		if (oldBubble.bonusLine) {
+			oldBubble.bonusLine.destroy();
+		}
+		if (oldBubble.bonusLine2) {
+			oldBubble.bonusLine2.destroy();
+		}
+		if(oldBubble.sharp){
+			oldBubble.sharp.destroy();
+		}
+		if(oldBubble.flat){
+			oldBubble.flat.destroy();
+		}
+	}
 
 	public receiveNote(note: number, vel: number) {
 		this.ourApp.ourConsole.logMessage("trying to spawn staff note for: " + note);
 		//const octave = Math.floor(note / 12);
-		const noteNum = note % 12;
+		
 		const scale = (this.spawnerHeight/(this.noteZpos.size+2))*1.75; 
-
-		/*while(this.availableBubbles.length>this.bubbleLimit){
-			this.ourApp.ourConsole.logMessage("culling bubble. enforcing bubble limit of: " + this.bubbleLimit);
-			const bubbleToCull=this.availableBubbles.shift();
-			bubbleToCull.actor.destroy();
-		}*/
 
 		if(this.staffRootTime===-1){
 			this.staffRootTime=Date.now();
@@ -372,64 +453,19 @@ export default class Spawner {
 		}
 
 		let timeDiffSeconds=(Date.now()-this.staffRootTime)/1000.0;
-		if(timeDiffSeconds>5.0){
+		if(timeDiffSeconds>5.0){ //TODO: make this pickable from a GUI
 			//clear previous notes
 			for (const oldBubble of this.availableBubbles) {
-				if (oldBubble.actor) {
-					oldBubble.actor.destroy();
-				}
-				if (oldBubble.bonusLine) {
-					oldBubble.bonusLine.destroy();
-				}
-				if (oldBubble.bonusLine2) {
-					oldBubble.bonusLine2.destroy();
-				}
-				if(oldBubble.sharp){
-					oldBubble.sharp.destroy();
-				}
+				this.destroyBubble(oldBubble);
 			}
 			this.availableBubbles=[]; //clear array
 			this.staffRootTime=Date.now();
 			timeDiffSeconds=0;
 		}
+
 		const xPos=(timeDiffSeconds/5.0)*this.spawnerWidth*0.9;
-
-		let zPos=0;
-		if(isAccidental){
-			zPos=this.noteZpos.get(note-1); //go one lower so we can sharp up to it
-		} else{
-			zPos=this.noteZpos.get(note);
-		}
-
-		const spawnPos = new MRE.Vector3(-(this.spawnerWidth*0.5+0.5)-
-			(this.spawnerWidth*0.5)*0.9+xPos,
-			0.0,zPos);
-		this.ourApp.ourConsole.logMessage("going to create note at pos: " + spawnPos);
-
-		const ourBubble = this.createBubble(note,spawnPos, scale, this.noteMaterials[noteNum]);
-		ourBubble.note=note;
-
-		if(isAccidental){
-			const ourSharp=new StaffSharp(this.ourApp, this);
-			const sharpPos=spawnPos.clone();
-			sharpPos.x-=scale;
-			ourSharp.create(sharpPos,this.staffGrabber.getGUID(),scale,this.noteMaterials[noteNum].id);
-			ourBubble.sharp=ourSharp;
-		}
-
-		ourBubble.actor.collider.onTrigger("trigger-enter", (otherActor: MRE.Actor) => {
-			this.ourApp.ourConsole.logMessage("trigger enter on staff note!");
-
-			if (otherActor.name.includes('SpawnerUserHand')) { //bubble touches hand
-				if(this.ourWavPlayer){
-					this.ourWavPlayer.playSound(note,127,spawnPos, this.audioRange);
-				}
-				this.spawnParticleEffect(spawnPos, scale, noteNum);
-				this.ourApp.ourSender.send(`["/NoteOn",${ourBubble.note}]`);
-						
-			} else {
-				//this.ourApp.ourConsole.logMessage("sphere collided with: " + otherActor.name);
-			}
-		});
+		const doSharp=true; //TODO: make this pickable from a GUI
+		
+		this.createNoteAndAccidental(note,isAccidental,doSharp,xPos,scale);
 	}
 }
