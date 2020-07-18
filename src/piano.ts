@@ -220,9 +220,30 @@ export default class Piano {
 				}
 			});
 
-			await keyCollisionActor.created();
+			const buttonBehavior = keyCollisionActor.setBehavior(MRE.ButtonBehavior);
+			buttonBehavior.onButton("pressed", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
+				if (this.ourApp.isAuthorized(user)) { //TODO: get this permission from gui for piano
 
-			//TODO: setup action here
+					this.ourApp.ourConsole.logMessage("user clicked on piano note!");
+					this.keyPressed(i);
+
+					if (this.ourStaff) {
+						this.ourStaff.receiveNote(i, 127);
+					}
+				}
+			});
+			buttonBehavior.onButton("released", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
+				if (this.ourApp.isAuthorized(user)) {
+					this.keyReleased(i);
+				}
+			});
+			buttonBehavior.onHover("exit", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
+				if (this.ourApp.isAuthorized(user)) {
+					this.keyReleased(i);
+				}
+			});
+
+			await keyCollisionActor.created();
 
 			this.ourKeys.set(i,keyActor);
 		}
