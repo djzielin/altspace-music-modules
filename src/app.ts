@@ -342,6 +342,16 @@ export default class App {
 			" Z: " + v.z.toFixed(precision) + "}";
 	}
 
+	public isAuthorized(user: MRE.User): boolean {
+		const ourRoles = user.properties["altspacevr-roles"];
+
+		if (ourRoles.includes("moderator") || ourRoles.includes("presenter") || ourRoles.includes("terraformer")) {
+			return true;
+		}
+
+		return false;
+	}
+
 	private async loadAsyncItems() {
 		this.ourConsole.logMessage("creating console");
 		await this.ourConsole.createAsyncItems(this.menuGrabber.getGUID());

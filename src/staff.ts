@@ -226,25 +226,27 @@ export default class Spawner {
 				}
 			}
 		});
-
 		
 		const buttonBehavior = this.staffBackground.setBehavior(MRE.ButtonBehavior);
 		buttonBehavior.onButton("pressed", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
-			
-			//TODO add user checks here
-			const pos = buttonData.targetedPoints[0].localSpacePoint;
-			const posVector3=new MRE.Vector3(pos.x,pos.y,pos.z);
 
-			this.ourApp.ourConsole.logMessage("user pressed on staff at: " + posVector3);
-			this.drawStart(posVector3);
+			//TODO add user checks here
+			if (this.ourApp.isAuthorized(user)) {
+				const pos = buttonData.targetedPoints[0].localSpacePoint;
+				const posVector3 = new MRE.Vector3(pos.x, pos.y, pos.z);
+
+				this.ourApp.ourConsole.logMessage("user pressed on staff at: " + posVector3);
+				this.drawStart(posVector3);
+			}
 		});
 
 		buttonBehavior.onButton("released", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
-			//TODO add user checks here
-			const pos = buttonData.targetedPoints[0].localSpacePoint;
-			const posVector3=new MRE.Vector3(pos.x,pos.y,pos.z);
-			this.ourApp.ourConsole.logMessage("user released on staff at: " + posVector3);
-			this.drawEnd(posVector3, this.staffBackground.id);
+			if (this.ourApp.isAuthorized(user)) {
+				const pos = buttonData.targetedPoints[0].localSpacePoint;
+				const posVector3 = new MRE.Vector3(pos.x, pos.y, pos.z);
+				this.ourApp.ourConsole.logMessage("user released on staff at: " + posVector3);
+				this.drawEnd(posVector3, this.staffBackground.id);
+			}
 		});
 
 		await this.staffBackground.created();
