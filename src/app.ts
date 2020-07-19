@@ -60,7 +60,7 @@ export default class App {
 	public handGrabMat: MRE.Material;
 	
 	public allUsers: UserProperties[] = [];
-	public moderatorUsers: MRE.User[] = [];
+	public moderatorUsers: string[] = [];
 	//public allHands: MRE.Actor[] = [];
 
 	/*
@@ -102,7 +102,7 @@ export default class App {
 	}	
 
 	//from functional-tests / user-test.ts
-	private formatProperties(props: { [key: string]: string }): string {
+	/*private formatProperties(props: { [key: string]: string }): string {
 		let output = "";
 		for (const k in props) {
 			if (Object.prototype.hasOwnProperty.call(props, k)) {
@@ -110,18 +110,35 @@ export default class App {
 			}
 		}
 		return output;
+	}*/
+
+	public isAuthorized(user: MRE.User): boolean {
+		const ourRoles = user.properties["altspacevr-roles"];
+
+		if (ourRoles.includes("moderator") || ourRoles.includes("presenter") || ourRoles.includes("terraformer")) {
+			return true;
+		}
+
+		return false;
 	}
+
+	public isAuthorizedString(user: string): boolean {
+		if(this.moderatorUsers.includes(user)){
+			//this.ourConsole.logMessage("user is moderator based on GUID");
+			return true;
+		}
+
+		//this.ourConsole.logMessage("user is NOT moderator based on GUID");
+		return false;
+	}
+
 
 	private userJoined(user: MRE.User) {
 		this.ourConsole.logMessage("user joined. name: " + user.name + " id: " + user.id);
 
 		let isModerator=false
 
-		const ourRoles = user.properties["altspacevr-roles"];
-		if (ourRoles.includes("moderator") ||
-			ourRoles.includes("presenter") || 
-			ourRoles.includes("terraformer")) {
-			this.ourConsole.logMessage("  user is a moderator!");
+		if (this.isAuthorized(user)){
 			isModerator=true;
 		}
 
@@ -149,9 +166,14 @@ export default class App {
 			isModerator: isModerator
 		}
 		this.allUsers.push(ourUser);
-		this.moderatorUsers.push(user);
 
-		this.updateUserButtons();
+		if(isModerator){
+			this.moderatorUsers.push(user.id.toString());
+		}
+
+		this.addHands(ourUser);
+
+		//this.updateUserButtons();
 	}
 
 	public findUserRecord(userID: MRE.Guid): UserProperties{
@@ -172,35 +194,37 @@ export default class App {
 		this.updateUserButtons();
 	}
 
-	private updateUserHands(ourUser: UserProperties) {
-		if(ourUser.handButton.getValue()){
-			/*ourUser.rHand = this.createHand('right-hand', ourUser.userID, new MRE.Vector3(0, 0, 0.1),
-				new MRE.Vector3(0.06, 0.06, 0.14));
-			ourUser.lHand = this.createHand('left-hand', ourUser.userID, new MRE.Vector3(0, 0, 0.1),
-				new MRE.Vector3(0.06, 0.06, 0.14));*/
-			this.ourConsole.logMessage("creating hands for: " + ourUser.name);
-
+	private addHands(ourUser: UserProperties){
+		this.ourConsole.logMessage("creating hands for: " + ourUser.name);
 	
-			ourUser.rHand = this.createHand('right-hand', ourUser.userID, new MRE.Vector3(0, 0, 0.1),
-				new MRE.Vector3(0.03, 0.03, 0.14));
-			ourUser.lHand = this.createHand('left-hand', ourUser.userID, new MRE.Vector3(0, 0, 0.1),
-				new MRE.Vector3(0.03, 0.03, 0.14));
+		ourUser.rHand = this.createHand('right-hand', ourUser.userID, new MRE.Vector3(0, 0, 0.1),
+			new MRE.Vector3(0.03, 0.03, 0.14));
+		ourUser.lHand = this.createHand('left-hand', ourUser.userID, new MRE.Vector3(0, 0, 0.1),
+			new MRE.Vector3(0.03, 0.03, 0.14));
+	}
 
-		} else{
-			this.ourConsole.logMessage("removing hands for: " + ourUser.name);
+	/*private removeHands(ourUser: UserProperties){
+		this.ourConsole.logMessage("removing hands for: " + ourUser.name);
 
-			if(ourUser.rHand){
-				ourUser.rHand.destroy();
-				ourUser.rHand=null;
-			}
+		if(ourUser.rHand){
+			ourUser.rHand.destroy();
+			ourUser.rHand=null;
+		}
 
-			if(ourUser.lHand){
-				ourUser.lHand.destroy();
-				ourUser.lHand=null;
-			}
+		if(ourUser.lHand){
+			ourUser.lHand.destroy();
+			ourUser.lHand=null;
 		}
 	}
 
+	private updateUserHands(ourUser: UserProperties) {
+		if(ourUser.handButton.getValue()){
+			this.addHands(ourUser);
+		} else{
+			this.removeHands(ourUser);
+		}
+	}
+*/
 	private updateUserButtons() {
 		this.ourConsole.logMessage("updating user buttons");
 		const authoritativeUserID = this.session.authoritativeClient.userId;
@@ -232,7 +256,7 @@ export default class App {
 				userCount++;
 			}
 
-			const handButtonPos = new MRE.Vector3(1.5 + Math.floor(i / 10) * 1.0, 0, 0.35 + -(i % 10) * 0.15);
+			/*const handButtonPos = new MRE.Vector3(1.5 + Math.floor(i / 10) * 1.0, 0, 0.35 + -(i % 10) * 0.15);
 
 			if (!ourUser.handButton) { //create a button if we don't already have one
 				this.ourConsole.logMessage("  user needs an Hand button: " + ourUser.name);
@@ -243,13 +267,14 @@ export default class App {
 					});
 			} else {
 				ourUser.handButton.setPos(handButtonPos);
-			}
+			}*/
 		}
 	}
 
 	private userLeft(user: MRE.User) {
 		this.ourConsole.logMessage("user left. name: " + user.name + " id: " + user.id);
 		this.ourConsole.logMessage("  user array pre-deletion is size: " + this.allUsers.length);
+
 		for (let i = 0; i < this.allUsers.length; i++) {
 			const ourUser = this.allUsers[i];
 
@@ -262,6 +287,19 @@ export default class App {
 				}
 				this.allUsers.splice(i, 1);
 				this.updateUserButtons();
+				
+				if(ourUser.isModerator){
+					const userString=user.id.toString();
+
+					const index=this.moderatorUsers.indexOf(userString);
+					if(index!==-1){
+						this.moderatorUsers.splice(index, 1);
+						this.ourConsole.logMessage("removed user from moderator string list");
+					}	
+				}
+
+				//this.removeHands(ourUser);
+
 				break;
 			}
 		}
@@ -299,7 +337,7 @@ export default class App {
 	private createHand(aPoint: string, userID: MRE.Guid, handPos: MRE.Vector3, handScale: MRE.Vector3) {
 		const hand = MRE.Actor.Create(this.context, {
 			actor: {
-				name: 'SpawnerUserHand',
+				name: 'SpawnerUserHand_'+userID.toString(),
 				transform: {
 					local: {
 						position: handPos,
@@ -349,16 +387,7 @@ export default class App {
 			" Z: " + v.z.toFixed(precision) + "}";
 	}
 
-	public isAuthorized(user: MRE.User): boolean {
-		const ourRoles = user.properties["altspacevr-roles"];
-
-		if (ourRoles.includes("moderator") || ourRoles.includes("presenter") || ourRoles.includes("terraformer")) {
-			return true;
-		}
-
-		return false;
-	}
-
+	
 	private async loadAsyncItems() {
 		this.ourConsole.logMessage("creating console");
 		await this.ourConsole.createAsyncItems(this.menuGrabber.getGUID());
@@ -425,7 +454,7 @@ export default class App {
 
 		this.ourPiano.ourWavPlayer=this.ourWavPlayer;
 		this.ourPianoGui=new PianoGui(this,this.ourPiano);
-		await this.ourPianoGui.createAsync(new MRE.Vector3(-3,0.1,0),"Main Piano")
+		await this.ourPianoGui.createAsync(new MRE.Vector3(-3.5,0.1,0),"Main Piano")
 
 		this.ourConsole.logMessage("Loading staff items");
 		this.ourStaff = new Staff(this); 

@@ -239,13 +239,19 @@ export default class Piano {
 			});
 
 			keyCollisionActor.collider.onTrigger("trigger-enter", (otherActor: MRE.Actor) => {
-				this.ourApp.ourConsole.logMessage("trigger enter on piano note!");				
+				this.ourApp.ourConsole.logMessage("trigger enter on piano note!");
 
 				if (otherActor.name.includes('SpawnerUserHand')) { //bubble touches hand
-					this.keyPressed(i);
+					const guid = otherActor.name.substr(16);
+					//this.ourApp.ourConsole.logMessage("  full user name is: " + otherActor.name);
+					//this.ourApp.ourConsole.logMessage("  guid is: " + guid);
 
-					if (this.ourStaff) {
-						this.ourStaff.receiveNote(i, 127);
+					if (this.ourInteractionAuth === AuthType.All || this.ourApp.isAuthorizedString(guid)) {
+						this.keyPressed(i);
+
+						if (this.ourStaff) {
+							this.ourStaff.receiveNote(i, 127);
+						}
 					}
 
 				} else {
@@ -254,10 +260,16 @@ export default class Piano {
 			});
 
 			keyCollisionActor.collider.onTrigger("trigger-exit", (otherActor: MRE.Actor) => {
-				this.ourApp.ourConsole.logMessage("trigger enter on piano note!");				
+				this.ourApp.ourConsole.logMessage("trigger enter on piano note!");
 
 				if (otherActor.name.includes('SpawnerUserHand')) { //bubble touches hand
-					this.keyReleased(i);
+					const guid = otherActor.name.substr(16);
+					//this.ourApp.ourConsole.logMessage("  full user name is: " + otherActor.name);
+					//this.ourApp.ourConsole.logMessage("  guid is: " + guid);
+
+					if (this.ourInteractionAuth === AuthType.All || this.ourApp.isAuthorizedString(guid)) {
+						this.keyReleased(i);
+					}
 
 				} else {
 					//this.ourApp.ourConsole.logMessage("sphere collided with: " + otherActor.name);
