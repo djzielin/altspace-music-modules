@@ -159,7 +159,7 @@ export default class PlusMinus {
 
 		// Set a click handler on the button.
 		buttonM.setBehavior(MRE.ButtonBehavior)
-			.onButton("released", (user: MRE.User) => {				
+			.onButton("released", (user: MRE.User) => {	
 				const ourRoles = user.properties["altspacevr-roles"];
 				if (ourRoles.includes("moderator") ||
 					ourRoles.includes("presenter") || ourRoles.includes("terraformer")) {

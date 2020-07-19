@@ -59,6 +59,13 @@ export default class GrabButton {
 		return this.buttonActor.id;
 	}
 
+	public getPos(): MRE.Vector3{
+		return this.buttonActor.transform.local.position;
+	}
+	public getRot(): MRE.Quaternion{
+		return this.buttonActor.transform.local.rotation;
+	}
+
 	public create(pos: MRE.Vector3,rot=new MRE.Quaternion()) { //TODO: should this be async?
 		this.createAssets();
 
@@ -81,7 +88,7 @@ export default class GrabButton {
 					},
 					isTrigger: false
 				},
-				//grabbable: true
+				subscriptions: ["transform"]
 			}
 		});
 

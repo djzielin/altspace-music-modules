@@ -9,13 +9,27 @@ import GrabButton from './grabbutton';
 import WavPlayer from './wavplayer';
 import Staff from './staff';
 
+enum AuthType {
+	Moderators=0,
+	All=1,
+	SpecificUser=2
+  }
+
+
 export default class Piano {
+	public ourInteractionAuth=AuthType.Moderators;
+	public authorizedUser: MRE.User;
+
 	//private ourKeys: MRE.Actor[] = [];
 	private ourKeys: Map<number,MRE.Actor>=new Map();
 	public keyboardParent: MRE.Actor;
-	private pianoGrabber: GrabButton=null;
+	public pianoGrabber: GrabButton=null;
 	public ourWavPlayer: WavPlayer;
 	public ourStaff: Staff;
+
+	public keyLowest=36;
+	public keyHighest=85;
+	public pianoScale=5.0;
 
 	private inch = 0.0254;
 	private halfinch = this.inch * 0.5;
@@ -38,9 +52,9 @@ export default class Piano {
 		[0, this.inch - 0.001, 0, this.inch - 0.001, 0, 0, this.inch - 0.001, 0, this.inch - 0.001, 0, 
 			this.inch - 0.001, 0];
 	private zOffsetCollision =
-		[-this.inch * 1.75, this.inch - 0.001, -this.inch * 1.75, this.inch - 0.001, -this.inch * 1.75,
-			-this.inch * 1.75, this.inch - 0.001, -this.inch * 1.75, this.inch - 0.001, -this.inch * 1.75,
-			this.inch - 0.001, -this.inch * 1.75];
+		[-this.inch * 1.75, this.inch, -this.inch * 1.75, this.inch, -this.inch * 1.75,
+			-this.inch * 1.75, this.inch, -this.inch * 1.75, this.inch, -this.inch * 1.75,
+			this.inch, -this.inch * 1.75];
 	private octaveSize = this.inch * 7.0;
 
 	private noteOrder =
@@ -51,6 +65,11 @@ export default class Piano {
 	private redKeyMaterial: MRE.Material= null;
 
 	private keyLocations: Map<number,MRE.Vector3>=new Map();
+
+	public setScale(scale: number){
+		this.pianoScale=scale;
+		this.keyboardParent.transform.local.scale=new MRE.Vector3(this.pianoScale, this.pianoScale, this.pianoScale);
+	}
 
 	public setProperKeyColor(midiNote: number) {
 		const note = midiNote % 12;
@@ -84,6 +103,33 @@ export default class Piano {
 		});
 	}
 
+	private isAuthorized(user: MRE.User): boolean{
+		if(this.ourInteractionAuth===AuthType.All){
+			return true;
+		}
+		if(this.ourInteractionAuth===AuthType.Moderators){
+			return this.ourApp.isAuthorized(user);
+		}
+		if(this.ourInteractionAuth===AuthType.SpecificUser){
+			if(user===this.authorizedUser){
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	public destroyKeys(){
+		for(const [midiNote, keyActor] of this.ourKeys){
+			keyActor.destroy();
+		}
+		this.ourKeys.clear();
+		this.keyLocations.clear();
+
+		this.keyboardParent.destroy();
+		this.pianoGrabber.destroy();
+	}
+
 	public async createAllKeys(pos: MRE.Vector3,rot=new MRE.Quaternion()) {
 		const whiteKeyMesh = this.ourApp.assets.createBoxMesh('box', this.inch * 0.9, this.inch, this.inch * 5.5);
 		await whiteKeyMesh.created;
@@ -115,25 +161,24 @@ export default class Piano {
 				parentId: this.pianoGrabber.getGUID(),
 				transform: {
 					local: {
-						position: new MRE.Vector3(0, 0, 0),
-						scale: new MRE.Vector3(5, 5, 5)
+						position: new MRE.Vector3(-0.5, 0, 0),
+						scale: new MRE.Vector3(this.pianoScale, this.pianoScale, this.pianoScale)
 					}
 				}
 			}
 		});
-		//await this.keyboardParent.created();
 
-		//this.keyboardParent.setCollider(MRE.ColliderType.Box, false,
-		//	new MRE.Vector3(this.octaveSize * 8, this.inch * 2.0, this.inch * 6.0));
+		const totalOctaves=(this.keyHighest-this.keyLowest)/12.0;
+		this.ourApp.ourConsole.logMessage(`creating new keyboard with range ${this.keyLowest} to ${this.keyHighest}`);
+		this.ourApp.ourConsole.logMessage(`octaves: ${totalOctaves}`);
+		const baseOctave=Math.floor(this.keyLowest / 12);
 
-		//this.keyboardParent.grabbable = true;
-
-		//21 to 109
-		for (let i = 36; i < 85; i++) {
+		for (let i = this.keyLowest; i < this.keyHighest; i++) {
 			let meshId: MRE.Guid = blackKeyMesh.id;
 			let mattId: MRE.Guid = blackKeyMaterial.id;
 			const note = i % 12;
 			const octave = Math.floor(i / 12);
+			const relativeOctave=octave-baseOctave;
 
 
 			let collisionMeshID: MRE.Guid = blackKeyMesh.id;
@@ -145,16 +190,14 @@ export default class Piano {
 			}
 
 			const keyPos = new MRE.Vector3(
-				-this.octaveSize * 2 + octave * this.octaveSize + this.xOffset[note] -1.0,
+				-this.octaveSize * totalOctaves + relativeOctave * this.octaveSize + this.xOffset[note],
 				this.yOffset[note],
 				this.zOffset[note]);
 
-			this.keyLocations.set(note,keyPos); //TODO, wont be accurate if moved
+			this.keyLocations.set(note,keyPos); //TODO, not accurate if moved (need extra calcs to get in world space)
 
-			const keyPosCollision = new MRE.Vector3(
-					-this.octaveSize * 2 + octave * this.octaveSize + this.xOffset[note] -1.0,
-					this.yOffset[note],
-					this.zOffsetCollision[note]);
+			const keyPosCollision = keyPos.clone();
+			keyPosCollision.z=this.zOffsetCollision[note]; //different zPos
 
 			const keyActor = MRE.Actor.Create(this.ourApp.context, {
 				actor: {
@@ -209,6 +252,7 @@ export default class Piano {
 					//this.ourApp.ourConsole.logMessage("sphere collided with: " + otherActor.name);
 				}
 			});
+
 			keyCollisionActor.collider.onTrigger("trigger-exit", (otherActor: MRE.Actor) => {
 				this.ourApp.ourConsole.logMessage("trigger enter on piano note!");				
 
@@ -222,7 +266,7 @@ export default class Piano {
 
 			const buttonBehavior = keyCollisionActor.setBehavior(MRE.ButtonBehavior);
 			buttonBehavior.onButton("pressed", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
-				if (this.ourApp.isAuthorized(user)) { //TODO: get this permission from gui for piano
+				if (this.isAuthorized(user)) { 
 
 					this.ourApp.ourConsole.logMessage("user clicked on piano note!");
 					this.keyPressed(i);
@@ -233,12 +277,12 @@ export default class Piano {
 				}
 			});
 			buttonBehavior.onButton("released", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
-				if (this.ourApp.isAuthorized(user)) {
+				if (this.isAuthorized(user)) {
 					this.keyReleased(i);
 				}
 			});
 			buttonBehavior.onHover("exit", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
-				if (this.ourApp.isAuthorized(user)) {
+				if (this.isAuthorized(user)) {
 					this.keyReleased(i);
 				}
 			});

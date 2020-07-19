@@ -16,6 +16,7 @@ import Console from './console';
 import Button from './button';
 import Staff from './staff';
 import GrabButton from './grabbutton';
+import PianoGui from './piano_gui';
 
 /**
  * The main class of this app. All the logic goes here.
@@ -23,6 +24,7 @@ import GrabButton from './grabbutton';
 
 interface UserProperties {
 	name: string;
+	user: MRE.User;
 	userID: MRE.Guid;
 	clientId: MRE.Guid;
 	authButton: Button;
@@ -36,6 +38,8 @@ export default class App {
 	public assets: MRE.AssetContainer;
 
 	public ourPiano: Piano = null;
+	public ourPianoGui: PianoGui = null;
+
 	public ourStaff: Staff=null;
 
 	//public ourPiano2: Piano = null;
@@ -56,6 +60,7 @@ export default class App {
 	public handGrabMat: MRE.Material;
 	
 	public allUsers: UserProperties[] = [];
+	public moderatorUsers: MRE.User[] = [];
 	//public allHands: MRE.Actor[] = [];
 
 	/*
@@ -134,6 +139,7 @@ export default class App {
 
 		const ourUser = {
 			name: user.name,
+			user: user,
 			userID: user.id,
 			clientId: id,
 			authButton: null as Button,
@@ -143,6 +149,7 @@ export default class App {
 			isModerator: isModerator
 		}
 		this.allUsers.push(ourUser);
+		this.moderatorUsers.push(user);
 
 		this.updateUserButtons();
 	}
@@ -417,7 +424,8 @@ export default class App {
 			Quaternion.FromEulerAngles(-30* Math.PI / 180,0,0));
 
 		this.ourPiano.ourWavPlayer=this.ourWavPlayer;
-
+		this.ourPianoGui=new PianoGui(this,this.ourPiano);
+		await this.ourPianoGui.createAsync(new MRE.Vector3(-3,0.1,0),"Main Piano")
 
 		this.ourConsole.logMessage("Loading staff items");
 		this.ourStaff = new Staff(this); 
