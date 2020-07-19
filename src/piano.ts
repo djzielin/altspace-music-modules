@@ -168,7 +168,7 @@ export default class Piano {
 			}
 		});
 
-		const totalOctaves=(this.keyHighest-this.keyLowest)/12.0;
+		const totalOctaves=Math.ceil((this.keyHighest-this.keyLowest)/12.0);
 		this.ourApp.ourConsole.logMessage(`creating new keyboard with range ${this.keyLowest} to ${this.keyHighest}`);
 		this.ourApp.ourConsole.logMessage(`octaves: ${totalOctaves}`);
 		const baseOctave=Math.floor(this.keyLowest / 12);
@@ -189,8 +189,9 @@ export default class Piano {
 				collisionMeshID=whiteKeyCollisionMesh.id;
 			}
 
+			//TODO: could have better centering.
 			const keyPos = new MRE.Vector3(
-				-this.octaveSize * totalOctaves + relativeOctave * this.octaveSize + this.xOffset[note],
+				-this.octaveSize * totalOctaves + relativeOctave * this.octaveSize + this.xOffset[note], 
 				this.yOffset[note],
 				this.zOffset[note]);
 
