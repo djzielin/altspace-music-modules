@@ -60,7 +60,8 @@ export default class App {
 	public greenMat: MRE.Material;
 	public whiteMat: MRE.Material;
 	public blackMat: MRE.Material;
-
+	public grayMat: MRE.Material;
+	
 	public handMesh: MRE.Mesh = null;
 	public handTexture: MRE.Texture = null;
 	public handMaterial: MRE.Material = null;
@@ -99,6 +100,9 @@ export default class App {
 		});
 		this.whiteMat = this.assets.createMaterial('whiteMat', {
 			color: new MRE.Color4(1, 1, 1)
+		});
+		this.grayMat = this.assets.createMaterial('whiteMat', {
+			color: new MRE.Color4(0.5,0.5,0.5)
 		});
 
 		const filename = `${this.baseUrl}/` + "hand_grey.png";

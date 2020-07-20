@@ -103,6 +103,7 @@ e8e30e
 	private noteZpos: Map<number,number>=new Map();
 	public noteMaterials: MRE.Material[] = [];
 
+	private allStaffLines: MRE.Actor[]=[];
 
 	//private bubbleLimit=50;
 	public doParticleEffect=true;
@@ -115,7 +116,7 @@ e8e30e
 
 	private isDrawing=false;
 	private drawPreviousPos: MRE.Vector3;
-
+	private computedStaffScale: number;
 
 	constructor(private ourApp: App) {
 
@@ -165,7 +166,7 @@ e8e30e
 				name: "annotations",
 				appearance: {
 					meshId: this.ourApp.boxMesh.id,
-					materialId: this.ourApp.blackMat.id,
+					materialId: this.ourApp.grayMat.id,
 					enabled: true
 				},
 				transform: {
@@ -181,7 +182,47 @@ e8e30e
 		this.annotationList.push(drawSegment);
 	}
 
+	public updateStaffWidth() {
+		this.staffBackground.transform.local.position.x = -(this.spawnerWidth * 0.5 + 0.5);
+		this.staffBackground.transform.local.scale.x = this.spawnerWidth;
+
+		for (const line of this.allStaffLines) {
+			line.transform.local.position.x = -(this.spawnerWidth * 0.5 + 0.5);
+			line.transform.local.scale.x = this.spawnerWidth;
+		}
+	}
+
+	private computeStaffScale(){
+		this.computedStaffScale = (this.spawnerHeight/(this.noteZpos.size+2))*1.75; 
+		this.ourApp.ourConsole.logMessage("computed staff scale is: " + this.computedStaffScale);
+	}
+
+	public updateStaffHeight() {
+		this.computeStaffScale();
+
+		this.staffBackground.transform.local.scale.y = this.computedStaffScale * 0.0591;
+		this.staffBackground.transform.local.scale.z = this.spawnerHeight;
+
+		const zSpacing = this.spawnerHeight / (this.staffMidi.length + 2);
+		const zBase = -(this.spawnerHeight / 2.0) + zSpacing;
+
+		for (let i = 0; i < this.staffMidi.length; i++) {
+			this.noteZpos.set(this.staffMidi[i], zBase + (i + 1) * zSpacing);
+		}
+
+		for (let i = 0; i < this.allStaffLines.length; i++) {
+			const line = this.allStaffLines[i];
+
+			line.transform.local.scale.y = this.computedStaffScale * 0.118;
+			line.transform.local.scale.z = this.computedStaffScale * 0.177;
+
+			line.transform.local.position.z = this.noteZpos.get(this.staffLineIndex[i]);
+		}
+	}
+
 	public async createAsyncItems(pos: MRE.Vector3, rot=new MRE.Quaternion()) {
+		this.ourApp.ourConsole.logMessage("creating staff asyn items");
+
 		this.boxMesh = this.ourApp.assets.createBoxMesh('boxMesh', 1.0, 1.0, 1.0);
 		await this.boxMesh.created;
 
@@ -207,7 +248,7 @@ e8e30e
 				},
 				transform: {
 					local: {
-						position: { x: -(this.spawnerWidth * 0.5 + 0.5), y: 0, z: 0 },
+						position: new MRE.Vector3(-(this.spawnerWidth * 0.5 + 0.5), 0, 0 ),
 						scale: new MRE.Vector3(this.spawnerWidth, 0.005, this.spawnerHeight)
 					}
 				},
@@ -218,12 +259,14 @@ e8e30e
 				}
 			}
 		});
+
+		this.updateStaffWidth();
 		
 		const buttonBehavior = this.staffBackground.setBehavior(MRE.ButtonBehavior);
 		buttonBehavior.onHover("exit", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
 			if (this.ourApp.isAuthorized(user)) {
-				const pos = buttonData.targetedPoints[0].localSpacePoint;
-				const posVector3 = new MRE.Vector3(pos.x, pos.y, pos.z);
+				const penPos = buttonData.targetedPoints[0].localSpacePoint;
+				const posVector3 = new MRE.Vector3(penPos.x, penPos.y, penPos.z);
 				this.ourApp.ourConsole.logMessage("user hover has ended at: " + posVector3);
 
 				if(this.isDrawing){
@@ -236,8 +279,8 @@ e8e30e
 		buttonBehavior.onButton("pressed", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
 
 			if (this.ourApp.isAuthorized(user)) {
-				const pos = buttonData.targetedPoints[0].localSpacePoint;
-				const posVector3 = new MRE.Vector3(pos.x, pos.y, pos.z);
+				const penPos = buttonData.targetedPoints[0].localSpacePoint;
+				const posVector3 = new MRE.Vector3(penPos.x, penPos.y, penPos.z);
 
 				this.ourApp.ourConsole.logMessage("user pressed on staff at: " + posVector3);
 				this.ourApp.ourConsole.logMessage("number of points: " + buttonData.targetedPoints.length);
@@ -252,27 +295,34 @@ e8e30e
 
 				if (this.isDrawing) {
 					this.ourApp.ourConsole.logMessage("user is holding ");
+					this.ourApp.ourConsole.logMessage("number of points: " + buttonData.targetedPoints.length);
 
 					for (const point of buttonData.targetedPoints) {
-						const pos = point.localSpacePoint;
-						const posVector3 = new MRE.Vector3(pos.x, pos.y, pos.z);
+						const penPos = point.localSpacePoint;
+						const posVector3 = new MRE.Vector3(penPos.x, penPos.y, penPos.z);
+						posVector3.y=this.drawPreviousPos.y; //hack to fix MRE bug
+						this.ourApp.ourConsole.logMessage("point: " + posVector3); 
+						this.ourApp.ourConsole.logMessage("prev: " + this.drawPreviousPos); 
 
-						if (posVector3.subtract(this.drawPreviousPos).length() > this.drawThreshold) {
+						const dist = posVector3.subtract(this.drawPreviousPos).length()
+						if (dist > this.drawThreshold) {
+							this.ourApp.ourConsole.logMessage("pen dist: " + dist +
+								" is greater then threshold: " + this.drawThreshold);
 							this.drawSegment(this.drawPreviousPos, posVector3);
 							this.drawPreviousPos = posVector3;
 						}
 					}
 
-					this.ourApp.ourConsole.logMessage("number of points: " + buttonData.targetedPoints.length);
 				}
 			}
 		});
 
 		buttonBehavior.onButton("released", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
 			if (this.ourApp.isAuthorized(user)) {
-				const pos = buttonData.targetedPoints[0].localSpacePoint;
-				const posVector3 = new MRE.Vector3(pos.x, pos.y, pos.z);
+				const penPos = buttonData.targetedPoints[0].localSpacePoint;
+				const posVector3 = new MRE.Vector3(penPos.x, penPos.y, penPos.z);
 				this.ourApp.ourConsole.logMessage("user released on staff at: " + posVector3);
+				posVector3.y=this.drawPreviousPos.y; //hack to fix MRE bug
 
 				if(this.isDrawing){
 					this.drawSegment(this.drawPreviousPos,posVector3);
@@ -290,6 +340,8 @@ e8e30e
 			this.noteZpos.set(this.staffMidi[i], zBase + (i + 1) * zSpacing);
 		}
 
+		this.computeStaffScale();
+
 		for (let i = 0; i < this.staffLineIndex.length; i++) {
 			const z = this.noteZpos.get(this.staffLineIndex[i]);
 
@@ -303,13 +355,19 @@ e8e30e
 					},
 					transform: {
 						local: {
-							position: new MRE.Vector3(-(this.spawnerWidth*0.5+0.5),0,z),
-							scale: new MRE.Vector3(this.spawnerWidth, 0.015, 0.01)
+							position: new MRE.Vector3(-(this.spawnerWidth * 0.5 + 0.5), 0, z),
+							scale: new MRE.Vector3(this.spawnerWidth,
+								this.computedStaffScale * 0.118,
+								this.computedStaffScale * 0.177)
 						}
 					}
 				}
 			});
+			this.allStaffLines.push(staffLine);
 		}
+
+		this.updateStaffWidth();
+		this.updateStaffHeight();
 
 		for (const noteColor of this.noteColors) {
 			const ourMat: MRE.Material = this.ourApp.assets.createMaterial('bubblemat', {
@@ -319,12 +377,8 @@ e8e30e
 			await ourMat.created;
 			this.noteMaterials.push(ourMat);
 		}
-		this.ourApp.ourConsole.logMessage("completed all staff object creation");
 
-		/*this.ourSpawnerGUI=new SpawnerGUI(this.ourApp, this);
-		const guiPos=new MRE.Vector3(pos.x-(this.spawnerWidth*0.5+0.5),0,pos.z);
-		await this.ourSpawnerGUI.createAsync(guiPos);
-		*/
+		this.ourApp.ourConsole.logMessage("completed all staff object creation");
 	}
 
 	private spawnParticleEffect(pos: MRE.Vector3, scale: number, colorIndex: number) {
@@ -391,7 +445,7 @@ e8e30e
 		this.ourApp.ourConsole.logMessage("trying to spawn staff note for: " + note);
 		//const octave = Math.floor(note / 12);
 		
-		const scale = (this.spawnerHeight/(this.noteZpos.size+2))*1.75; 
+		
 
 		if(this.staffRootTime===-1){
 			this.staffRootTime=Date.now();
@@ -430,7 +484,7 @@ e8e30e
 
 		const xPos=(timeDiffSeconds/this.staffTime)*this.spawnerWidth*0.9;
 	
-		this.createNoteAndAccidental(note,vel,isAccidental,this.doSharps,xPos,scale);
+		this.createNoteAndAccidental(note,vel,isAccidental,this.doSharps,xPos,this.computedStaffScale);
 	}
 
 	public createNoteAndAccidental(note: number, vel: number, isAccidental: boolean, isSharp: boolean, 
@@ -592,7 +646,9 @@ e8e30e
 					transform: {
 						local: {
 							position: pos2,
-							scale: new MRE.Vector3(scale*2.0, 0.015, 0.01)
+							scale: new MRE.Vector3(scale*2.0, 
+								this.computedStaffScale*0.118, 
+								this.computedStaffScale*0.177)
 						}
 					}
 				}
@@ -623,7 +679,9 @@ e8e30e
 					transform: {
 						local: {
 							position: pos2,
-							scale: new MRE.Vector3(scale*2.0, 0.015, 0.01)
+							scale: new MRE.Vector3(scale*2.0, 
+								this.computedStaffScale*0.118, 
+								this.computedStaffScale*0.177)
 						}
 					}
 				}

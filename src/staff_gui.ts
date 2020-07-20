@@ -24,11 +24,6 @@ export default class StaffGui {
 
 		this.guiGrabber=new GrabButton(this.ourApp);
 		this.guiGrabber.create(pos);
-		
-		const consoleMat = this.ourApp.assets.createMaterial('consolemat', {
-			color: new MRE.Color3(0.5, 0.5, 0.5) //TODO move material over to app
-		});
-		await consoleMat.created;
 
 		const backGroundMesh = this.ourApp.assets.createBoxMesh('boxMesh', 1.1, 0.1, 1.5);
 
@@ -39,7 +34,7 @@ export default class StaffGui {
 				name: "consoleBackground",
 				appearance: {
 					meshId: backGroundMesh.id,
-					materialId: consoleMat.id
+					materialId: this.ourApp.grayMat.id
 				},
 				transform: {
 					local: {
@@ -89,11 +84,13 @@ export default class StaffGui {
 	}
 	
 	public setStaffHeight(n: number){
-		
+		this.ourStaff.spawnerHeight=n;
+		this.ourStaff.updateStaffHeight();
 	}
 
 	public setStaffWidth(n: number){
-		
+		this.ourStaff.spawnerWidth=n;
+		this.ourStaff.updateStaffWidth();
 	}
 
 	public showBackground(b: boolean){
@@ -108,7 +105,7 @@ export default class StaffGui {
 	
 
 	public async createAsync(pos: MRE.Vector3, name: string) {
-		this.ourApp.ourConsole.logMessage("creating spawner gui");
+		this.ourApp.ourConsole.logMessage("creating staff gui");
 
 		await this.createBackground(pos, name);
 
