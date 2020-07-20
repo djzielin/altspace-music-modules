@@ -7,16 +7,16 @@ import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 import App from './app';
 import PlusMinus from './plusminus';
 import Button from './button';
-import Piano from './piano';
+import Staff from './staff';
 import GrabButton from './grabbutton';
 
-export default class PianoGui {
+export default class StaffGui {
 	//private guiParent: MRE.Actor=null;
 	private guiBackground: MRE.Actor=null;
 	private guiGrabber: GrabButton=null;
 	private resetButton: Button;
 
-	constructor(private ourApp: App, private ourPiano: Piano) {
+	constructor(private ourApp: App, private ourStaff: Staff) {
 		
 	}
 
@@ -70,34 +70,36 @@ export default class PianoGui {
 	}
 
 	public setAuthAllUsers(b: boolean): void {
-		this.ourPiano.ourInteractionAuth=(b===true) ? 1:0;
+		this.ourStaff.ourInteractionAuth=(b===true) ? 1:0;
 	}
+
 	public setScale(n: number): void {
 		if(n>0){ //sanity check
-			this.ourPiano.setScale(n);
+			//this.ourPiano.setScale(n);
 		}
 	}
-	public setLowestKey(n: number): void {
-		if(n>0){ //sanity check
-			this.ourPiano.keyLowest=n;
-		}
+	public setDoSharps(b: boolean){
+		this.ourStaff.doSharps=b;
 	}
-	public setHighestKey(n: number): void {
-		if(n>0){ //sanity check
-			this.ourPiano.keyHighest=n;
-		}
+	
+	public setStaffTime(n: number){
+		this.ourStaff.staffTime=n;
+	}
+	
+	public setStaffHeight(n: number){
+		
 	}
 
-	public doReset(b: boolean): void {
-		const pos = this.ourPiano.pianoGrabber.getPos();
-		const rot = this.ourPiano.pianoGrabber.getRot();
-
-		this.ourPiano.destroyKeys();
-		this.ourPiano.createAllKeys(pos, rot).then(() => {
-			this.ourApp.ourConsole.logMessage("piano reset complete!");
-			this.resetButton.setValue(false);
-		});
+	public setStaffWidth(n: number){
+		
 	}
+
+	public showBackground(b: boolean){
+		this.ourStaff.showBackground=b;
+
+		this.ourStaff.staffBackground.appearance.enabled=b;
+	}
+	
 
 	public async createAsync(pos: MRE.Vector3, name: string) {
 		this.ourApp.ourConsole.logMessage("creating spawner gui");
@@ -107,27 +109,33 @@ export default class PianoGui {
 		const authButton = new Button(this.ourApp);
 		await authButton.createAsync(new MRE.Vector3(-0.75, 0.025, 0.3),
 			this.guiGrabber.getGUID(), "All Users", "Auth Only",
-			this.ourPiano.ourInteractionAuth === 1, this.setAuthAllUsers.bind(this));
+			this.ourStaff.ourInteractionAuth === 1, this.setAuthAllUsers.bind(this));
 
-		const scaleSelector = new PlusMinus(this.ourApp);
-		await scaleSelector.createAsync(new MRE.Vector3(-0.5 - 0.75, 0.1, 0.15),
-			this.guiGrabber.getGUID(), "scale",
-			this.ourPiano.pianoScale, 0.1, this.setScale.bind(this));
+		const widthSelector = new PlusMinus(this.ourApp);
+		await widthSelector.createAsync(new MRE.Vector3(-0.5 - 0.75, 0.1, 0.15),
+			this.guiGrabber.getGUID(), "width",
+			this.ourStaff.spawnerWidth, 0.1, this.setStaffWidth.bind(this));
 
-		const lowestKeySelector = new PlusMinus(this.ourApp);
-		await lowestKeySelector.createAsync(new MRE.Vector3(-0.5 - 0.75, 0.1, 0.0),
-			this.guiGrabber.getGUID(), "L key",
-			this.ourPiano.keyLowest, 1, this.setLowestKey.bind(this));
+		const heightSelector = new PlusMinus(this.ourApp);
+		await heightSelector.createAsync(new MRE.Vector3(-0.5 - 0.75, 0.1, 0.0),
+			this.guiGrabber.getGUID(), "height",
+			this.ourStaff.spawnerHeight, 0.1, this.setStaffHeight.bind(this));
 
-		const highestKeySelector = new PlusMinus(this.ourApp);
-		await highestKeySelector.createAsync(new MRE.Vector3(-0.5 - 0.75, 0.1, -0.15),
-			this.guiGrabber.getGUID(), "H key",
-			this.ourPiano.keyHighest, 1, this.setHighestKey.bind(this));
+		const staffTime = new PlusMinus(this.ourApp);
+			await staffTime.createAsync(new MRE.Vector3(-0.5 - 0.75, 0.1, -0.15),
+				this.guiGrabber.getGUID(), "staffTime",
+				this.ourStaff.spawnerHeight, 0.1, this.setStaffTime.bind(this));
 
-		this.resetButton = new Button(this.ourApp);
-		await this.resetButton.createAsync(new MRE.Vector3(-0.75, 0.025, -0.3),
-			this.guiGrabber.getGUID(), "Resetting", "Reset",
-			false, this.doReset.bind(this));
+		const sharpButton = new Button(this.ourApp);
+		await sharpButton.createAsync(new MRE.Vector3(-0.75, 0.025, -0.3),
+			this.guiGrabber.getGUID(), "sharps", "flats",
+			false, this.setDoSharps.bind(this));
+
+		const backgroundVis = new Button(this.ourApp);
+		await sharpButton.createAsync(new MRE.Vector3(-0.75, 0.025, -0.45),
+				this.guiGrabber.getGUID(), "back white", "back clear",
+				this.ourStaff.showBackground, this.showBackground.bind(this));
+
 
 	}
 }

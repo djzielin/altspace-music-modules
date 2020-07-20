@@ -9,8 +9,7 @@ import WavPlayer from './wavplayer';
 import GrabButton from './grabbutton';
 import StaffSharp from './staffsharp';
 import StaffFlat from './staffflat';
-import { Collider, Quaternion, MreArgumentError } from '../../mixed-reality-extension-sdk/packages/sdk/';
-import { timeStamp } from 'console';
+
 
 interface BubbleProperties{
 	timeStamp: number;
@@ -23,40 +22,23 @@ interface BubbleProperties{
 	note: number;
 }
 
-export default class Spawner {
+enum AuthType {
+	Moderators=0,
+	All=1,
+	SpecificUser=2
+  }
 
-	/**************
-  	 https://colorbrewer2.org/#type=qualitative&scheme=Paired&n=12
-	****************/
-	/*
-	A6CEE3
-	1F78B4
-	B2DF8A
-	33A02C
-	FB9A99
-	E31A1C
-	FDBF6F
-	FF7F00
-	CAB2D6
-	6A3D9A
-	FFFF99
-	B15928
-	*/
-	
-	/*private noteColors: MRE.Color4[] = [
-		new MRE.Color4(166 / 255, 206 / 255, 227 / 255),
-		new MRE.Color4(31 / 255, 120 / 255, 180 / 255),
-		new MRE.Color4(178 / 255, 223 / 255, 138 / 255),
-		new MRE.Color4(51 / 255, 160 / 255, 44 / 255),
-		new MRE.Color4(251 / 255, 154 / 255, 153 / 255),
-		new MRE.Color4(227 / 255, 26 / 255, 28 / 255),
-		new MRE.Color4(253 / 255, 191 / 255, 111 / 255),
-		new MRE.Color4(255 / 255, 127 / 255, 0 / 255),
-		new MRE.Color4(202 / 255, 178 / 255, 214 / 255),
-		new MRE.Color4(106 / 255, 61 / 255, 154 / 255),
-		new MRE.Color4(255 / 255, 255 / 255, 153 / 255),
-		new MRE.Color4(177 / 255, 89 / 255, 40 / 255)];
-*/
+
+export default class Spawner {
+	public ourInteractionAuth=AuthType.Moderators;
+	public authorizedUser: MRE.User;
+
+	public doSharps=true;
+	public staffTime=5.0;
+	public spawnerWidth=4.0;
+	public spawnerHeight=1.5;
+	public showBackground=true;
+
 
 /*
 169, 30, 16
@@ -120,36 +102,24 @@ e8e30e
 
 	private noteZpos: Map<number,number>=new Map();
 	public noteMaterials: MRE.Material[] = [];
-	public spawnerWidth=4.0;
-	public spawnerHeight=1.5;
+
 
 	//private bubbleLimit=50;
 	public doParticleEffect=true;
 	public audioRange=10;
 
-	public doSharps=true;
-	public staffTime=5.0;
-
 	public ourWavPlayer: WavPlayer;
 
-	private staffBackground: MRE.Actor=null;
+	public staffBackground: MRE.Actor=null;
 	private staffRootTime=-1;
-	
-	//private ourSpawnerGUI: SpawnerGUI=null;
 
-	/*private removeFromAvailable(ourBubble: BubbleProperties) {
-		const index = this.availableBubbles.indexOf(ourBubble);
-		if (index > -1) {
-			this.availableBubbles.splice(index, 1);
-		}
-	}*/	
+	private isDrawing=false;
+	private drawPreviousPos: MRE.Vector3;
+
 
 	constructor(private ourApp: App) {
 
 	}
-
-	private isDrawing=false;
-	private drawPreviousPos: MRE.Vector3;
 
 	private drawStart(pos: MRE.Vector3){
 		if(this.isDrawing){
@@ -233,7 +203,7 @@ e8e30e
 				appearance: {
 					meshId: this.ourApp.boxMesh.id,
 					materialId: this.ourApp.whiteMat.id,
-					enabled: false
+					enabled: this.showBackground
 				},
 				transform: {
 					local: {

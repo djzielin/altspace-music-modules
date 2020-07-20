@@ -16,6 +16,7 @@ import Button from './button';
 import Staff from './staff';
 import GrabButton from './grabbutton';
 import PianoGui from './piano_gui';
+import StaffGui from './staff_gui';
 
 /**
  * The main class of this app. All the logic goes here.
@@ -40,6 +41,8 @@ export default class App {
 	public ourPianoGui: PianoGui = null;
 
 	public ourStaff: Staff=null;
+	public ourStaffGui: StaffGui=null;
+
 
 	//public ourPiano2: Piano = null;
 	//public ourStaff2: Staff=null;
@@ -441,27 +444,6 @@ export default class App {
 		});
 		await authLabel.created();
 
-		const handLabel = MRE.Actor.Create(this.context, {
-			actor: {
-				parentId: this.menuGrabber.getGUID(),
-				name: 'hasHandsLabel',
-				text: {
-					contents: "Has Hands:",
-					height: 0.1,
-					anchor: MRE.TextAnchorLocation.MiddleCenter
-				},
-				transform: {
-					local: {
-						position: { x: 1.5, y: 0.101, z: 0.5 },
-						rotation: MRE.Quaternion.FromEulerAngles(this.degToRad(90), 0, 0)
-					}
-				}
-			}
-		});
-		await handLabel.created();
-
-		
-
 		this.ourConsole.logMessage("Creating Wav Player");
 		this.ourWavPlayer=new WavPlayer(this);
 		await this.ourWavPlayer.loadAllSounds("piano");
@@ -487,9 +469,10 @@ export default class App {
 		await this.ourStaff.createAsyncItems(new MRE.Vector3(2,2,0.5), 
 			MRE.Quaternion.FromEulerAngles(-90* Math.PI / 180,0,0));
 		this.ourStaff.ourWavPlayer=this.ourWavPlayer;
-
 		this.ourPiano.ourStaff=this.ourStaff;
 
+		this.ourStaffGui=new StaffGui(this,this.ourStaff);
+		await this.ourStaffGui.createAsync(new MRE.Vector3(-3.5,0.1,0),"Main Staff")
 
 	/*	this.ourConsole.logMessage("creating piano keys"); 
 		this.ourPiano2 = new Piano(this);
