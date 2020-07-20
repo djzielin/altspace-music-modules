@@ -32,7 +32,7 @@ export default class Console {
 				name: "parent",
 				transform: {
 					local: {
-						position: { x: 1.5-3.75, y: 0-0.05, z: 0 },
+						position: { x: 1.5-3.75, y:0.0, z: 0 },
 						scale: new MRE.Vector3(0.5, 0.5, 0.5)
 					}
 				}

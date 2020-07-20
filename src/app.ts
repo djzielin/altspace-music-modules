@@ -480,19 +480,22 @@ export default class App {
 		await this.ourPiano.createAllKeys(new MRE.Vector3(2, 1, 0),
 			MRE.Quaternion.FromEulerAngles(-30* Math.PI / 180,0,0));
 
-		this.ourPiano.ourWavPlayer=this.ourWavPlayer;
-		this.ourPianoGui=new PianoGui(this,this.ourPiano);
-		await this.ourPianoGui.createAsync(new MRE.Vector3(-2.5,0.0,0),"Main Piano")
+		let xPos = -2.75;
+
+		this.ourPiano.ourWavPlayer = this.ourWavPlayer;
+		this.ourPianoGui = new PianoGui(this, this.ourPiano);
+		await this.ourPianoGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Main Piano")
+		xPos -= 1.75;
 
 		this.ourConsole.logMessage("Loading staff items");
-		this.ourStaff = new Staff(this); 
-		this.ourStaff.ourWavPlayer=this.ourWavPlayer;
-		await this.ourStaff.createAsyncItems(new MRE.Vector3(2,2,0.5), 
-			MRE.Quaternion.FromEulerAngles(-90* Math.PI / 180,0,0));
-		this.ourPiano.ourStaff=this.ourStaff;
+		this.ourStaff = new Staff(this);
+		this.ourStaff.ourWavPlayer = this.ourWavPlayer;
+		await this.ourStaff.createAsyncItems(new MRE.Vector3(2, 2, 0.5),
+			MRE.Quaternion.FromEulerAngles(-90 * Math.PI / 180, 0, 0));
+		this.ourPiano.ourStaff = this.ourStaff;
 
-		this.ourStaffGui=new StaffGui(this,this.ourStaff);
-		await this.ourStaffGui.createAsync(new MRE.Vector3(-4.0,0.0,0),"Main Staff")
+		this.ourStaffGui = new StaffGui(this, this.ourStaff);
+		await this.ourStaffGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Main Staff")
 
 	/*	this.ourConsole.logMessage("creating piano keys"); 
 		this.ourPiano2 = new Piano(this);
