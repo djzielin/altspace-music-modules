@@ -27,6 +27,8 @@ export default class WavPlayer {
 	private lowestNote=-1;
 	private highestNote=-1;
 
+	public doPedal=true;
+
 	private noteOrder =
 		["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
 
@@ -165,7 +167,7 @@ export default class WavPlayer {
 			pitch: 0.0,
 			looping: false,
 			paused: false,
-			volume: this.volume,
+			volume: (this.volume*(vel/127.0)),
 			rolloffStartDistance: audioRange 
 		});	
 
@@ -177,13 +179,23 @@ export default class WavPlayer {
 
 		this.playingWavs.push(ourWave);		
 	}
-
-	/*
+	
 	public stopSound(note: number) {
-		if (this.activeSounds.has(note)) {
-			const playingSoud: MRE.MediaInstance = this.activeSounds.get(note);
-			playingSoud.stop();
-			this.activeSounds.delete(note);
+		if(this.doPedal){
+			return; //let all notes ring out
 		}
-	}*/
+
+		const listOfPlayingWavsToDelete: WavProperties[] = [];
+
+		for(const ourWave of this.playingWavs){
+			if(ourWave.note===note){
+				
+				ourWave.actor.destroy();
+				listOfPlayingWavsToDelete.push(ourWave);
+			}
+		}
+		for (const ourWave of listOfPlayingWavsToDelete) {
+			this.removeFromPlaying(ourWave)
+		}
+	}
 }

@@ -8,7 +8,7 @@ import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 import dotenv from 'dotenv';
 import { resolve as resolvePath } from 'path';
 import App from './app';
-import PianoReceiver from './receiver'
+import {PianoReceiver} from './receiver'
 import OscSender from './sender';
 
 /* eslint-disable no-console */
@@ -37,7 +37,8 @@ const ourSender: OscSender = new OscSender();
 server.adapter.onConnection(context => {
 	const sessionId=context.sessionId;
 	const session=(server.adapter as MRE.MultipeerAdapter).sessions[sessionId];
-
+	
+	MRE.log.info("app", "about the create new App in server.ts");
 	return new App(context, server.baseUrl, server.baseDir, ourReceiver, ourSender, session);
 });
 

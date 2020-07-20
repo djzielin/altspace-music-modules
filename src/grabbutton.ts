@@ -13,10 +13,6 @@ export default class GrabButton {
 	private lockButton: Button = null;
 	private unLocked = false;
 	
-	static handMesh: MRE.Mesh = null;
-	static handTexture: MRE.Texture = null;
-	static handMaterial: MRE.Material = null;
-
 	constructor(private ourApp: App) {
 
 	}
@@ -36,25 +32,6 @@ export default class GrabButton {
 		}
 	}
 
-	public createAssets() {
-		if (GrabButton.handMesh) {
-			return; //already setup!
-		}
-
-		const filename = `${this.ourApp.baseUrl}/` + "hand_grey.png";
-
-		GrabButton.handTexture = this.ourApp.assets.createTexture("hand", {
-			uri: filename
-		});
-
-		GrabButton.handMaterial = this.ourApp.assets.createMaterial('handMat', {
-			color: new MRE.Color4(1, 1, 1),
-			mainTextureId: GrabButton.handTexture.id
-		});
-
-		GrabButton.handMesh = this.ourApp.assets.createBoxMesh('boxMesh', 0.25, 0.1, 0.25);
-	}
-
 	public getGUID(): MRE.Guid {
 		return this.buttonActor.id;
 	}
@@ -67,7 +44,6 @@ export default class GrabButton {
 	}
 
 	public create(pos: MRE.Vector3,rot=new MRE.Quaternion()) { //TODO: should this be async?
-		this.createAssets();
 
 		this.buttonActor = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
@@ -79,8 +55,8 @@ export default class GrabButton {
 					}
 				},
 				appearance: {
-					meshId: GrabButton.handMesh.id,
-					materialId: GrabButton.handMaterial.id
+					meshId: this.ourApp.handMesh.id,
+					materialId: this.ourApp.handMaterial.id
 				},
 				collider: {
 					geometry: {

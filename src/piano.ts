@@ -69,6 +69,16 @@ export default class Piano {
 	public setScale(scale: number){
 		this.pianoScale=scale;
 		this.keyboardParent.transform.local.scale=new MRE.Vector3(this.pianoScale, this.pianoScale, this.pianoScale);
+		this.updateKeyboardCenter();
+	}
+
+	public updateKeyboardCenter(){
+		const lowPos=this.computeKeyPositionX(this.keyLowest)*this.pianoScale;
+		const highPos=this.computeKeyPositionX(this.keyHighest)*this.pianoScale;
+
+		const offset=-highPos-0.5;
+
+		this.keyboardParent.transform.local.position.x=offset;
 	}
 
 	public setProperKeyColor(midiNote: number) {
@@ -130,6 +140,16 @@ export default class Piano {
 		this.pianoGrabber.destroy();
 	}
 
+	private computeKeyPositionX(i: number): number{
+		const totalOctaves=Math.ceil((this.keyHighest-this.keyLowest)/12.0);
+		const baseOctave=Math.floor(this.keyLowest / 12);
+		const octave = Math.floor(i / 12);
+		const relativeOctave=octave-baseOctave;
+		const note = i % 12;
+
+		return -this.octaveSize * totalOctaves + relativeOctave * this.octaveSize + this.xOffset[note];
+	}
+
 	public async createAllKeys(pos: MRE.Vector3,rot=new MRE.Quaternion()) {
 		const whiteKeyMesh = this.ourApp.assets.createBoxMesh('box', this.inch * 0.9, this.inch, this.inch * 5.5);
 		await whiteKeyMesh.created;
@@ -168,18 +188,17 @@ export default class Piano {
 			}
 		});
 
-		const totalOctaves=Math.ceil((this.keyHighest-this.keyLowest)/12.0);
+		this.updateKeyboardCenter();
+
 		this.ourApp.ourConsole.logMessage(`creating new keyboard with range ${this.keyLowest} to ${this.keyHighest}`);
-		this.ourApp.ourConsole.logMessage(`octaves: ${totalOctaves}`);
-		const baseOctave=Math.floor(this.keyLowest / 12);
+		//this.ourApp.ourConsole.logMessage(`octaves: ${totalOctaves}`);
+		
 
 		for (let i = this.keyLowest; i < this.keyHighest; i++) {
 			let meshId: MRE.Guid = blackKeyMesh.id;
 			let mattId: MRE.Guid = blackKeyMaterial.id;
 			const note = i % 12;
 			const octave = Math.floor(i / 12);
-			const relativeOctave=octave-baseOctave;
-
 
 			let collisionMeshID: MRE.Guid = blackKeyMesh.id;
 
@@ -189,9 +208,8 @@ export default class Piano {
 				collisionMeshID=whiteKeyCollisionMesh.id;
 			}
 
-			//TODO: could have better centering.
 			const keyPos = new MRE.Vector3(
-				-this.octaveSize * totalOctaves + relativeOctave * this.octaveSize + this.xOffset[note], 
+				this.computeKeyPositionX(i), 
 				this.yOffset[note],
 				this.zOffset[note]);
 
@@ -248,7 +266,7 @@ export default class Piano {
 					//this.ourApp.ourConsole.logMessage("  guid is: " + guid);
 
 					if (this.ourInteractionAuth === AuthType.All || this.ourApp.isAuthorizedString(guid)) {
-						this.keyPressed(i);
+						this.keyPressed(i,127);
 
 						if (this.ourStaff) {
 							this.ourStaff.receiveNote(i, 127);
@@ -282,7 +300,7 @@ export default class Piano {
 				if (this.isAuthorized(user)) { 
 
 					this.ourApp.ourConsole.logMessage("user clicked on piano note!");
-					this.keyPressed(i);
+					this.keyPressed(i,127);
 
 					if (this.ourStaff) {
 						this.ourStaff.receiveNote(i, 127);
@@ -306,7 +324,7 @@ export default class Piano {
 		}
 	}	
 
-	public keyPressed(note: number) {
+	public keyPressed(note: number, vel: number) {
 		if(!this.ourKeys.has(note)){
 			return;
 		}
@@ -317,7 +335,7 @@ export default class Piano {
 			new MRE.Vector3(currentPos.x, currentPos.y - 0.01, currentPos.z);
 			
 		if(this.ourWavPlayer){
-			this.ourWavPlayer.playSound(note,127,new MRE.Vector3(0,0,0), 20.0);
+			this.ourWavPlayer.playSound(note,vel,new MRE.Vector3(0,0,0), 20.0);
 		}
 
 		this.setFancyKeyColor(note);
@@ -334,6 +352,10 @@ export default class Piano {
 
 		this.ourKeys.get(note).transform.local.position =
 			new MRE.Vector3(currentPos.x, this.yOffset[noteNum], currentPos.z);
+
+		if(this.ourWavPlayer){
+			this.ourWavPlayer.stopSound(note);
+		}	
 
 		this.setProperKeyColor(note);
 	}

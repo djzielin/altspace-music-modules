@@ -9,7 +9,7 @@ import WavPlayer from './wavplayer';
 import GrabButton from './grabbutton';
 import StaffSharp from './staffsharp';
 import StaffFlat from './staffflat';
-import { Collider, Quaternion } from '../../mixed-reality-extension-sdk/packages/sdk/';
+import { Collider, Quaternion, MreArgumentError } from '../../mixed-reality-extension-sdk/packages/sdk/';
 import { timeStamp } from 'console';
 
 interface BubbleProperties{
@@ -58,33 +58,52 @@ export default class Spawner {
 		new MRE.Color4(177 / 255, 89 / 255, 40 / 255)];
 */
 
+/*
+169, 30, 16
+252,147,8
+232,227,14
+34,121,18
+23,166,249
+19,0,140
+145,0,190
+
+a91e10
+fc9308
+e8e30e
+227912
+17a6f9
+13008c
+9100be
+
+*/
+
 	private noteColors: MRE.Color4[] = [
-		new MRE.Color4(229 / 255, 60 / 255, 81 / 255), //C
-		new MRE.Color4(229 / 255, 60 / 255, 81 / 255), //C#
-		new MRE.Color4(243 / 255, 124 / 255, 59 / 255), //D
-		new MRE.Color4(243 / 255, 124 / 255, 59 / 255), //D#
-		new MRE.Color4(255 / 255, 165 / 255, 44 / 255), //E
-		new MRE.Color4(110 / 255, 200 / 255, 80 / 255), //F
-		new MRE.Color4(110 / 255, 200 / 255, 80 / 255), //F#
-		new MRE.Color4(66 / 255, 184 / 255, 212 / 255), //G
-		new MRE.Color4(66 / 255, 184 / 255, 212 / 255), //G#
-		new MRE.Color4(96 / 255, 96 / 255, 186 / 255), //A
-		new MRE.Color4(96 / 255, 96 / 255, 186 / 255), //A#
-		new MRE.Color4(178 / 255, 96 / 255, 178 / 255)]; //B
+		new MRE.Color4(169 / 255, 30 / 255, 16 / 255), //C
+		new MRE.Color4(169 / 255, 30 / 255, 16 / 255), 
+		new MRE.Color4(252 / 255, 147 / 255, 8 / 255), //D
+		new MRE.Color4(252 / 255, 147 / 255, 8 / 255), 
+		new MRE.Color4(232 / 255, 227 / 255, 14 / 255), //E
+		new MRE.Color4(34 / 255, 121 / 255, 18 / 255),  //F
+		new MRE.Color4(34 / 255, 121 / 255, 18 / 255), 		
+		new MRE.Color4(23 / 255, 166 / 255, 249 / 255), //G
+		new MRE.Color4(23 / 255, 166 / 255, 249 / 255), 
+		new MRE.Color4(19 / 255, 0 / 255, 140 / 255),   //A
+		new MRE.Color4(19 / 255, 0 / 255, 140 / 255), 
+		new MRE.Color4(145 / 255, 0 / 255, 190 / 255)]; //B
 
 	private particleEffects: string [] = [
-		"artifact:1502544138917118217",
-		"artifact:1502544125159801091",
-		"artifact:1502544152556994829",
-		"artifact:1502544200791490851",
-		"artifact:1502544158974279955",
-		"artifact:1502544131971350791",
-		"artifact:1502544211017204009",
-		"artifact:1502544145477009675",
-		"artifact:1502544192268665119",
-		"artifact:1502544182571434268",
-		"artifact:1502544165660000535",
-		"artifact:1502544173000032538"
+		"artifact:1520777605018550624", //C
+		"artifact:1520777605018550624",
+		"artifact:1520777597938565470", //D
+		"artifact:1520777597938565470",
+		"artifact:1520777583518548308", //E
+		"artifact:1520777576572780882", //F
+		"artifact:1520777576572780882",
+		"artifact:1520777562286981452", //G
+		"artifact:1520777562286981452",
+		"artifact:1520777568838484302", //A
+		"artifact:1520777568838484302",
+		"artifact:1520777590866968922"  //B
 	]
 
 	private staffMidi: number[]=[36,38,40,41,43,45,47,48,50,52,53,55,57,59,
@@ -107,6 +126,10 @@ export default class Spawner {
 	//private bubbleLimit=50;
 	public doParticleEffect=true;
 	public audioRange=10;
+
+	public doSharps=true;
+	public staffTime=5.0;
+
 	public ourWavPlayer: WavPlayer;
 
 	private staffBackground: MRE.Actor=null;
@@ -126,13 +149,13 @@ export default class Spawner {
 	}
 
 	private isDrawing=false;
-	private drawStartPos: MRE.Vector3;
+	private drawPreviousPos: MRE.Vector3;
 
 	private drawStart(pos: MRE.Vector3){
 		if(this.isDrawing){
 			return;
 		}
-		this.drawStartPos=pos;
+		this.drawPreviousPos=pos;
 		
 
 		this.isDrawing=true;
@@ -147,9 +170,9 @@ export default class Spawner {
 		return new MRE.Vector3(x,0,z);
 	}	
 
-	private drawEnd(pos: MRE.Vector3, parentID: MRE.Guid){
-		const sPos=this.convertPosBackToGrabberReference(this.drawStartPos);
-		const ePos=this.convertPosBackToGrabberReference(pos);
+	private drawSegment(startPos: MRE.Vector3, endPos: MRE.Vector3){
+		const sPos=this.convertPosBackToGrabberReference(startPos);
+		const ePos=this.convertPosBackToGrabberReference(endPos);
 
 		const halfPos=(sPos.add(ePos)).multiply(new MRE.Vector3(0.5,0.5,0.5));	
 		const length=(sPos.subtract(ePos)).length();
@@ -186,7 +209,6 @@ export default class Spawner {
 		});
 
 		this.annotationList.push(drawSegment);
-		this.isDrawing=false;
 	}
 
 	public async createAsyncItems(pos: MRE.Vector3, rot=new MRE.Quaternion()) {
@@ -211,7 +233,7 @@ export default class Spawner {
 				appearance: {
 					meshId: this.ourApp.boxMesh.id,
 					materialId: this.ourApp.whiteMat.id,
-					enabled: true
+					enabled: false
 				},
 				transform: {
 					local: {
@@ -230,13 +252,35 @@ export default class Spawner {
 		const buttonBehavior = this.staffBackground.setBehavior(MRE.ButtonBehavior);
 		buttonBehavior.onButton("pressed", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
 
-			//TODO add user checks here
 			if (this.ourApp.isAuthorized(user)) {
 				const pos = buttonData.targetedPoints[0].localSpacePoint;
 				const posVector3 = new MRE.Vector3(pos.x, pos.y, pos.z);
 
 				this.ourApp.ourConsole.logMessage("user pressed on staff at: " + posVector3);
+				this.ourApp.ourConsole.logMessage("number of points: " + buttonData.targetedPoints.length);
+
 				this.drawStart(posVector3);
+			}
+		});
+
+		buttonBehavior.onButton("holding", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
+
+			if (this.ourApp.isAuthorized(user)) {
+				
+				this.ourApp.ourConsole.logMessage("user is holding ");
+
+				for(const point of buttonData.targetedPoints){
+					const pos = point.localSpacePoint;
+					const posVector3 = new MRE.Vector3(pos.x, pos.y, pos.z);
+
+					if(this.drawPreviousPos.subtract(posVector3).length()>0.02){
+						this.drawSegment(this.drawPreviousPos,posVector3);
+						this.drawPreviousPos=posVector3;
+					}
+				}
+
+				this.ourApp.ourConsole.logMessage("number of points: " + buttonData.targetedPoints.length);
+
 			}
 		});
 
@@ -245,7 +289,10 @@ export default class Spawner {
 				const pos = buttonData.targetedPoints[0].localSpacePoint;
 				const posVector3 = new MRE.Vector3(pos.x, pos.y, pos.z);
 				this.ourApp.ourConsole.logMessage("user released on staff at: " + posVector3);
-				this.drawEnd(posVector3, this.staffBackground.id);
+				this.ourApp.ourConsole.logMessage("number of points: " + buttonData.targetedPoints.length);
+
+				this.drawSegment(this.drawPreviousPos,posVector3);
+				this.isDrawing=false;
 			}
 		});
 
@@ -319,6 +366,141 @@ export default class Spawner {
 			this.ourApp.ourConsole.logMessage("3 seconds has expired. deleting particle effect");
 			particleActor.destroy();
 		}, 3000);
+	}
+
+	public destroyBubble(oldBubble: BubbleProperties) {
+		if (oldBubble.actor) {
+			oldBubble.actor.destroy();
+		}
+		if (oldBubble.bonusLine) {
+			oldBubble.bonusLine.destroy();
+		}
+		if (oldBubble.bonusLine2) {
+			oldBubble.bonusLine2.destroy();
+		}
+		if(oldBubble.sharp){
+			oldBubble.sharp.destroy();
+		}
+		if(oldBubble.flat){
+			oldBubble.flat.destroy();
+		}
+	}
+
+	public receiveNote(note: number, vel: number) {
+		this.ourApp.ourConsole.logMessage("trying to spawn staff note for: " + note);
+		//const octave = Math.floor(note / 12);
+		
+		const scale = (this.spawnerHeight/(this.noteZpos.size+2))*1.75; 
+
+		if(this.staffRootTime===-1){
+			this.staffRootTime=Date.now();
+		}
+
+		let isAccidental=false;
+
+		if(!this.noteZpos.has(note)){
+			if(note<this.staffMidi[0]){
+				this.ourApp.ourConsole.logMessage("note is lower then staff, need 8VB support!");
+				return;
+			}
+			if(note>this.staffMidi[this.staffMidi.length-1]){
+				this.ourApp.ourConsole.logMessage("note is high then staff, need 8VA support!");
+				return;
+			}
+
+			this.ourApp.ourConsole.logMessage("note must be accidental");
+			isAccidental=true;
+		}
+
+		let timeDiffSeconds=(Date.now()-this.staffRootTime)/1000.0;
+		if(timeDiffSeconds>this.staffTime){ //TODO: make this pickable from a GUI
+			//clear previous notes
+			for (const oldBubble of this.availableBubbles) {
+				this.destroyBubble(oldBubble);
+			}
+			for (const annotations of this.annotationList) {
+				annotations.destroy();
+			}
+			this.availableBubbles=[]; //clear array
+			this.annotationList=[];
+			this.staffRootTime=Date.now();
+			timeDiffSeconds=0;
+		}
+
+		const xPos=(timeDiffSeconds/this.staffTime)*this.spawnerWidth*0.9;
+	
+		this.createNoteAndAccidental(note,vel,isAccidental,this.doSharps,xPos,scale);
+	}
+
+	public createNoteAndAccidental(note: number, vel: number, isAccidental: boolean, isSharp: boolean, 
+		xPos: number, scale: number) {
+		let adjustedNote=note;
+		if(isAccidental){
+			if(isSharp){			
+				adjustedNote=note-1;
+			}else{
+				adjustedNote=note+1;
+			}
+		} 
+		
+		const zPos=this.noteZpos.get(adjustedNote);
+	
+		const spawnPos = new MRE.Vector3(-(this.spawnerWidth*0.5+0.5)-
+			(this.spawnerWidth*0.5)*0.9+xPos,
+			0.0,zPos);
+		this.ourApp.ourConsole.logMessage("going to create note at pos: " + spawnPos);
+
+		const noteNum = adjustedNote % 12;
+		const ourBubble = this.createBubble(adjustedNote,spawnPos, scale, this.noteMaterials[noteNum]);
+		ourBubble.note=note;
+
+		if(isAccidental){
+			if(isSharp){
+				const ourSharp=new StaffSharp(this.ourApp, this);
+				const sharpPos=spawnPos.clone();
+				sharpPos.x-=scale*1.0;
+				sharpPos.y+=scale*0.1;
+				ourSharp.create(sharpPos,this.staffGrabber.getGUID(),scale,this.noteMaterials[noteNum].id);
+				ourBubble.sharp=ourSharp;
+			}
+			else{
+				const ourFlat=new StaffFlat(this.ourApp, this);
+				const flatPos=spawnPos.clone();
+				flatPos.x-=scale*0.85;
+				flatPos.y+=scale*0.1;
+				ourFlat.create(flatPos,this.staffGrabber.getGUID(),scale,this.noteMaterials[noteNum].id);
+				ourBubble.flat=ourFlat;
+			}
+		}
+
+		ourBubble.actor.collider.onTrigger("trigger-enter", (otherActor: MRE.Actor) => {
+			this.ourApp.ourConsole.logMessage("trigger enter on staff note!");
+
+			if (otherActor.name.includes('SpawnerUserHand')) { //bubble touches hand
+				if(this.ourWavPlayer){
+					this.ourWavPlayer.playSound(note,vel,spawnPos, this.audioRange);
+				}
+				this.spawnParticleEffect(spawnPos, scale, noteNum);
+				this.ourApp.ourSender.send(`["/NoteOn",${ourBubble.note}]`);
+						
+			} else {
+				//this.ourApp.ourConsole.logMessage("sphere collided with: " + otherActor.name);
+			}
+		});
+
+		if (isAccidental) {
+			ourBubble.actor.setBehavior(MRE.ButtonBehavior)
+				.onButton("released", (user: MRE.User) => {
+					const ourRoles = user.properties["altspacevr-roles"];
+					if (ourRoles.includes("moderator") ||
+						ourRoles.includes("presenter") || ourRoles.includes("terraformer")) {
+						this.ourApp.ourConsole.logMessage("user is authorized to toggle sharp/flat");
+
+						this.destroyBubble(ourBubble);
+						this.createNoteAndAccidental(note, vel, isAccidental, !isSharp, xPos, scale);
+					}
+				});
+		}
 	}
 
 	private createBubble(note: number, pos: MRE.Vector3, scale: number, mat: MRE.Material): BubbleProperties {
@@ -427,142 +609,5 @@ export default class Spawner {
 		this.availableBubbles.push(ourBubble);
 
 		return ourBubble;
-	}
-	
-
-
-	public createNoteAndAccidental(note: number, isAccidental: boolean, isSharp: boolean, xPos: number, scale: number) {
-		let adjustedNote=note;
-		if(isAccidental){
-			if(isSharp){			
-				adjustedNote=note-1;
-			}else{
-				adjustedNote=note+1;
-			}
-		} 
-		
-		const zPos=this.noteZpos.get(adjustedNote);
-	
-		const spawnPos = new MRE.Vector3(-(this.spawnerWidth*0.5+0.5)-
-			(this.spawnerWidth*0.5)*0.9+xPos,
-			0.0,zPos);
-		this.ourApp.ourConsole.logMessage("going to create note at pos: " + spawnPos);
-
-		const noteNum = adjustedNote % 12;
-		const ourBubble = this.createBubble(adjustedNote,spawnPos, scale, this.noteMaterials[noteNum]);
-		ourBubble.note=note;
-
-		if(isAccidental){
-			if(isSharp){
-				const ourSharp=new StaffSharp(this.ourApp, this);
-				const sharpPos=spawnPos.clone();
-				sharpPos.x-=scale*1.0;
-				sharpPos.y+=scale*0.1;
-				ourSharp.create(sharpPos,this.staffGrabber.getGUID(),scale,this.noteMaterials[noteNum].id);
-				ourBubble.sharp=ourSharp;
-			}
-			else{
-				const ourFlat=new StaffFlat(this.ourApp, this);
-				const flatPos=spawnPos.clone();
-				flatPos.x-=scale*0.85;
-				flatPos.y+=scale*0.1;
-				ourFlat.create(flatPos,this.staffGrabber.getGUID(),scale,this.noteMaterials[noteNum].id);
-				ourBubble.flat=ourFlat;
-			}
-		}
-
-		ourBubble.actor.collider.onTrigger("trigger-enter", (otherActor: MRE.Actor) => {
-			this.ourApp.ourConsole.logMessage("trigger enter on staff note!");
-
-			if (otherActor.name.includes('SpawnerUserHand')) { //bubble touches hand
-				if(this.ourWavPlayer){
-					this.ourWavPlayer.playSound(note,127,spawnPos, this.audioRange);
-				}
-				this.spawnParticleEffect(spawnPos, scale, noteNum);
-				this.ourApp.ourSender.send(`["/NoteOn",${ourBubble.note}]`);
-						
-			} else {
-				//this.ourApp.ourConsole.logMessage("sphere collided with: " + otherActor.name);
-			}
-		});
-
-		if (isAccidental) {
-			ourBubble.actor.setBehavior(MRE.ButtonBehavior)
-				.onButton("released", (user: MRE.User) => {
-					const ourRoles = user.properties["altspacevr-roles"];
-					if (ourRoles.includes("moderator") ||
-						ourRoles.includes("presenter") || ourRoles.includes("terraformer")) {
-						this.ourApp.ourConsole.logMessage("user is authorized to toggle sharp/flat");
-
-						this.destroyBubble(ourBubble);
-						this.createNoteAndAccidental(note, isAccidental, !isSharp, xPos, scale);
-					}
-				});
-		}
-	}
-
-	public destroyBubble(oldBubble: BubbleProperties) {
-		if (oldBubble.actor) {
-			oldBubble.actor.destroy();
-		}
-		if (oldBubble.bonusLine) {
-			oldBubble.bonusLine.destroy();
-		}
-		if (oldBubble.bonusLine2) {
-			oldBubble.bonusLine2.destroy();
-		}
-		if(oldBubble.sharp){
-			oldBubble.sharp.destroy();
-		}
-		if(oldBubble.flat){
-			oldBubble.flat.destroy();
-		}
-	}
-
-	public receiveNote(note: number, vel: number) {
-		this.ourApp.ourConsole.logMessage("trying to spawn staff note for: " + note);
-		//const octave = Math.floor(note / 12);
-		
-		const scale = (this.spawnerHeight/(this.noteZpos.size+2))*1.75; 
-
-		if(this.staffRootTime===-1){
-			this.staffRootTime=Date.now();
-		}
-
-		let isAccidental=false;
-
-		if(!this.noteZpos.has(note)){
-			if(note<this.staffMidi[0]){
-				this.ourApp.ourConsole.logMessage("note is lower then staff, need 8VB support!");
-				return;
-			}
-			if(note>this.staffMidi[this.staffMidi.length-1]){
-				this.ourApp.ourConsole.logMessage("note is high then staff, need 8VA support!");
-				return;
-			}
-
-			this.ourApp.ourConsole.logMessage("note must be accidental");
-			isAccidental=true;
-		}
-
-		let timeDiffSeconds=(Date.now()-this.staffRootTime)/1000.0;
-		if(timeDiffSeconds>5.0){ //TODO: make this pickable from a GUI
-			//clear previous notes
-			for (const oldBubble of this.availableBubbles) {
-				this.destroyBubble(oldBubble);
-			}
-			for (const annotations of this.annotationList) {
-				annotations.destroy();
-			}
-			this.availableBubbles=[]; //clear array
-			this.annotationList=[];
-			this.staffRootTime=Date.now();
-			timeDiffSeconds=0;
-		}
-
-		const xPos=(timeDiffSeconds/5.0)*this.spawnerWidth*0.9;
-		const doSharp=true; //TODO: make this pickable from a GUI
-		
-		this.createNoteAndAccidental(note,isAccidental,doSharp,xPos,scale);
 	}
 }

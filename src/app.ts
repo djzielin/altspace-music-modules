@@ -6,10 +6,9 @@
 import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 import { Session } from '../../mixed-reality-extension-sdk/packages/sdk/built/internal/adapters/multipeer'
 
-import PianoReceiver from './receiver'
+import {PianoReceiver, RCallback} from './receiver'
 import Piano from './piano'
 import Spawner from './spawner'
-import { User, Quaternion } from '../../mixed-reality-extension-sdk/packages/sdk/';
 import OscSender from './sender';
 import WavPlayer from './wavplayer';
 import Console from './console';
@@ -44,7 +43,7 @@ export default class App {
 
 	//public ourPiano2: Piano = null;
 	//public ourStaff2: Staff=null;
-
+	
 	public ourSpawner: any = null;
 	public ourSpawner2: any = null;
 	public ourWavPlayer: WavPlayer = null;
@@ -57,10 +56,16 @@ export default class App {
 	public greenMat: MRE.Material;
 	public whiteMat: MRE.Material;
 	public blackMat: MRE.Material;
-	public handGrabMat: MRE.Material;
+
+	public handMesh: MRE.Mesh = null;
+	public handTexture: MRE.Texture = null;
+	public handMaterial: MRE.Material = null;
 	
 	public allUsers: UserProperties[] = [];
 	public moderatorUsers: string[] = [];
+
+	private receiverCallback: RCallback;
+
 	//public allHands: MRE.Actor[] = [];
 
 	/*
@@ -92,11 +97,24 @@ export default class App {
 			color: new MRE.Color4(1, 1, 1)
 		});
 
+		const filename = `${this.baseUrl}/` + "hand_grey.png";
+		this.handTexture = this.assets.createTexture("hand", {
+			uri: filename
+		});
+
+		this.handMaterial = this.assets.createMaterial('handMat', {
+			color: new MRE.Color4(1, 1, 1),
+			mainTextureId: this.handTexture.id
+		});
+
+		this.handMesh = this.assets.createBoxMesh('boxMesh', 0.25, 0.1, 0.25);
+
 
 		this.menuGrabber=new GrabButton(this);
 		this.menuGrabber.create(new MRE.Vector3(1, 0.1, 0));
 
 		this.context.onStarted(() => this.started());
+		this.context.onStopped(() => this.stopped());
 		this.context.onUserLeft(user => this.userLeft(user));
 		this.context.onUserJoined(user => this.userJoined(user));
 	}	
@@ -172,8 +190,7 @@ export default class App {
 		}
 
 		this.addHands(ourUser);
-
-		//this.updateUserButtons();
+		this.updateUserButtons();
 	}
 
 	public findUserRecord(userID: MRE.Guid): UserProperties{
@@ -227,6 +244,14 @@ export default class App {
 */
 	private updateUserButtons() {
 		this.ourConsole.logMessage("updating user buttons");
+
+		if(!this.session){ //prevent errors when last user leaves (session seems to be destroyed already)
+			return;
+		}
+		if(!this.session.authoritativeClient){
+			return;
+		}
+
 		const authoritativeUserID = this.session.authoritativeClient.userId;
 		this.ourConsole.logMessage("  authoritative user is currently id: " + authoritativeUserID);
 		this.ourConsole.logMessage("  number of users: " + this.allUsers.length);
@@ -315,7 +340,7 @@ export default class App {
 			//	this.ourWavPlayer.playSound(note,127,new MRE.Vector3(0,0,0), 20.0);
 			//}
 			if (this.ourPiano) {
-				this.ourPiano.keyPressed(note);
+				this.ourPiano.keyPressed(note, vel);
 			}
 			if (this.ourSpawner) {
 				this.ourSpawner.spawnBubble(note, vel);
@@ -450,7 +475,7 @@ export default class App {
 		this.ourConsole.logMessage("creating piano keys"); 
 		this.ourPiano = new Piano(this);
 		await this.ourPiano.createAllKeys(new MRE.Vector3(2, 1, 0),
-			Quaternion.FromEulerAngles(-30* Math.PI / 180,0,0));
+			MRE.Quaternion.FromEulerAngles(-30* Math.PI / 180,0,0));
 
 		this.ourPiano.ourWavPlayer=this.ourWavPlayer;
 		this.ourPianoGui=new PianoGui(this,this.ourPiano);
@@ -460,7 +485,7 @@ export default class App {
 		this.ourStaff = new Staff(this); 
 		this.ourStaff.ourWavPlayer=this.ourWavPlayer;
 		await this.ourStaff.createAsyncItems(new MRE.Vector3(2,2,0.5), 
-			Quaternion.FromEulerAngles(-90* Math.PI / 180,0,0));
+			MRE.Quaternion.FromEulerAngles(-90* Math.PI / 180,0,0));
 		this.ourStaff.ourWavPlayer=this.ourWavPlayer;
 
 		this.ourPiano.ourStaff=this.ourStaff;
@@ -493,11 +518,19 @@ export default class App {
 */
 		
 	}
+	private stopped(){
+		MRE.log.info("app", "stopped callback has been called");
+		this.ourReceiver.removeReceiver(this.receiverCallback);
+	}
+
 
 	private started() {
+		this.ourConsole.logMessage("started callback has begun");
+
 		this.loadAsyncItems().then(() => {
 			this.ourConsole.logMessage("all async items created/loaded!");
-			this.ourReceiver.ourCallback = this.PianoReceiveCallback.bind(this);
+			this.receiverCallback=this.PianoReceiveCallback.bind(this)
+			this.ourReceiver.addReceiver(this.receiverCallback);
 
 			setInterval(() => { 
 				let pianoPlayable=0;
