@@ -38,7 +38,7 @@ export default class Spawner {
 	public spawnerWidth=4.0;
 	public spawnerHeight=1.5;
 	public showBackground=true;
-
+	public drawThreshold=0.04;
 
 /*
 169, 30, 16
@@ -220,6 +220,19 @@ e8e30e
 		});
 		
 		const buttonBehavior = this.staffBackground.setBehavior(MRE.ButtonBehavior);
+		buttonBehavior.onHover("exit", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
+			if (this.ourApp.isAuthorized(user)) {
+				const pos = buttonData.targetedPoints[0].localSpacePoint;
+				const posVector3 = new MRE.Vector3(pos.x, pos.y, pos.z);
+				this.ourApp.ourConsole.logMessage("user hover has ended at: " + posVector3);
+
+				if(this.isDrawing){
+					this.drawSegment(this.drawPreviousPos,posVector3);
+					this.isDrawing=false;
+				}
+			}
+		});
+
 		buttonBehavior.onButton("pressed", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
 
 			if (this.ourApp.isAuthorized(user)) {
@@ -236,21 +249,22 @@ e8e30e
 		buttonBehavior.onButton("holding", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
 
 			if (this.ourApp.isAuthorized(user)) {
-				
-				this.ourApp.ourConsole.logMessage("user is holding ");
 
-				for(const point of buttonData.targetedPoints){
-					const pos = point.localSpacePoint;
-					const posVector3 = new MRE.Vector3(pos.x, pos.y, pos.z);
+				if (this.isDrawing) {
+					this.ourApp.ourConsole.logMessage("user is holding ");
 
-					if(this.drawPreviousPos.subtract(posVector3).length()>0.02){
-						this.drawSegment(this.drawPreviousPos,posVector3);
-						this.drawPreviousPos=posVector3;
+					for (const point of buttonData.targetedPoints) {
+						const pos = point.localSpacePoint;
+						const posVector3 = new MRE.Vector3(pos.x, pos.y, pos.z);
+
+						if (posVector3.subtract(this.drawPreviousPos).length() > this.drawThreshold) {
+							this.drawSegment(this.drawPreviousPos, posVector3);
+							this.drawPreviousPos = posVector3;
+						}
 					}
+
+					this.ourApp.ourConsole.logMessage("number of points: " + buttonData.targetedPoints.length);
 				}
-
-				this.ourApp.ourConsole.logMessage("number of points: " + buttonData.targetedPoints.length);
-
 			}
 		});
 
@@ -259,10 +273,11 @@ e8e30e
 				const pos = buttonData.targetedPoints[0].localSpacePoint;
 				const posVector3 = new MRE.Vector3(pos.x, pos.y, pos.z);
 				this.ourApp.ourConsole.logMessage("user released on staff at: " + posVector3);
-				this.ourApp.ourConsole.logMessage("number of points: " + buttonData.targetedPoints.length);
 
-				this.drawSegment(this.drawPreviousPos,posVector3);
-				this.isDrawing=false;
+				if(this.isDrawing){
+					this.drawSegment(this.drawPreviousPos,posVector3);
+					this.isDrawing=false;
+				}
 			}
 		});
 
@@ -356,6 +371,22 @@ e8e30e
 		}
 	}
 
+	private isAuthorized(user: MRE.User): boolean{
+		if(this.ourInteractionAuth===AuthType.All){
+			return true;
+		}
+		if(this.ourInteractionAuth===AuthType.Moderators){
+			return this.ourApp.isAuthorized(user);
+		}
+		if(this.ourInteractionAuth===AuthType.SpecificUser){
+			if(user===this.authorizedUser){
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	public receiveNote(note: number, vel: number) {
 		this.ourApp.ourConsole.logMessage("trying to spawn staff note for: " + note);
 		//const octave = Math.floor(note / 12);
@@ -420,6 +451,7 @@ e8e30e
 			0.0,zPos);
 		this.ourApp.ourConsole.logMessage("going to create note at pos: " + spawnPos);
 
+		const notAdjustedNoteNum=note % 12;
 		const noteNum = adjustedNote % 12;
 		const ourBubble = this.createBubble(adjustedNote,spawnPos, scale, this.noteMaterials[noteNum]);
 		ourBubble.note=note;
@@ -447,27 +479,60 @@ e8e30e
 			this.ourApp.ourConsole.logMessage("trigger enter on staff note!");
 
 			if (otherActor.name.includes('SpawnerUserHand')) { //bubble touches hand
-				if(this.ourWavPlayer){
-					this.ourWavPlayer.playSound(note,vel,spawnPos, this.audioRange);
+				const guid = otherActor.name.substr(16);
+				//this.ourApp.ourConsole.logMessage("  full user name is: " + otherActor.name);
+				//this.ourApp.ourConsole.logMessage("  guid is: " + guid);
+
+				if (this.ourInteractionAuth === AuthType.All || this.ourApp.isAuthorizedString(guid)) {
+					if (this.ourWavPlayer) {
+						this.ourWavPlayer.playSound(note, vel, spawnPos, this.audioRange);
+					}
+					this.spawnParticleEffect(spawnPos, scale, noteNum);
+					this.ourApp.ourSender.send(`["/NoteOn",${ourBubble.note}]`);
 				}
-				this.spawnParticleEffect(spawnPos, scale, noteNum);
-				this.ourApp.ourSender.send(`["/NoteOn",${ourBubble.note}]`);
-						
 			} else {
 				//this.ourApp.ourConsole.logMessage("sphere collided with: " + otherActor.name);
 			}
 		});
 
-		if (isAccidental) {
+		//can toggle between flats and sharps on black keys
+		if (notAdjustedNoteNum===1 || notAdjustedNoteNum===3 || 
+			notAdjustedNoteNum===6 || notAdjustedNoteNum===8 || notAdjustedNoteNum===10) {
 			ourBubble.actor.setBehavior(MRE.ButtonBehavior)
 				.onButton("released", (user: MRE.User) => {
-					const ourRoles = user.properties["altspacevr-roles"];
-					if (ourRoles.includes("moderator") ||
-						ourRoles.includes("presenter") || ourRoles.includes("terraformer")) {
-						this.ourApp.ourConsole.logMessage("user is authorized to toggle sharp/flat");
-
+					if (this.isAuthorized(user)){
 						this.destroyBubble(ourBubble);
 						this.createNoteAndAccidental(note, vel, isAccidental, !isSharp, xPos, scale);
+					}
+				});
+		}
+
+		//can toggle between sharps and natural
+		if (notAdjustedNoteNum === 5 || notAdjustedNoteNum === 0) {
+			ourBubble.actor.setBehavior(MRE.ButtonBehavior)
+				.onButton("released", (user: MRE.User) => {
+					if (this.isAuthorized(user)) {
+						this.destroyBubble(ourBubble);
+						if (isAccidental) {
+							this.createNoteAndAccidental(note, vel, false, false, xPos, scale);
+						} else {
+							this.createNoteAndAccidental(note, vel, true, true, xPos, scale);
+						}
+					}
+				});
+		}
+
+		//can toggle between flat and natural
+		if (notAdjustedNoteNum === 4 || notAdjustedNoteNum === 11) {
+			ourBubble.actor.setBehavior(MRE.ButtonBehavior)
+				.onButton("released", (user: MRE.User) => {
+					if (this.isAuthorized(user)) {
+						this.destroyBubble(ourBubble);
+						if (isAccidental) {
+							this.createNoteAndAccidental(note, vel, false, false, xPos, scale);
+						} else {
+							this.createNoteAndAccidental(note, vel, true, false, xPos, scale);
+						}
 					}
 				});
 		}

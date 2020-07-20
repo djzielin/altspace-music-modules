@@ -60,7 +60,7 @@ export default class Button {
 				collider: { geometry: { shape: MRE.ColliderType.Auto } },
 				transform: {
 					local: {
-						position: { x: 0, y: 0.05, z: 0.0 },
+						position: { x: 0, y: 0.00, z: 0.0 },
 						scale: new MRE.Vector3(width, 0.1, 0.1)
 					}
 				}
@@ -80,7 +80,7 @@ export default class Button {
 				},
 				transform: {
 					local: {
-						position: { x: 0, y: 0.101, z: 0.0 },
+						position: { x: 0, y: 0.051, z: 0.0 },
 						rotation: MRE.Quaternion.FromEulerAngles(this.ourApp.degToRad(90), 0, 0)
 					}
 				}

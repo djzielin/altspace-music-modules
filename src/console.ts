@@ -89,7 +89,7 @@ export default class Console {
 	private async createConsoleToggleButton() {
 
 		const button=new Button(this.ourApp);
-		await button.createAsync(new MRE.Vector3(0-0.6,0,0.3),this.consoleHolder,"Console On","Console Off",
+		await button.createAsync(new MRE.Vector3(-0.7,0,0.3),this.consoleHolder,"Console On","Console Off",
 			this.consoleOn, this.setConsoleOn.bind(this));
 	}
 

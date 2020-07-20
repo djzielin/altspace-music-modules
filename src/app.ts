@@ -17,6 +17,7 @@ import Staff from './staff';
 import GrabButton from './grabbutton';
 import PianoGui from './piano_gui';
 import StaffGui from './staff_gui';
+import { Appearance } from '../../mixed-reality-extension-sdk/packages/sdk/';
 
 /**
  * The main class of this app. All the logic goes here.
@@ -194,6 +195,26 @@ export default class App {
 
 		this.addHands(ourUser);
 		this.updateUserButtons();
+
+		/*const particleActor = MRE.Actor.CreateFromLibrary(this.context, {
+			resourceId: "artifact:1520871632212591055",
+			actor: {
+				name: 'particle burst',
+				//parentId: this.staffGrabber.getGUID(),
+				transform: {
+					local: {
+						scale: new MRE.Vector3(0.1,0.1,0.1)
+					}
+				},
+				attachment: {
+					attachPoint: 'right-hand',
+					userId: user.id
+				},
+				Appearance:{
+					enabled: true
+				}
+			}
+		});*/
 	}
 
 	public findUserRecord(userID: MRE.Guid): UserProperties{
@@ -264,7 +285,7 @@ export default class App {
 			const ourUser = this.allUsers[i];
 
 			if (ourUser.isModerator) {
-				const authButtonPos = new MRE.Vector3(0.6, 0, 0.35 - userCount * 0.15);
+				const authButtonPos = new MRE.Vector3(-0.7, 0, -0.15 - userCount * 0.15);
 				const areWeAuthoritative = (ourUser.userID === authoritativeUserID);
 
 				this.ourConsole.logMessage("  user: " + ourUser.name + " is Auth: " + areWeAuthoritative);
@@ -379,7 +400,7 @@ export default class App {
 				appearance:
 				{
 					meshId: this.boxMesh.id,
-					enabled: false
+					enabled: true
 				}
 			}
 		});
@@ -422,7 +443,7 @@ export default class App {
 
 		this.ourConsole.logMessage("Creating Reset Button ");
 		const button=new Button(this);
-		await button.createAsync(new MRE.Vector3(0-0.6,0,0.5),this.menuGrabber.getGUID(),"Reset","Reset",
+		await button.createAsync(new MRE.Vector3(-0.7,0,0.5),this.menuGrabber.getGUID(),"Reset","Reset",
 			false, this.doReset.bind(this));
 
 		const authLabel = MRE.Actor.Create(this.context, {
@@ -436,7 +457,7 @@ export default class App {
 				},
 				transform: {
 					local: {
-						position: { x: 0.5, y: 0.101, z: 0.5 },
+						position: { x: 0-0.7, y: 0.101, z: 0.0 },
 						rotation: MRE.Quaternion.FromEulerAngles(this.degToRad(90), 0, 0)
 					}
 				}
@@ -447,13 +468,13 @@ export default class App {
 		this.ourConsole.logMessage("Creating Wav Player");
 		this.ourWavPlayer=new WavPlayer(this);
 		await this.ourWavPlayer.loadAllSounds("piano");
-/*
-		this.ourConsole.logMessage("Creating Wav Player2");
+
+		/*this.ourConsole.logMessage("Creating Wav Player2");
 		this.ourWavPlayer2=new WavPlayer(this);
 		this.ourWavPlayer2.volume=0.25;
 		this.ourWavPlayer2.cullTime=10000;
-		await this.ourWavPlayer2.loadAllSounds("vibes");
-*/
+		await this.ourWavPlayer2.loadAllSounds("vibes");*/
+
 		this.ourConsole.logMessage("creating piano keys"); 
 		this.ourPiano = new Piano(this);
 		await this.ourPiano.createAllKeys(new MRE.Vector3(2, 1, 0),
@@ -461,18 +482,17 @@ export default class App {
 
 		this.ourPiano.ourWavPlayer=this.ourWavPlayer;
 		this.ourPianoGui=new PianoGui(this,this.ourPiano);
-		await this.ourPianoGui.createAsync(new MRE.Vector3(-3.5,0.1,0),"Main Piano")
+		await this.ourPianoGui.createAsync(new MRE.Vector3(-2.5,0.0,0),"Main Piano")
 
 		this.ourConsole.logMessage("Loading staff items");
 		this.ourStaff = new Staff(this); 
 		this.ourStaff.ourWavPlayer=this.ourWavPlayer;
 		await this.ourStaff.createAsyncItems(new MRE.Vector3(2,2,0.5), 
 			MRE.Quaternion.FromEulerAngles(-90* Math.PI / 180,0,0));
-		this.ourStaff.ourWavPlayer=this.ourWavPlayer;
 		this.ourPiano.ourStaff=this.ourStaff;
 
 		this.ourStaffGui=new StaffGui(this,this.ourStaff);
-		await this.ourStaffGui.createAsync(new MRE.Vector3(-3.5,0.1,0),"Main Staff")
+		await this.ourStaffGui.createAsync(new MRE.Vector3(-4.0,0.0,0),"Main Staff")
 
 	/*	this.ourConsole.logMessage("creating piano keys"); 
 		this.ourPiano2 = new Piano(this);
