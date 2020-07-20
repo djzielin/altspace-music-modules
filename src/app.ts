@@ -457,7 +457,7 @@ export default class App {
 				},
 				transform: {
 					local: {
-						position: { x: 0-0.7, y: 0.101, z: 0.0 },
+						position: { x: 0-0.7, y: 0.051, z: 0.0 },
 						rotation: MRE.Quaternion.FromEulerAngles(this.degToRad(90), 0, 0)
 					}
 				}

@@ -30,18 +30,20 @@ export default class PianoGui {
 		});
 		await consoleMat.created;
 
+		const backGroundMesh = this.ourApp.assets.createBoxMesh('boxMesh', 1.1, 0.1, 1.5);
+
+
 		this.guiBackground = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
 				parentId: this.guiGrabber.getGUID(),
 				name: "consoleBackground",
 				appearance: {
-					meshId: this.ourApp.boxMesh.id,
+					meshId: backGroundMesh.id,
 					materialId: consoleMat.id
 				},
 				transform: {
 					local: {
-						position: { x: -0.75, y: 0.05, z: -0.25 },
-						scale: new MRE.Vector3(1.05, 0.1, 1.5)
+						position: { x: -0.85, y:0.0, z: -0.25 },
 					}
 				}
 			}
@@ -50,7 +52,7 @@ export default class PianoGui {
 
 		const guiTextActor = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
-				parentId: this.guiGrabber.getGUID(),
+				parentId: this.guiBackground.id,
 				name: 'consoleText',
 				text: {
 					contents: name,
@@ -60,7 +62,7 @@ export default class PianoGui {
 				},
 				transform: {
 					local: {
-						position: new MRE.Vector3(-0.75, 0.101, 0.5),
+						position: new MRE.Vector3(0.0, 0.051, 0.7),
 						rotation: MRE.Quaternion.FromEulerAngles(this.ourApp.degToRad(90), 0, 0)
 					}
 				}
@@ -104,30 +106,36 @@ export default class PianoGui {
 
 		await this.createBackground(pos, name);
 
+		let zPos=0.45;
+
 		const authButton = new Button(this.ourApp);
-		await authButton.createAsync(new MRE.Vector3(-0.75, 0.025, 0.3),
-			this.guiGrabber.getGUID(), "All Users", "Auth Only",
+		await authButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
+			this.guiBackground.id, "All Users", "Auth Only",
 			this.ourPiano.ourInteractionAuth === 1, this.setAuthAllUsers.bind(this));
-
-		const scaleSelector = new PlusMinus(this.ourApp);
-		await scaleSelector.createAsync(new MRE.Vector3(-0.5 - 0.75, 0.1, 0.15),
-			this.guiGrabber.getGUID(), "scale",
-			this.ourPiano.pianoScale, 0.1, this.setScale.bind(this));
-
-		const lowestKeySelector = new PlusMinus(this.ourApp);
-		await lowestKeySelector.createAsync(new MRE.Vector3(-0.5 - 0.75, 0.1, 0.0),
-			this.guiGrabber.getGUID(), "L key",
-			this.ourPiano.keyLowest, 1, this.setLowestKey.bind(this));
-
-		const highestKeySelector = new PlusMinus(this.ourApp);
-		await highestKeySelector.createAsync(new MRE.Vector3(-0.5 - 0.75, 0.1, -0.15),
-			this.guiGrabber.getGUID(), "H key",
-			this.ourPiano.keyHighest, 1, this.setHighestKey.bind(this));
+		zPos -= 0.15;
 
 		this.resetButton = new Button(this.ourApp);
-		await this.resetButton.createAsync(new MRE.Vector3(-0.75, 0.025, -0.3),
-			this.guiGrabber.getGUID(), "Resetting", "Reset",
+		await this.resetButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
+			this.guiBackground.id, "Relayout", "Relayout",
 			false, this.doReset.bind(this));
+		zPos -= 0.15;
 
+		const scaleSelector = new PlusMinus(this.ourApp);
+		await scaleSelector.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
+			this.guiBackground.id, "scale",
+			this.ourPiano.pianoScale, 0.1, this.setScale.bind(this));
+		zPos -= 0.15;
+
+		const lowestKeySelector = new PlusMinus(this.ourApp);
+		await lowestKeySelector.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
+			this.guiBackground.id, "L key",
+			this.ourPiano.keyLowest, 1, this.setLowestKey.bind(this));
+		zPos -= 0.15;
+
+		const highestKeySelector = new PlusMinus(this.ourApp);
+		await highestKeySelector.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
+			this.guiBackground.id, "H key",
+			this.ourPiano.keyHighest, 1, this.setHighestKey.bind(this));
+		zPos -= 0.15;
 	}
 }

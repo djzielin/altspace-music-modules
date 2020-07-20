@@ -73,8 +73,8 @@ export default class GrabButton {
 		}
 
 		this.lockButton=new Button(this.ourApp);
-		this.lockButton.createAsync(new MRE.Vector3(0.0,0.0,-0.3),this.buttonActor.id,"unlocked","locked",
-			this.unLocked, this.setUnlocked.bind(this),0.4);
+		this.lockButton.createAsync(new MRE.Vector3(0.0,0.0,-0.25),this.buttonActor.id,"unlocked","locked",
+			this.unLocked, this.setUnlocked.bind(this),0.45);
 
 		/*this.buttonActor.setBehavior(MRE.ButtonBehavior)
 			.onButton("pressed", (user: MRE.User) => {
