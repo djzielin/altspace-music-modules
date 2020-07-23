@@ -30,6 +30,7 @@ export default class Piano {
 	public keyLowest=36;
 	public keyHighest=85;
 	public pianoScale=5.0;
+	public audioRange=50.0;
 
 	private inch = 0.0254;
 	private halfinch = this.inch * 0.5;
@@ -335,7 +336,7 @@ export default class Piano {
 			new MRE.Vector3(currentPos.x, currentPos.y - 0.01, currentPos.z);
 			
 		if(this.ourWavPlayer){
-			this.ourWavPlayer.playSound(note,vel,new MRE.Vector3(0,0,0), 50.0);
+			this.ourWavPlayer.playSound(note,vel,new MRE.Vector3(0,0,0), this.audioRange);
 		}
 
 		this.setFancyKeyColor(note);

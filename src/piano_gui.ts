@@ -84,6 +84,11 @@ export default class PianoGui {
 			this.ourPiano.keyHighest=n;
 		}
 	}
+	public setAudioRange(n: number): void {
+		if(n>0){ //sanity check
+			this.ourPiano.audioRange=n;
+		}
+	}
 
 	public doReset(b: boolean): void {
 		const pos = this.ourPiano.pianoGrabber.getPos();
@@ -131,6 +136,12 @@ export default class PianoGui {
 		await highestKeySelector.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
 			this.guiBackground.id, "H key",
 			this.ourPiano.keyHighest, 1, this.setHighestKey.bind(this));
+		zPos -= 0.15;
+
+		const audioRangeSelector = new PlusMinus(this.ourApp);
+		await audioRangeSelector.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
+			this.guiBackground.id, "aud m",
+			this.ourPiano.audioRange, 1, this.setAudioRange.bind(this));
 		zPos -= 0.15;
 	}
 }

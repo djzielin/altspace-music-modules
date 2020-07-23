@@ -102,7 +102,10 @@ export default class StaffGui {
 	public setStaffDrawThreshold(n: number){
 		this.ourStaff.drawThreshold=n;
 	}
-	
+
+	public setStaffAudioDistance(n: number){
+		this.ourStaff.audioRange=n;
+	}
 
 	public async createAsync(pos: MRE.Vector3, name: string) {
 		this.ourApp.ourConsole.logMessage("creating staff gui");
@@ -149,8 +152,14 @@ export default class StaffGui {
 
 		const drawDist = new PlusMinus(this.ourApp);
 		await drawDist.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
-		this.guiBackground.id, "pen dx",
+		this.guiBackground.id, "pen Δ",
 			this.ourStaff.drawThreshold, 0.01, this.setStaffDrawThreshold.bind(this));
+		zPos-=0.15;
+
+		const audDist = new PlusMinus(this.ourApp);
+		await audDist.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
+		this.guiBackground.id, "aud m",
+			this.ourStaff.audioRange, 1.0, this.setStaffAudioDistance.bind(this));
 		zPos-=0.15;
 
 	}

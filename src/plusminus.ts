@@ -157,17 +157,22 @@ export default class PlusMinus {
 		});
 		await plusTextDisplay.created();
 
-		// Set a click handler on the button.
 		buttonM.setBehavior(MRE.ButtonBehavior)
 			.onButton("released", (user: MRE.User) => {	
 				const ourRoles = user.properties["altspacevr-roles"];
 				if (ourRoles.includes("moderator") ||
 					ourRoles.includes("presenter") || ourRoles.includes("terraformer")) {
+					
 					this.ourValue -= this.ourChangeAmount;
+					if(this.ourValue<0){ //always prevent negative numbers?
+						this.ourValue=0;
+					}
+
 					this.updateDisplayValue();
 					callback(this.ourValue);
 				}
 			});
+			
 		buttonP.setBehavior(MRE.ButtonBehavior)
 			.onButton("released", (user: MRE.User) => {
 				const ourRoles = user.properties["altspacevr-roles"];
