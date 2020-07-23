@@ -107,7 +107,7 @@ e8e30e
 
 	//private bubbleLimit=50;
 	public doParticleEffect=true;
-	public audioRange=10;
+	public audioRange=50;
 
 	public ourWavPlayer: WavPlayer;
 
@@ -116,7 +116,10 @@ e8e30e
 
 	private isDrawing=false;
 	private drawPreviousPos: MRE.Vector3;
+	private drawingUser: MRE.User;
+
 	private computedStaffScale: number;
+
 
 	constructor(private ourApp: App) {
 
@@ -263,21 +266,8 @@ e8e30e
 		this.updateStaffWidth();
 		
 		const buttonBehavior = this.staffBackground.setBehavior(MRE.ButtonBehavior);
-		buttonBehavior.onHover("exit", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
-			if (this.ourApp.isAuthorized(user)) {
-				const penPos = buttonData.targetedPoints[0].localSpacePoint;
-				const posVector3 = new MRE.Vector3(penPos.x, penPos.y, penPos.z);
-				this.ourApp.ourConsole.logMessage("user hover has ended at: " + posVector3);
-
-				if(this.isDrawing){
-					this.drawSegment(this.drawPreviousPos,posVector3);
-					this.isDrawing=false;
-				}
-			}
-		});
 
 		buttonBehavior.onButton("pressed", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
-
 			if (this.ourApp.isAuthorized(user)) {
 				const penPos = buttonData.targetedPoints[0].localSpacePoint;
 				const posVector3 = new MRE.Vector3(penPos.x, penPos.y, penPos.z);
@@ -285,31 +275,35 @@ e8e30e
 				this.ourApp.ourConsole.logMessage("user pressed on staff at: " + posVector3);
 				this.ourApp.ourConsole.logMessage("number of points: " + buttonData.targetedPoints.length);
 
-				this.drawStart(posVector3);
+				if(!this.isDrawing){
+					this.drawStart(posVector3);
+					this.drawingUser=user;
+				}
 			}
 		});
 
 		buttonBehavior.onButton("holding", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
-
 			if (this.ourApp.isAuthorized(user)) {
 
 				if (this.isDrawing) {
-					this.ourApp.ourConsole.logMessage("user is holding ");
-					this.ourApp.ourConsole.logMessage("number of points: " + buttonData.targetedPoints.length);
+					if (this.drawingUser === user) {
+						this.ourApp.ourConsole.logMessage("user is holding ");
+						this.ourApp.ourConsole.logMessage("number of points: " + buttonData.targetedPoints.length);
 
-					for (const point of buttonData.targetedPoints) {
-						const penPos = point.localSpacePoint;
-						const posVector3 = new MRE.Vector3(penPos.x, penPos.y, penPos.z);
-						posVector3.y=this.drawPreviousPos.y; //hack to fix MRE bug
-						this.ourApp.ourConsole.logMessage("point: " + posVector3); 
-						this.ourApp.ourConsole.logMessage("prev: " + this.drawPreviousPos); 
+						for (const point of buttonData.targetedPoints) {
+							const penPos = point.localSpacePoint;
+							const posVector3 = new MRE.Vector3(penPos.x, penPos.y, penPos.z);
+							posVector3.y = this.drawPreviousPos.y; //hack to fix MRE bug
+							this.ourApp.ourConsole.logMessage("point: " + posVector3);
+							this.ourApp.ourConsole.logMessage("prev: " + this.drawPreviousPos);
 
-						const dist = posVector3.subtract(this.drawPreviousPos).length()
-						if (dist > this.drawThreshold) {
-							this.ourApp.ourConsole.logMessage("pen dist: " + dist +
-								" is greater then threshold: " + this.drawThreshold);
-							this.drawSegment(this.drawPreviousPos, posVector3);
-							this.drawPreviousPos = posVector3;
+							const dist = posVector3.subtract(this.drawPreviousPos).length()
+							if (dist > this.drawThreshold) {
+								this.ourApp.ourConsole.logMessage("pen dist: " + dist +
+									" is greater then threshold: " + this.drawThreshold);
+								this.drawSegment(this.drawPreviousPos, posVector3);
+								this.drawPreviousPos = posVector3;
+							}
 						}
 					}
 
@@ -322,15 +316,34 @@ e8e30e
 				const penPos = buttonData.targetedPoints[0].localSpacePoint;
 				const posVector3 = new MRE.Vector3(penPos.x, penPos.y, penPos.z);
 				this.ourApp.ourConsole.logMessage("user released on staff at: " + posVector3);
-				posVector3.y=this.drawPreviousPos.y; //hack to fix MRE bug
+				posVector3.y = this.drawPreviousPos.y; //hack to fix MRE bug
 
-				if(this.isDrawing){
-					this.drawSegment(this.drawPreviousPos,posVector3);
-					this.isDrawing=false;
+				if (this.isDrawing) {
+					if (this.drawingUser === user) {
+						this.drawSegment(this.drawPreviousPos, posVector3);
+						this.isDrawing = false;
+					}
 				}
 			}
 		});
 
+
+		buttonBehavior.onHover("exit", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
+			if (this.ourApp.isAuthorized(user)) {
+				const penPos = buttonData.targetedPoints[0].localSpacePoint;
+				const posVector3 = new MRE.Vector3(penPos.x, penPos.y, penPos.z);
+				this.ourApp.ourConsole.logMessage("user hover has ended at: " + posVector3);
+
+				if (this.isDrawing) {
+					if (this.drawingUser === user) {
+						this.drawSegment(this.drawPreviousPos, posVector3);
+						this.isDrawing = false;
+					}
+				}
+			}
+		});
+
+		
 		await this.staffBackground.created();
 
 		const zSpacing = this.spawnerHeight / (this.staffMidi.length + 2);

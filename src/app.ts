@@ -404,7 +404,7 @@ export default class App {
 				appearance:
 				{
 					meshId: this.boxMesh.id,
-					enabled: true
+					enabled: false
 				}
 			}
 		});
