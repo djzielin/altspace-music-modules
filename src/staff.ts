@@ -11,7 +11,7 @@ import StaffSharp from './staffsharp';
 import StaffFlat from './staffflat';
 
 
-interface BubbleProperties{
+interface NoteProperties{
 	timeStamp: number;
 	actor: MRE.Actor;
 	sharp: StaffSharp;
@@ -20,6 +20,7 @@ interface BubbleProperties{
 	bonusLine2: MRE.Actor;
 	pos: MRE.Vector3;
 	note: number;
+	adjustedNote: number;
 }
 
 enum AuthType {
@@ -29,16 +30,18 @@ enum AuthType {
   }
 
 
-export default class Spawner {
+export default class Staff {
 	public ourInteractionAuth=AuthType.Moderators;
 	public authorizedUser: MRE.User;
 
 	public doSharps=true;
 	public staffTime=5.0;
-	public spawnerWidth=4.0;
-	public spawnerHeight=1.5;
+	public staffWidth=4.0;
+	public staffHeight=1.5;
 	public showBackground=true;
 	public drawThreshold=0.04;
+	public doTypesetOffset=true;
+
 
 /*
 169, 30, 16
@@ -97,7 +100,7 @@ e8e30e
 
 	private staffGrabber: GrabButton=null;
 
-	public availableBubbles: BubbleProperties[]=[]; 
+	public activeNotes: NoteProperties[]=[]; 
 	private annotationList: MRE.Actor[]=[];
 
 	private noteZpos: Map<number,number>=new Map();
@@ -105,7 +108,6 @@ e8e30e
 
 	private allStaffLines: MRE.Actor[]=[];
 
-	//private bubbleLimit=50;
 	public doParticleEffect=true;
 	public audioRange=50;
 
@@ -136,10 +138,10 @@ e8e30e
 	}
 
 	private convertPosBackToGrabberReference(pos: MRE.Vector3){
-		let x=pos.x*this.spawnerWidth;
-		const z=pos.z*this.spawnerHeight
+		let x=pos.x*this.staffWidth;
+		const z=pos.z*this.staffHeight
 
-		x-=(this.spawnerWidth * 0.5 + 0.5);
+		x-=(this.staffWidth * 0.5 + 0.5);
 
 		return new MRE.Vector3(x,0,z);
 	}	
@@ -161,7 +163,7 @@ e8e30e
 
 
 		const rot=MRE.Quaternion.FromEulerAngles(0,-tah,0);
-		const scale=(this.spawnerHeight/(this.noteZpos.size+2))*1.75*0.2;
+		const scale=(this.staffHeight/(this.noteZpos.size+2))*1.75*0.2;
 
 		const drawSegment = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
@@ -186,17 +188,17 @@ e8e30e
 	}
 
 	public updateStaffWidth() {
-		this.staffBackground.transform.local.position.x = -(this.spawnerWidth * 0.5 + 0.5);
-		this.staffBackground.transform.local.scale.x = this.spawnerWidth;
+		this.staffBackground.transform.local.position.x = -(this.staffWidth * 0.5 + 0.5);
+		this.staffBackground.transform.local.scale.x = this.staffWidth;
 
 		for (const line of this.allStaffLines) {
-			line.transform.local.position.x = -(this.spawnerWidth * 0.5 + 0.5);
-			line.transform.local.scale.x = this.spawnerWidth;
+			line.transform.local.position.x = -(this.staffWidth * 0.5 + 0.5);
+			line.transform.local.scale.x = this.staffWidth;
 		}
 	}
 
 	private computeStaffScale(){
-		this.computedStaffScale = (this.spawnerHeight/(this.noteZpos.size+2))*1.75; 
+		this.computedStaffScale = (this.staffHeight/(this.noteZpos.size+2))*1.75; 
 		this.ourApp.ourConsole.logMessage("computed staff scale is: " + this.computedStaffScale);
 	}
 
@@ -204,10 +206,10 @@ e8e30e
 		this.computeStaffScale();
 
 		this.staffBackground.transform.local.scale.y = this.computedStaffScale * 0.0591;
-		this.staffBackground.transform.local.scale.z = this.spawnerHeight;
+		this.staffBackground.transform.local.scale.z = this.staffHeight;
 
-		const zSpacing = this.spawnerHeight / (this.staffMidi.length + 2);
-		const zBase = -(this.spawnerHeight / 2.0) + zSpacing;
+		const zSpacing = this.staffHeight / (this.staffMidi.length + 2);
+		const zBase = -(this.staffHeight / 2.0) + zSpacing;
 
 		for (let i = 0; i < this.staffMidi.length; i++) {
 			this.noteZpos.set(this.staffMidi[i], zBase + (i + 1) * zSpacing);
@@ -251,8 +253,8 @@ e8e30e
 				},
 				transform: {
 					local: {
-						position: new MRE.Vector3(-(this.spawnerWidth * 0.5 + 0.5), 0, 0 ),
-						scale: new MRE.Vector3(this.spawnerWidth, 0.005, this.spawnerHeight)
+						position: new MRE.Vector3(-(this.staffWidth * 0.5 + 0.5), 0, 0 ),
+						scale: new MRE.Vector3(this.staffWidth, 0.005, this.staffHeight)
 					}
 				},
 				collider: {
@@ -346,8 +348,8 @@ e8e30e
 		
 		await this.staffBackground.created();
 
-		const zSpacing = this.spawnerHeight / (this.staffMidi.length + 2);
-		const zBase = -(this.spawnerHeight / 2.0) + zSpacing;
+		const zSpacing = this.staffHeight / (this.staffMidi.length + 2);
+		const zBase = -(this.staffHeight / 2.0) + zSpacing;
 
 		for (let i = 0; i < this.staffMidi.length; i++) {
 			this.noteZpos.set(this.staffMidi[i], zBase + (i + 1) * zSpacing);
@@ -368,8 +370,8 @@ e8e30e
 					},
 					transform: {
 						local: {
-							position: new MRE.Vector3(-(this.spawnerWidth * 0.5 + 0.5), 0, z),
-							scale: new MRE.Vector3(this.spawnerWidth,
+							position: new MRE.Vector3(-(this.staffWidth * 0.5 + 0.5), 0, z),
+							scale: new MRE.Vector3(this.staffWidth,
 								this.computedStaffScale * 0.118,
 								this.computedStaffScale * 0.177)
 						}
@@ -383,7 +385,7 @@ e8e30e
 		this.updateStaffHeight();
 
 		for (const noteColor of this.noteColors) {
-			const ourMat: MRE.Material = this.ourApp.assets.createMaterial('bubblemat', {
+			const ourMat: MRE.Material = this.ourApp.assets.createMaterial('notemat', {
 				color: noteColor
 				//mainTextureId: this.sphereTexture.id
 			});
@@ -420,21 +422,27 @@ e8e30e
 		}, 3000);
 	}
 
-	public destroyBubble(oldBubble: BubbleProperties) {
-		if (oldBubble.actor) {
-			oldBubble.actor.destroy();
+	public destroyNote(oldNote: NoteProperties, removeFromActiveList: boolean) {
+		if (oldNote.actor) {
+			oldNote.actor.destroy();
 		}
-		if (oldBubble.bonusLine) {
-			oldBubble.bonusLine.destroy();
+		if (oldNote.bonusLine) {
+			oldNote.bonusLine.destroy();
 		}
-		if (oldBubble.bonusLine2) {
-			oldBubble.bonusLine2.destroy();
+		if (oldNote.bonusLine2) {
+			oldNote.bonusLine2.destroy();
 		}
-		if(oldBubble.sharp){
-			oldBubble.sharp.destroy();
+		if(oldNote.sharp){
+			oldNote.sharp.destroy();
 		}
-		if(oldBubble.flat){
-			oldBubble.flat.destroy();
+		if(oldNote.flat){
+			oldNote.flat.destroy();
+		}
+		if(removeFromActiveList){
+			const index = this.activeNotes.indexOf(oldNote);
+			if (index > -1) {
+				this.activeNotes.splice(index, 1);
+			}
 		}
 	}
 
@@ -456,9 +464,7 @@ e8e30e
 
 	public receiveNote(note: number, vel: number) {
 		this.ourApp.ourConsole.logMessage("trying to spawn staff note for: " + note);
-		//const octave = Math.floor(note / 12);
-		
-		
+		//const octave = Math.floor(note / 12);		
 
 		if(this.staffRootTime===-1){
 			this.staffRootTime=Date.now();
@@ -483,19 +489,19 @@ e8e30e
 		let timeDiffSeconds=(Date.now()-this.staffRootTime)/1000.0;
 		if(timeDiffSeconds>this.staffTime){ //TODO: make this pickable from a GUI
 			//clear previous notes
-			for (const oldBubble of this.availableBubbles) {
-				this.destroyBubble(oldBubble);
+			for (const oldNote of this.activeNotes) {
+				this.destroyNote(oldNote,false); //will just clear later
 			}
 			for (const annotations of this.annotationList) {
 				annotations.destroy();
 			}
-			this.availableBubbles=[]; //clear array
+			this.activeNotes=[]; //clear array
 			this.annotationList=[];
 			this.staffRootTime=Date.now();
 			timeDiffSeconds=0;
 		}
 
-		const xPos=(timeDiffSeconds/this.staffTime)*this.spawnerWidth*0.9;
+		const xPos=(timeDiffSeconds/this.staffTime)*this.staffWidth*0.9;
 	
 		this.createNoteAndAccidental(note,vel,isAccidental,this.doSharps,xPos,this.computedStaffScale);
 	}
@@ -513,15 +519,31 @@ e8e30e
 		
 		const zPos=this.noteZpos.get(adjustedNote);
 	
-		const spawnPos = new MRE.Vector3(-(this.spawnerWidth*0.5+0.5)-
-			(this.spawnerWidth*0.5)*0.9+xPos,
+		const spawnPos = new MRE.Vector3(-(this.staffWidth*0.5+0.5)-
+			(this.staffWidth*0.5)*0.9+xPos,
 			0.0,zPos);
+
+		if (this.doTypesetOffset) {
+			for (const existingNote of this.activeNotes) {
+				const staffDist = Math.abs(existingNote.adjustedNote - adjustedNote);
+				if (staffDist < 3) { //could be neighbors
+					const noteDist = Math.abs(existingNote.pos.x - spawnPos.x);
+					if (noteDist < (scale*0.9)) {
+						spawnPos.x = (existingNote.pos.x+(scale*0.9));
+						this.ourApp.ourConsole.logMessage("notes are too close, doing typesetting adjustment");
+						break; //only ever do one adjustment
+					}
+				}
+			}
+		}
+
 		this.ourApp.ourConsole.logMessage("going to create note at pos: " + spawnPos);
 
 		const notAdjustedNoteNum=note % 12;
 		const noteNum = adjustedNote % 12;
-		const ourBubble = this.createBubble(adjustedNote,spawnPos, scale, this.noteMaterials[noteNum]);
-		ourBubble.note=note;
+		const ourNote = this.createNote(adjustedNote,spawnPos, scale, this.noteMaterials[noteNum]);
+		ourNote.note=note;
+		ourNote.adjustedNote=adjustedNote;
 
 		if(isAccidental){
 			if(isSharp){
@@ -530,7 +552,7 @@ e8e30e
 				sharpPos.x-=scale*1.0;
 				sharpPos.y+=scale*0.1;
 				ourSharp.create(sharpPos,this.staffGrabber.getGUID(),scale,this.noteMaterials[noteNum].id);
-				ourBubble.sharp=ourSharp;
+				ourNote.sharp=ourSharp;
 			}
 			else{
 				const ourFlat=new StaffFlat(this.ourApp, this);
@@ -538,14 +560,14 @@ e8e30e
 				flatPos.x-=scale*0.85;
 				flatPos.y+=scale*0.1;
 				ourFlat.create(flatPos,this.staffGrabber.getGUID(),scale,this.noteMaterials[noteNum].id);
-				ourBubble.flat=ourFlat;
+				ourNote.flat=ourFlat;
 			}
 		}
 
-		ourBubble.actor.collider.onTrigger("trigger-enter", (otherActor: MRE.Actor) => {
+		ourNote.actor.collider.onTrigger("trigger-enter", (otherActor: MRE.Actor) => {
 			this.ourApp.ourConsole.logMessage("trigger enter on staff note!");
 
-			if (otherActor.name.includes('SpawnerUserHand')) { //bubble touches hand
+			if (otherActor.name.includes('SpawnerUserHand')) { //note touches hand
 				const guid = otherActor.name.substr(16);
 				//this.ourApp.ourConsole.logMessage("  full user name is: " + otherActor.name);
 				//this.ourApp.ourConsole.logMessage("  guid is: " + guid);
@@ -555,7 +577,7 @@ e8e30e
 						this.ourWavPlayer.playSound(note, vel, spawnPos, this.audioRange);
 					}
 					this.spawnParticleEffect(spawnPos, scale, noteNum);
-					this.ourApp.ourSender.send(`["/NoteOn",${ourBubble.note}]`);
+					this.ourApp.ourSender.send(`["/NoteOn",${ourNote.note}]`);
 				}
 			} else {
 				//this.ourApp.ourConsole.logMessage("sphere collided with: " + otherActor.name);
@@ -565,10 +587,10 @@ e8e30e
 		//can toggle between flats and sharps on black keys
 		if (notAdjustedNoteNum===1 || notAdjustedNoteNum===3 || 
 			notAdjustedNoteNum===6 || notAdjustedNoteNum===8 || notAdjustedNoteNum===10) {
-			ourBubble.actor.setBehavior(MRE.ButtonBehavior)
+			ourNote.actor.setBehavior(MRE.ButtonBehavior)
 				.onButton("released", (user: MRE.User) => {
 					if (this.isAuthorized(user)){
-						this.destroyBubble(ourBubble);
+						this.destroyNote(ourNote,true);
 						this.createNoteAndAccidental(note, vel, isAccidental, !isSharp, xPos, scale);
 					}
 				});
@@ -576,10 +598,10 @@ e8e30e
 
 		//can toggle between sharps and natural
 		if (notAdjustedNoteNum === 5 || notAdjustedNoteNum === 0) {
-			ourBubble.actor.setBehavior(MRE.ButtonBehavior)
+			ourNote.actor.setBehavior(MRE.ButtonBehavior)
 				.onButton("released", (user: MRE.User) => {
 					if (this.isAuthorized(user)) {
-						this.destroyBubble(ourBubble);
+						this.destroyNote(ourNote,true);
 						if (isAccidental) {
 							this.createNoteAndAccidental(note, vel, false, false, xPos, scale);
 						} else {
@@ -591,10 +613,10 @@ e8e30e
 
 		//can toggle between flat and natural
 		if (notAdjustedNoteNum === 4 || notAdjustedNoteNum === 11) {
-			ourBubble.actor.setBehavior(MRE.ButtonBehavior)
+			ourNote.actor.setBehavior(MRE.ButtonBehavior)
 				.onButton("released", (user: MRE.User) => {
 					if (this.isAuthorized(user)) {
-						this.destroyBubble(ourBubble);
+						this.destroyNote(ourNote,true);
 						if (isAccidental) {
 							this.createNoteAndAccidental(note, vel, false, false, xPos, scale);
 						} else {
@@ -605,9 +627,9 @@ e8e30e
 		}
 	}
 
-	private createBubble(note: number, pos: MRE.Vector3, scale: number, mat: MRE.Material): BubbleProperties {
+	private createNote(note: number, pos: MRE.Vector3, scale: number, mat: MRE.Material): NoteProperties {
 
-		const bubbleActor = MRE.Actor.Create(this.ourApp.context, {
+		const noteActor = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
 				name: 'sphere',
 				parentId: this.staffGrabber.getGUID(),
@@ -701,19 +723,20 @@ e8e30e
 			});
 		}
 
-		const ourBubble={
+		const ourNote={
 			timeStamp: Date.now(),
-			actor: bubbleActor,
+			actor: noteActor,
 			sharp: null as StaffSharp,
 			flat: null as StaffFlat,
 			bonusLine: bonusLineActor,
 			bonusLine2: bonusLineActor2,
 			pos: pos,
-			note: note
+			note: note,
+			adjustedNote: note
 		};
 
-		this.availableBubbles.push(ourBubble);
+		this.activeNotes.push(ourNote);
 
-		return ourBubble;
+		return ourNote;
 	}
 }

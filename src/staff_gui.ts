@@ -16,6 +16,8 @@ export default class StaffGui {
 	private guiGrabber: GrabButton=null;
 	private resetButton: Button;
 
+	private backgroundHeight=1.75;
+
 	constructor(private ourApp: App, private ourStaff: Staff) {
 		
 	}
@@ -25,7 +27,7 @@ export default class StaffGui {
 		this.guiGrabber=new GrabButton(this.ourApp);
 		this.guiGrabber.create(pos);
 
-		const backGroundMesh = this.ourApp.assets.createBoxMesh('boxMesh', 1.1, 0.1, 1.5);
+		const backGroundMesh = this.ourApp.assets.createBoxMesh('boxMesh', 1.1, 0.1, this.backgroundHeight);
 
 
 		this.guiBackground = MRE.Actor.Create(this.ourApp.context, {
@@ -57,7 +59,7 @@ export default class StaffGui {
 				},
 				transform: {
 					local: {
-						position: new MRE.Vector3(0.0, 0.051, 0.7),
+						position: new MRE.Vector3(0.0, 0.051, this.backgroundHeight*0.5-0.05),
 						rotation: MRE.Quaternion.FromEulerAngles(this.ourApp.degToRad(90), 0, 0)
 					}
 				}
@@ -78,18 +80,22 @@ export default class StaffGui {
 	public setDoSharps(b: boolean){
 		this.ourStaff.doSharps=b;
 	}
+
+	public setDoOffset(b: boolean){
+		this.ourStaff.doTypesetOffset=b;
+	}
 	
 	public setStaffTime(n: number){
 		this.ourStaff.staffTime=n;
 	}
 	
 	public setStaffHeight(n: number){
-		this.ourStaff.spawnerHeight=n;
+		this.ourStaff.staffHeight=n;
 		this.ourStaff.updateStaffHeight();
 	}
 
 	public setStaffWidth(n: number){
-		this.ourStaff.spawnerWidth=n;
+		this.ourStaff.staffWidth=n;
 		this.ourStaff.updateStaffWidth();
 	}
 
@@ -112,7 +118,7 @@ export default class StaffGui {
 
 		await this.createBackground(pos, name);
 
-		let zPos=0.45;
+		let zPos=this.backgroundHeight*0.5-0.3;
 
 		const authButton = new Button(this.ourApp);
 		await authButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
@@ -132,16 +138,22 @@ export default class StaffGui {
 			this.ourStaff.showBackground, this.showBackground.bind(this));
 		zPos-=0.15;
 
+		const typesetOffset = new Button(this.ourApp);
+		await typesetOffset.createAsync(new MRE.Vector3(0,  0.025, zPos),
+		this.guiBackground.id, "NBR offset", "no offset",
+			this.ourStaff.doTypesetOffset, this.setDoOffset.bind(this));
+		zPos-=0.15;
+
 		const widthSelector = new PlusMinus(this.ourApp);
 		await widthSelector.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
 		this.guiBackground.id, "width",
-			this.ourStaff.spawnerWidth, 0.1, this.setStaffWidth.bind(this));
+			this.ourStaff.staffWidth, 0.1, this.setStaffWidth.bind(this));
 		zPos-=0.15;
 
 		const heightSelector = new PlusMinus(this.ourApp);
 		await heightSelector.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
 		this.guiBackground.id, "height",
-			this.ourStaff.spawnerHeight, 0.1, this.setStaffHeight.bind(this));
+			this.ourStaff.staffHeight, 0.1, this.setStaffHeight.bind(this));
 		zPos-=0.15;
 
 		const staffTime = new PlusMinus(this.ourApp);
