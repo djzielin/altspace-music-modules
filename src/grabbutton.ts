@@ -17,9 +17,21 @@ export default class GrabButton {
 
 	}
 
+	public setPos(pos: MRE.Vector3){
+		this.buttonActor.transform.local.position=pos;
+	}
+
+	public setRot(rot: MRE.Quaternion){
+		this.buttonActor.transform.local.rotation=rot;
+	}
+
 	public destroy() {
-		this.buttonActor.destroy();
-		this.lockButton.destroy();
+		if (this.buttonActor) {
+			this.buttonActor.destroy();
+		}
+		if (this.lockButton) {
+			this.lockButton.destroy();
+		}
 	}
 
 	public setUnlocked(b: boolean): void {

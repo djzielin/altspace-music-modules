@@ -138,7 +138,7 @@ export default class Piano {
 		this.keyLocations.clear();
 
 		this.keyboardParent.destroy();
-		this.pianoGrabber.destroy();
+		//this.pianoGrabber.destroy();
 	}
 
 	private computeKeyPositionX(i: number): number{
@@ -173,9 +173,14 @@ export default class Piano {
 		await blackKeyMaterial.created;
 
 		
-		this.pianoGrabber=new GrabButton(this.ourApp);
-		this.pianoGrabber.create(pos,rot);
-
+		if(!this.pianoGrabber){
+			this.pianoGrabber=new GrabButton(this.ourApp);
+			this.pianoGrabber.create(pos,rot);
+		}else{
+			this.pianoGrabber.setPos(pos);
+			this.pianoGrabber.setRot(rot);
+		}
+		
 		this.keyboardParent = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
 				name: 'keyboard_parent',

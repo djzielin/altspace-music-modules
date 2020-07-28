@@ -19,10 +19,16 @@ export default class Button {
 		
 	}
 
-	public destroy(){
-		this.buttonActor.destroy();
-		this.buttonText.destroy();
-		this.ourHolder.destroy(); 
+	public destroy() {
+		if (this.buttonActor) {
+			this.buttonActor.destroy();
+		}
+		if (this.buttonText) {
+			this.buttonText.destroy();
+		}
+		if (this.ourHolder) {
+			this.ourHolder.destroy();
+		}
 	}
 
 	public setPos(pos: MRE.Vector3){
