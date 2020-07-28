@@ -17,7 +17,7 @@ enum AuthType {
 
 
 export default class Piano {
-	public ourInteractionAuth=AuthType.Moderators;
+	public ourInteractionAuth=AuthType.All;
 	public authorizedUser: MRE.User;
 
 	//private ourKeys: MRE.Actor[] = [];

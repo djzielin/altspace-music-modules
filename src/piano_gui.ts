@@ -8,86 +8,29 @@ import App from './app';
 import PlusMinus from './plusminus';
 import Button from './button';
 import Piano from './piano';
-import GrabButton from './grabbutton';
+import GuiPanel from './gui_panel';
 
-export default class PianoGui {
-	//private guiParent: MRE.Actor=null;
-	private guiBackground: MRE.Actor=null;
-	private guiGrabber: GrabButton=null;
-	private resetButton: Button;
+export default class PianoGui  extends GuiPanel{
+	private resetButton: Button=null;
 
-	constructor(private ourApp: App, private ourPiano: Piano) {
-		
-	}
-
-	private async createBackground(pos: MRE.Vector3, name: string) {
-
-		this.guiGrabber=new GrabButton(this.ourApp);
-		this.guiGrabber.create(pos);
-		
-		const backGroundMesh = this.ourApp.assets.createBoxMesh('boxMesh', 1.1, 0.1, 1.5);
-
-
-		this.guiBackground = MRE.Actor.Create(this.ourApp.context, {
-			actor: {
-				parentId: this.guiGrabber.getGUID(),
-				name: "consoleBackground",
-				appearance: {
-					meshId: backGroundMesh.id,
-					materialId: this.ourApp.grayMat.id
-				},
-				transform: {
-					local: {
-						position: { x: -0.85, y:0.0, z: -0.25 },
-					}
-				}
-			}
-		});
-		await this.guiBackground.created();
-
-		const guiTextActor = MRE.Actor.Create(this.ourApp.context, {
-			actor: {
-				parentId: this.guiBackground.id,
-				name: 'consoleText',
-				text: {
-					contents: name,
-					height: 2.0 / 25,
-					anchor: MRE.TextAnchorLocation.TopCenter,
-					color: new MRE.Color3(1, 1, 1)
-				},
-				transform: {
-					local: {
-						position: new MRE.Vector3(0.0, 0.051, 0.7),
-						rotation: MRE.Quaternion.FromEulerAngles(this.ourApp.degToRad(90), 0, 0)
-					}
-				}
-			}
-		});
-		await guiTextActor.created();
+	constructor(protected ourApp: App, private ourPiano: Piano) {
+		super(ourApp);
 	}
 
 	public setAuthAllUsers(b: boolean): void {
-		this.ourPiano.ourInteractionAuth=(b===true) ? 1:0;
+		this.ourPiano.ourInteractionAuth = (b === true) ? 1 : 0;
 	}
 	public setScale(n: number): void {
-		if(n>0){ //sanity check
-			this.ourPiano.setScale(n);
-		}
+		this.ourPiano.setScale(n);
 	}
 	public setLowestKey(n: number): void {
-		if(n>0){ //sanity check
-			this.ourPiano.keyLowest=n;
-		}
+		this.ourPiano.keyLowest = n;
 	}
 	public setHighestKey(n: number): void {
-		if(n>0){ //sanity check
-			this.ourPiano.keyHighest=n;
-		}
+		this.ourPiano.keyHighest = n;
 	}
 	public setAudioRange(n: number): void {
-		if(n>0){ //sanity check
-			this.ourPiano.audioRange=n;
-		}
+		this.ourPiano.audioRange = n;
 	}
 
 	public doReset(b: boolean): void {
@@ -104,9 +47,9 @@ export default class PianoGui {
 	public async createAsync(pos: MRE.Vector3, name: string) {
 		this.ourApp.ourConsole.logMessage("creating piano gui");
 
-		await this.createBackground(pos, name);
+		await this.createBackground(pos, name, 1.5);
 
-		let zPos=0.45;
+		let zPos=this.backgroundHeight * 0.5 - 0.3;
 
 		const authButton = new Button(this.ourApp);
 		await authButton.createAsync(new MRE.Vector3(0, 0.025, zPos),

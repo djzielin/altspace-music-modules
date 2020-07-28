@@ -10,7 +10,7 @@ import Button from './button';
 export default class Console {
 	private consoleTextActor: MRE.Actor = null;
 	private consoleText: string[] = [];
-	private consoleOn = true;
+	private consoleOn = false;
 	private consoleParent: MRE.Actor=null;
 	private consoleHolder: MRE.Guid;
 	
@@ -35,7 +35,11 @@ export default class Console {
 						position: { x: 1.5-3.75, y:0.0, z: 0 },
 						scale: new MRE.Vector3(0.5, 0.5, 0.5)
 					}
+				},
+				appearance: {
+					enabled: this.consoleOn
 				}
+				
 			}
 		});
 		await this.consoleParent.created();

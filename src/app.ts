@@ -44,6 +44,8 @@ export default class App {
 	public ourStaff: Staff=null;
 	public ourStaffGui: StaffGui=null;
 
+	public allGUIs: any[]=[];
+
 
 	//public ourPiano2: Piano = null;
 	//public ourStaff2: Staff=null;

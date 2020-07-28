@@ -31,7 +31,7 @@ enum AuthType {
 
 
 export default class Staff {
-	public ourInteractionAuth=AuthType.Moderators;
+	public ourInteractionAuth=AuthType.All;
 	public authorizedUser: MRE.User;
 
 	public doSharps=true;
