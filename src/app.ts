@@ -17,6 +17,7 @@ import Staff from './staff';
 import GrabButton from './grabbutton';
 import PianoGui from './piano_gui';
 import StaffGui from './staff_gui';
+import WavPlayerGui from './wavplayer_gui';
 
 /**
  * The main class of this app. All the logic goes here.
@@ -43,6 +44,9 @@ export default class App {
 	public ourStaff: Staff = null;
 	public ourStaffGui: StaffGui = null;
 
+	public ourWavPlayer: WavPlayer = null;
+	public ourWavPlayerGui: WavPlayerGui = null;
+
 	public allGUIs: any[] = [];
 
 
@@ -51,7 +55,8 @@ export default class App {
 
 	public ourSpawner: any = null;
 	public ourSpawner2: any = null;
-	public ourWavPlayer: WavPlayer = null;
+
+
 	public ourWavPlayer2: WavPlayer = null;
 	public ourConsole: Console = null;
 	public menuGrabber: GrabButton = null;
@@ -118,9 +123,8 @@ export default class App {
 
 		this.handMesh = this.assets.createBoxMesh('boxMesh', 0.25, 0.1, 0.25);
 
-
 		this.menuGrabber = new GrabButton(this);
-		this.menuGrabber.create(new MRE.Vector3(1, 0.1, 0));
+		this.menuGrabber.create(new MRE.Vector3(2, 0.1, 0));
 
 		this.context.onStarted(() => this.started());
 		this.context.onStopped(() => this.stopped());
@@ -470,9 +474,15 @@ export default class App {
 		});
 		await authLabel.created();
 
+		let xPos = 0.5;
+
 		this.ourConsole.logMessage("Creating Wav Player");
 		this.ourWavPlayer = new WavPlayer(this);
 		await this.ourWavPlayer.loadAllSounds("piano");
+
+		this.ourWavPlayerGui = new WavPlayerGui(this, this.ourWavPlayer);
+		await this.ourWavPlayerGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Piano WavPlayer")		
+		xPos -= 1.75;
 
 		/*this.ourConsole.logMessage("Creating Wav Player2");
 		this.ourWavPlayer2=new WavPlayer(this);
@@ -482,12 +492,10 @@ export default class App {
 
 		this.ourConsole.logMessage("creating piano keys");
 		this.ourPiano = new Piano(this);
+		this.ourPiano.ourWavPlayer = this.ourWavPlayer;
 		await this.ourPiano.createAllKeys(new MRE.Vector3(2, 1, 0),
 			MRE.Quaternion.FromEulerAngles(-30 * Math.PI / 180, 0, 0));
 
-		let xPos = -2.75;
-
-		this.ourPiano.ourWavPlayer = this.ourWavPlayer;
 		this.ourPianoGui = new PianoGui(this, this.ourPiano);
 		await this.ourPianoGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Main Piano")
 		xPos -= 1.75;
@@ -495,26 +503,12 @@ export default class App {
 		this.ourConsole.logMessage("Loading staff items");
 		this.ourStaff = new Staff(this);
 		this.ourStaff.ourWavPlayer = this.ourWavPlayer;
+		this.ourPiano.ourStaff=this.ourStaff;
 		await this.ourStaff.createAsyncItems(new MRE.Vector3(2, 2, 0.5),
 			MRE.Quaternion.FromEulerAngles(-90 * Math.PI / 180, 0, 0));
-		this.ourPiano.ourStaff = this.ourStaff;
 
 		this.ourStaffGui = new StaffGui(this, this.ourStaff);
 		await this.ourStaffGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Main Staff")
-
-		/*	this.ourConsole.logMessage("creating piano keys"); 
-			this.ourPiano2 = new Piano(this);
-			await this.ourPiano2.createAllKeys(new MRE.Vector3(1.0, 1, 3));
-			this.ourPiano2.ourWavPlayer=this.ourWavPlayer;
-	
-	
-			this.ourConsole.logMessage("Loading staff items");
-			this.ourStaff2 = new Staff(this); 
-			this.ourStaff2.ourWavPlayer=this.ourWavPlayer;
-			await this.ourStaff2.createAsyncItems(new MRE.Vector3(-4,1,0));
-			this.ourStaff2.ourWavPlayer=this.ourWavPlayer;
-	
-			this.ourPiano2.ourStaff=this.ourStaff2;*/
 		/*
 				this.ourConsole.logMessage("Loading spawner items");
 				this.ourSpawner = new Spawner(this); 
@@ -543,6 +537,7 @@ export default class App {
 			this.receiverCallback = this.PianoReceiveCallback.bind(this)
 			this.ourReceiver.addReceiver(this.receiverCallback);
 
+			/*
 			setInterval(() => {
 				let pianoPlayable = 0;
 				let vibesPlayable = 0;
@@ -571,9 +566,10 @@ export default class App {
 					`Time: ${this.pad(timeNow.getHours(), 2, '0')}:` +
 					`${this.pad(timeNow.getMinutes(), 2, '0')}:` +
 					`${this.pad(timeNow.getSeconds(), 2, '0')} - ` +
-					`[piano playing: ${pianoPlaying} playable: ${pianoPlayable}] - ` +
-					`[vibes playing: ${vibesPlaying} playable: ${vibesPlayable}]`);
-			}, 2000);
+					`[piano playing: ${pianoPlaying}] - ` +
+					`[vibes playing: ${vibesPlaying}]`);
+			}, 1000);
+			*/
 		});
 	}
 }

@@ -11,7 +11,9 @@ import fs from 'fs';
 interface WavProperties{
 	timeStamp: number;
 	actor: MRE.Actor;
+	media: MRE.MediaInstance;
 	note: number;
+	vol: number;
 }
 
 export default class WavPlayer {
@@ -19,14 +21,13 @@ export default class WavPlayer {
 
 	public playingWavs: WavProperties[]=[]; 
 
-	private polyphonyLimit=10; // TODO: allow these to be set in in-world GUI
+	public polyphonyLimit=10; // TODO: allow these to be set in in-world GUI
 	public volume=0.75;
 	public cullTime=5000;
+	public doPedal=true;
 
 	private lowestNote=-1;
 	private highestNote=-1;
-
-	public doPedal=true;
 
 	private noteOrder =
 		["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
@@ -134,19 +135,23 @@ export default class WavPlayer {
 			}
 		});
 
-		soundActor.startSound(ourSound.id, {
+		const volume=(this.volume*(vel/127.0));
+
+		const mediaInstance=soundActor.startSound(ourSound.id, {
 			doppler: 0,
 			pitch: 0.0,
 			looping: false,
 			paused: false,
-			volume: (this.volume*(vel/127.0)),
+			volume: volume,
 			rolloffStartDistance: audioRange 
 		});	
 
 		const ourWave={
 			timeStamp: Date.now(),
 			actor: soundActor,
-			note: note
+			media: mediaInstance,
+			note: note,
+			vol: volume
 		}
 
 		this.playingWavs.push(ourWave);		
@@ -161,9 +166,8 @@ export default class WavPlayer {
 
 		for(const ourWave of this.playingWavs){
 			if(ourWave.note===note){
-				
 				ourWave.actor.destroy();
-				listOfPlayingWavsToDelete.push(ourWave);
+				listOfPlayingWavsToDelete.push(ourWave);		
 			}
 		}
 		for (const ourWave of listOfPlayingWavsToDelete) {
