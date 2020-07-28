@@ -1,12 +1,12 @@
 /*!
  * Licensed under the MIT License.
  */
+/* eslint-disable no-warning-comments */
 
 //import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 import App from './app';
 import fs from 'fs';
-//import { isRegExp } from 'util';
 
 interface WavProperties{
 	timeStamp: number;
@@ -15,12 +15,11 @@ interface WavProperties{
 }
 
 export default class WavPlayer {
-	//private ourSounds: MRE.Sound[] = [];
 	private ourSounds: Map<number, MRE.Sound> = new Map();
 
 	public playingWavs: WavProperties[]=[]; 
 
-	private polyphonyLimit=10; //TODO: allow these to be set in in-world GUI
+	private polyphonyLimit=10; // TODO: allow these to be set in in-world GUI
 	public volume=0.75;
 	public cullTime=5000;
 
@@ -46,7 +45,6 @@ export default class WavPlayer {
 
 			for (const ourWave of this.playingWavs) {
 				if (currentTime - ourWave.timeStamp > this.cullTime) {
-					//this.ourApp.ourConsole.logMessage("5 seconds has expired, pulling playing bubble");
 					ourWave.actor.destroy();
 					listOfPlayingWavsToDelete.push(ourWave);
 				}
@@ -56,23 +54,11 @@ export default class WavPlayer {
 				this.removeFromPlaying(ourWave);
 			}
 
-			//const timeNow = new Date(Date.now());
-
-			/*this.ourApp.ourConsole.logMessage(
-				`Time: ${this.ourApp.pad(timeNow.getHours(), 2, '0')}:` +
-				`${this.ourApp.pad(timeNow.getMinutes(), 2, '0')}:` +
-				`${this.ourApp.pad(timeNow.getSeconds(), 2, '0')} - ` +
-				`${this.playingWavs.length} playing ` +
-				`(${listOfPlayingWavsToDelete.length} culled)`);*/
 		}, 1000);
 	}
 
 	public async loadAllSounds(subdir: string) {
-		let octave = 0;
-		let note = 9;
-
 		for (let i = 0; i < 128; i++) {
-			//const filename =` +
 			const filename = `${subdir}/${i}.ogg`;
 			const URL = `${this.ourApp.baseUrl}/` + filename;
 			const diskLocation=`${this.ourApp.baseDir}/` + filename;
@@ -104,27 +90,13 @@ export default class WavPlayer {
 				uri: URL
 			});
 			await newSound.created;
-			this.ourApp.ourConsole.logMessage(" success!");
-			//this.ourSounds.push(newSound);
-			this.ourSounds.set(i,newSound);
 
-			note = note + 1;
-			if (note === 12) {
-				note = 0;
-				octave++;
-			}
+			this.ourSounds.set(i,newSound);
+			this.ourApp.ourConsole.logMessage(" success!");
 		}
 	}	
 
-	/*public getSoundGUID(note: number) {
-		//const adjustedNote: number = note - 21;
-		
-		return this.ourSounds[adjustedNote].id;
-	}*/
-
 	public playSound(note: number, vel: number, pos: MRE.Vector3, audioRange: number) {
-		//const adjustedNote: number = note - 21;
-
 		if (!this.ourSounds.has(note)) {
 			this.ourApp.ourConsole.logMessage("cant play midi note: " +
 				note + " as wav set doesnt contain a ogg for it!");

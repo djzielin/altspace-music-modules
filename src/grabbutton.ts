@@ -1,11 +1,11 @@
 /*!
  * Licensed under the MIT License.
  */
+/* eslint-disable no-warning-comments */
 
 //import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 import App from './app';
-//import { MreArgumentError } from '../../mixed-reality-extension-sdk/packages/sdk/';
 import Button from './button';
 
 export default class GrabButton {

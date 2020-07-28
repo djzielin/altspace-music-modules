@@ -4,7 +4,6 @@
 
 //import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
-import Piano from './piano';
 import App from './app';
 import SpawnerGUI from './spawner_gui';
 import WavPlayer from './wavplayer';

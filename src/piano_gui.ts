@@ -10,7 +10,7 @@ import Button from './button';
 import Piano from './piano';
 import GuiPanel from './gui_panel';
 
-export default class PianoGui  extends GuiPanel{
+export default class PianoGui extends GuiPanel{
 	private resetButton: Button=null;
 
 	constructor(protected ourApp: App, private ourPiano: Piano) {

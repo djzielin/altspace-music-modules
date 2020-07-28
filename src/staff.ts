@@ -1,6 +1,7 @@
 /*!
  * Licensed under the MIT License.
  */
+/* eslint-disable no-warning-comments */
 
 //import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
@@ -9,7 +10,6 @@ import WavPlayer from './wavplayer';
 import GrabButton from './grabbutton';
 import StaffSharp from './staffsharp';
 import StaffFlat from './staffflat';
-
 
 interface NoteProperties{
 	timeStamp: number;
@@ -42,25 +42,23 @@ export default class Staff {
 	public drawThreshold=0.04;
 	public doTypesetOffset=true;
 
+	/*
+		169, 30, 16
+		252,147,8
+		232,227,14
+		34,121,18
+		23,166,249
+		19,0,140
+		145,0,190
 
-/*
-169, 30, 16
-252,147,8
-232,227,14
-34,121,18
-23,166,249
-19,0,140
-145,0,190
-
-a91e10
-fc9308
-e8e30e
-227912
-17a6f9
-13008c
-9100be
-
-*/
+		a91e10
+		fc9308
+		e8e30e
+		227912
+		17a6f9
+		13008c
+		9100be
+	*/
 
 	private noteColors: MRE.Color4[] = [
 		new MRE.Color4(169 / 255, 30 / 255, 16 / 255), //C
@@ -519,9 +517,8 @@ e8e30e
 		
 		const zPos=this.noteZpos.get(adjustedNote);
 	
-		const spawnPos = new MRE.Vector3(-(this.staffWidth*0.5+0.5)-
-			(this.staffWidth*0.5)*0.9+xPos,
-			0.0,zPos);
+		const spawnPos = new MRE.Vector3(-(this.staffWidth * 0.5 + 0.5) -
+			(this.staffWidth * 0.5) * 0.9 + xPos, 0.0, zPos);
 
 		if (this.doTypesetOffset) {
 			for (const existingNote of this.activeNotes) {
@@ -545,22 +542,21 @@ e8e30e
 		ourNote.note=note;
 		ourNote.adjustedNote=adjustedNote;
 
-		if(isAccidental){
-			if(isSharp){
-				const ourSharp=new StaffSharp(this.ourApp, this);
-				const sharpPos=spawnPos.clone();
-				sharpPos.x-=scale*1.0;
-				sharpPos.y+=scale*0.1;
-				ourSharp.create(sharpPos,this.staffGrabber.getGUID(),scale,this.noteMaterials[noteNum].id);
-				ourNote.sharp=ourSharp;
-			}
-			else{
-				const ourFlat=new StaffFlat(this.ourApp, this);
-				const flatPos=spawnPos.clone();
-				flatPos.x-=scale*0.85;
-				flatPos.y+=scale*0.1;
-				ourFlat.create(flatPos,this.staffGrabber.getGUID(),scale,this.noteMaterials[noteNum].id);
-				ourNote.flat=ourFlat;
+		if (isAccidental) {
+			if (isSharp) {
+				const ourSharp = new StaffSharp(this.ourApp, this);
+				const sharpPos = spawnPos.clone();
+				sharpPos.x -= scale * 1.0;
+				sharpPos.y += scale * 0.1;
+				ourSharp.create(sharpPos, this.staffGrabber.getGUID(), scale, this.noteMaterials[noteNum].id);
+				ourNote.sharp = ourSharp;
+			} else {
+				const ourFlat = new StaffFlat(this.ourApp, this);
+				const flatPos = spawnPos.clone();
+				flatPos.x -= scale * 0.85;
+				flatPos.y += scale * 0.1;
+				ourFlat.create(flatPos, this.staffGrabber.getGUID(), scale, this.noteMaterials[noteNum].id);
+				ourNote.flat = ourFlat;
 			}
 		}
 

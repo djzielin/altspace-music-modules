@@ -6,7 +6,6 @@
 import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 import App from './app';
 import Staff from './staff';
-import { Quaternion } from '../../mixed-reality-extension-sdk/packages/sdk/';
 
 export default class StaffSharp {
 	

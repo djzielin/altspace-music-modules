@@ -6,9 +6,9 @@
 import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 import { Session } from '../../mixed-reality-extension-sdk/packages/sdk/built/internal/adapters/multipeer'
 
-import {PianoReceiver, RCallback} from './receiver'
+import { PianoReceiver, RCallback } from './receiver'
 import Piano from './piano'
-import Spawner from './spawner'
+//import Spawner from './spawner'
 import OscSender from './sender';
 import WavPlayer from './wavplayer';
 import Console from './console';
@@ -17,7 +17,6 @@ import Staff from './staff';
 import GrabButton from './grabbutton';
 import PianoGui from './piano_gui';
 import StaffGui from './staff_gui';
-import { Appearance } from '../../mixed-reality-extension-sdk/packages/sdk/';
 
 /**
  * The main class of this app. All the logic goes here.
@@ -41,21 +40,21 @@ export default class App {
 	public ourPiano: Piano = null;
 	public ourPianoGui: PianoGui = null;
 
-	public ourStaff: Staff=null;
-	public ourStaffGui: StaffGui=null;
+	public ourStaff: Staff = null;
+	public ourStaffGui: StaffGui = null;
 
-	public allGUIs: any[]=[];
+	public allGUIs: any[] = [];
 
 
 	//public ourPiano2: Piano = null;
 	//public ourStaff2: Staff=null;
-	
+
 	public ourSpawner: any = null;
 	public ourSpawner2: any = null;
 	public ourWavPlayer: WavPlayer = null;
 	public ourWavPlayer2: WavPlayer = null;
 	public ourConsole: Console = null;
-	public menuGrabber: GrabButton=null;
+	public menuGrabber: GrabButton = null;
 
 	public boxMesh: MRE.Mesh;
 	public redMat: MRE.Material;
@@ -63,11 +62,11 @@ export default class App {
 	public whiteMat: MRE.Material;
 	public blackMat: MRE.Material;
 	public grayMat: MRE.Material;
-	
+
 	public handMesh: MRE.Mesh = null;
 	public handTexture: MRE.Texture = null;
 	public handMaterial: MRE.Material = null;
-	
+
 	public allUsers: UserProperties[] = [];
 	public moderatorUsers: string[] = [];
 
@@ -77,19 +76,19 @@ export default class App {
 
 	/*
 		https://stackoverflow.com/questions/10073699/pad-a-number-with-leading-zeros-in-javascript	
-	*/	
+	*/
 	public pad(value: number, maxWidth: number, padChar: string) {
 		const n = value.toString();
 		return n.length >= maxWidth ? n : new Array(maxWidth - n.length + 1).join(padChar) + n;
 	}
-	
+
 	constructor(public context: MRE.Context, public baseUrl: string, public baseDir: string,
 		public ourReceiver: PianoReceiver, public ourSender: OscSender, public session: Session) {
-		this.ourConsole=new Console(this);
+		this.ourConsole = new Console(this);
 
 		this.assets = new MRE.AssetContainer(context);
 		this.boxMesh = this.assets.createBoxMesh('boxMesh', 1.0, 1.0, 1.0);
-		
+
 		this.redMat = this.assets.createMaterial('redmat', {
 			color: new MRE.Color4(1, 0, 0)
 		});
@@ -104,7 +103,7 @@ export default class App {
 			color: new MRE.Color4(1, 1, 1)
 		});
 		this.grayMat = this.assets.createMaterial('whiteMat', {
-			color: new MRE.Color4(0.5,0.5,0.5)
+			color: new MRE.Color4(0.5, 0.5, 0.5)
 		});
 
 		const filename = `${this.baseUrl}/` + "hand_grey.png";
@@ -120,14 +119,14 @@ export default class App {
 		this.handMesh = this.assets.createBoxMesh('boxMesh', 0.25, 0.1, 0.25);
 
 
-		this.menuGrabber=new GrabButton(this);
+		this.menuGrabber = new GrabButton(this);
 		this.menuGrabber.create(new MRE.Vector3(1, 0.1, 0));
 
 		this.context.onStarted(() => this.started());
 		this.context.onStopped(() => this.stopped());
 		this.context.onUserLeft(user => this.userLeft(user));
 		this.context.onUserJoined(user => this.userJoined(user));
-	}	
+	}
 
 	//from functional-tests / user-test.ts
 	/*private formatProperties(props: { [key: string]: string }): string {
@@ -151,7 +150,7 @@ export default class App {
 	}
 
 	public isAuthorizedString(user: string): boolean {
-		if(this.moderatorUsers.includes(user)){
+		if (this.moderatorUsers.includes(user)) {
 			//this.ourConsole.logMessage("user is moderator based on GUID");
 			return true;
 		}
@@ -164,15 +163,15 @@ export default class App {
 	private userJoined(user: MRE.User) {
 		this.ourConsole.logMessage("user joined. name: " + user.name + " id: " + user.id);
 
-		let isModerator=false
+		let isModerator = false
 
-		if (this.isAuthorized(user)){
-			isModerator=true;
+		if (this.isAuthorized(user)) {
+			isModerator = true;
 		}
 
 		const rHand: MRE.Actor = null;
 		const lHand: MRE.Actor = null;
-		
+
 		let id = MRE.ZeroGuid;
 		const clients = this.session.clients;
 		for (const client of clients) {
@@ -180,7 +179,7 @@ export default class App {
 				id = client.id;
 				break;
 			}
-		}	
+		}
 
 		const ourUser = {
 			name: user.name,
@@ -195,7 +194,7 @@ export default class App {
 		}
 		this.allUsers.push(ourUser);
 
-		if(isModerator){
+		if (isModerator) {
 			this.moderatorUsers.push(user.id.toString());
 		}
 
@@ -223,10 +222,10 @@ export default class App {
 		});*/
 	}
 
-	public findUserRecord(userID: MRE.Guid): UserProperties{
-		for(let i=0;i<this.allUsers.length;i++){
-			const ourUser=this.allUsers[i];
-			if(ourUser.userID===userID){
+	public findUserRecord(userID: MRE.Guid): UserProperties {
+		for (let i = 0; i < this.allUsers.length; i++) {
+			const ourUser = this.allUsers[i];
+			if (ourUser.userID === userID) {
 				return ourUser;
 			}
 		}
@@ -241,9 +240,9 @@ export default class App {
 		this.updateUserButtons();
 	}
 
-	private addHands(ourUser: UserProperties){
+	private addHands(ourUser: UserProperties) {
 		this.ourConsole.logMessage("creating hands for: " + ourUser.name);
-	
+
 		ourUser.rHand = this.createHand('right-hand', ourUser.userID, new MRE.Vector3(0, 0, 0.1),
 			new MRE.Vector3(0.03, 0.03, 0.14));
 		ourUser.lHand = this.createHand('left-hand', ourUser.userID, new MRE.Vector3(0, 0, 0.1),
@@ -275,10 +274,10 @@ export default class App {
 	private updateUserButtons() {
 		this.ourConsole.logMessage("updating user buttons");
 
-		if(!this.session){ //prevent errors when last user leaves (session seems to be destroyed already)
+		if (!this.session) { //prevent errors when last user leaves (session seems to be destroyed already)
 			return;
 		}
-		if(!this.session.authoritativeClient){
+		if (!this.session.authoritativeClient) {
 			return;
 		}
 
@@ -300,9 +299,9 @@ export default class App {
 					const ourButton = new Button(this);
 					ourButton.createAsync(authButtonPos, this.menuGrabber.getGUID(), ourUser.name, ourUser.name,
 						areWeAuthoritative, this.makeAuthoritative.bind(this, ourUser)).then(() => {
-							ourUser.authButton = ourButton;
-							ourButton.doVisualUpdates = false; //we'll handle toggling
-						});
+						ourUser.authButton = ourButton;
+						ourButton.doVisualUpdates = false; //we'll handle toggling
+					});
 				} else {
 					ourUser.authButton.setPos(authButtonPos);
 					ourUser.authButton.setValue(areWeAuthoritative);
@@ -342,15 +341,15 @@ export default class App {
 				}
 				this.allUsers.splice(i, 1);
 				this.updateUserButtons();
-				
-				if(ourUser.isModerator){
-					const userString=user.id.toString();
 
-					const index=this.moderatorUsers.indexOf(userString);
-					if(index!==-1){
+				if (ourUser.isModerator) {
+					const userString = user.id.toString();
+
+					const index = this.moderatorUsers.indexOf(userString);
+					if (index !== -1) {
 						this.moderatorUsers.splice(index, 1);
 						this.ourConsole.logMessage("removed user from moderator string list");
-					}	
+					}
 				}
 
 				//this.removeHands(ourUser);
@@ -392,7 +391,7 @@ export default class App {
 	private createHand(aPoint: string, userID: MRE.Guid, handPos: MRE.Vector3, handScale: MRE.Vector3) {
 		const hand = MRE.Actor.Create(this.context, {
 			actor: {
-				name: 'SpawnerUserHand_'+userID.toString(),
+				name: 'SpawnerUserHand_' + userID.toString(),
 				transform: {
 					local: {
 						position: handPos,
@@ -431,8 +430,8 @@ export default class App {
 	public degToRad(degrees: number) {
 		const pi = Math.PI;
 		return degrees * (pi / 180);
-	}	
-	private doReset(){
+	}
+	private doReset() {
 		process.exit(0);
 	}
 
@@ -442,14 +441,14 @@ export default class App {
 			" Z: " + v.z.toFixed(precision) + "}";
 	}
 
-	
+
 	private async loadAsyncItems() {
 		this.ourConsole.logMessage("creating console");
 		await this.ourConsole.createAsyncItems(this.menuGrabber.getGUID());
 
 		this.ourConsole.logMessage("Creating Reset Button ");
-		const button=new Button(this);
-		await button.createAsync(new MRE.Vector3(-0.7,0,0.5),this.menuGrabber.getGUID(),"Reset","Reset",
+		const button = new Button(this);
+		await button.createAsync(new MRE.Vector3(-0.7, 0, 0.5), this.menuGrabber.getGUID(), "Reset", "Reset",
 			false, this.doReset.bind(this));
 
 		const authLabel = MRE.Actor.Create(this.context, {
@@ -463,7 +462,7 @@ export default class App {
 				},
 				transform: {
 					local: {
-						position: { x: 0-0.7, y: 0.051, z: 0.0 },
+						position: { x: 0 - 0.7, y: 0.051, z: 0.0 },
 						rotation: MRE.Quaternion.FromEulerAngles(this.degToRad(90), 0, 0)
 					}
 				}
@@ -472,7 +471,7 @@ export default class App {
 		await authLabel.created();
 
 		this.ourConsole.logMessage("Creating Wav Player");
-		this.ourWavPlayer=new WavPlayer(this);
+		this.ourWavPlayer = new WavPlayer(this);
 		await this.ourWavPlayer.loadAllSounds("piano");
 
 		/*this.ourConsole.logMessage("Creating Wav Player2");
@@ -481,10 +480,10 @@ export default class App {
 		this.ourWavPlayer2.cullTime=10000;
 		await this.ourWavPlayer2.loadAllSounds("vibes");*/
 
-		this.ourConsole.logMessage("creating piano keys"); 
+		this.ourConsole.logMessage("creating piano keys");
 		this.ourPiano = new Piano(this);
 		await this.ourPiano.createAllKeys(new MRE.Vector3(2, 1, 0),
-			MRE.Quaternion.FromEulerAngles(-30* Math.PI / 180,0,0));
+			MRE.Quaternion.FromEulerAngles(-30 * Math.PI / 180, 0, 0));
 
 		let xPos = -2.75;
 
@@ -503,34 +502,34 @@ export default class App {
 		this.ourStaffGui = new StaffGui(this, this.ourStaff);
 		await this.ourStaffGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Main Staff")
 
-	/*	this.ourConsole.logMessage("creating piano keys"); 
-		this.ourPiano2 = new Piano(this);
-		await this.ourPiano2.createAllKeys(new MRE.Vector3(1.0, 1, 3));
-		this.ourPiano2.ourWavPlayer=this.ourWavPlayer;
-
-
-		this.ourConsole.logMessage("Loading staff items");
-		this.ourStaff2 = new Staff(this); 
-		this.ourStaff2.ourWavPlayer=this.ourWavPlayer;
-		await this.ourStaff2.createAsyncItems(new MRE.Vector3(-4,1,0));
-		this.ourStaff2.ourWavPlayer=this.ourWavPlayer;
-
-		this.ourPiano2.ourStaff=this.ourStaff2;*/
-/*
-		this.ourConsole.logMessage("Loading spawner items");
-		this.ourSpawner = new Spawner(this); 
-		this.ourSpawner.ourWavPlayer=this.ourWavPlayer;
-		await this.ourSpawner.createAsyncItems(new MRE.Vector3(0,1.3,0));
-
-		this.ourConsole.logMessage("Loading spawner2 items");
-		this.ourSpawner2 = new Spawner(this); 
-		this.ourSpawner2.ourWavPlayer=this.ourWavPlayer2;
-		await this.ourSpawner2.createAsyncItems(new MRE.Vector3(-2,1.3,0));
-
-*/
+		/*	this.ourConsole.logMessage("creating piano keys"); 
+			this.ourPiano2 = new Piano(this);
+			await this.ourPiano2.createAllKeys(new MRE.Vector3(1.0, 1, 3));
+			this.ourPiano2.ourWavPlayer=this.ourWavPlayer;
+	
+	
+			this.ourConsole.logMessage("Loading staff items");
+			this.ourStaff2 = new Staff(this); 
+			this.ourStaff2.ourWavPlayer=this.ourWavPlayer;
+			await this.ourStaff2.createAsyncItems(new MRE.Vector3(-4,1,0));
+			this.ourStaff2.ourWavPlayer=this.ourWavPlayer;
+	
+			this.ourPiano2.ourStaff=this.ourStaff2;*/
+		/*
+				this.ourConsole.logMessage("Loading spawner items");
+				this.ourSpawner = new Spawner(this); 
+				this.ourSpawner.ourWavPlayer=this.ourWavPlayer;
+				await this.ourSpawner.createAsyncItems(new MRE.Vector3(0,1.3,0));
 		
+				this.ourConsole.logMessage("Loading spawner2 items");
+				this.ourSpawner2 = new Spawner(this); 
+				this.ourSpawner2.ourWavPlayer=this.ourWavPlayer2;
+				await this.ourSpawner2.createAsyncItems(new MRE.Vector3(-2,1.3,0));
+		
+		*/
+
 	}
-	private stopped(){
+	private stopped() {
 		MRE.log.info("app", "stopped callback has been called");
 		this.ourReceiver.removeReceiver(this.receiverCallback);
 	}
@@ -541,14 +540,14 @@ export default class App {
 
 		this.loadAsyncItems().then(() => {
 			this.ourConsole.logMessage("all async items created/loaded!");
-			this.receiverCallback=this.PianoReceiveCallback.bind(this)
+			this.receiverCallback = this.PianoReceiveCallback.bind(this)
 			this.ourReceiver.addReceiver(this.receiverCallback);
 
-			setInterval(() => { 
-				let pianoPlayable=0;
+			setInterval(() => {
+				let pianoPlayable = 0;
 				let vibesPlayable = 0;
 				let pianoPlaying = 0;
-				let vibesPlaying =0;
+				let vibesPlaying = 0;
 
 				if (this.ourSpawner) { //prevent errors, in case this isn't setup yet
 					pianoPlayable = this.ourSpawner.availableBubbles.length;
@@ -566,7 +565,7 @@ export default class App {
 					vibesPlaying = this.ourWavPlayer2.playingWavs.length;
 				}
 
-				const timeNow=new Date(Date.now());			
+				const timeNow = new Date(Date.now());
 
 				this.ourConsole.logMessage(
 					`Time: ${this.pad(timeNow.getHours(), 2, '0')}:` +

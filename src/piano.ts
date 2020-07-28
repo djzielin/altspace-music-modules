@@ -1,6 +1,7 @@
 /*!
  * Licensed under the MIT License.
  */
+/* eslint-disable no-warning-comments */
 
 //import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
@@ -74,7 +75,6 @@ export default class Piano {
 	}
 
 	public updateKeyboardCenter(){
-		const lowPos=this.computeKeyPositionX(this.keyLowest)*this.pianoScale;
 		const highPos=this.computeKeyPositionX(this.keyHighest)*this.pianoScale;
 
 		const offset=-highPos-0.5;
@@ -131,7 +131,7 @@ export default class Piano {
 	}
 
 	public destroyKeys(){
-		for(const [midiNote, keyActor] of this.ourKeys){
+		for(const keyActor of this.ourKeys.values()){
 			keyActor.destroy();
 		}
 		this.ourKeys.clear();
@@ -199,7 +199,7 @@ export default class Piano {
 			let meshId: MRE.Guid = blackKeyMesh.id;
 			let mattId: MRE.Guid = blackKeyMaterial.id;
 			const note = i % 12;
-			const octave = Math.floor(i / 12);
+			//const octave = Math.floor(i / 12);
 
 			let collisionMeshID: MRE.Guid = blackKeyMesh.id;
 

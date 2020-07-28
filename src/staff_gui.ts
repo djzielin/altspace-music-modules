@@ -8,7 +8,6 @@ import App from './app';
 import PlusMinus from './plusminus';
 import Button from './button';
 import Staff from './staff';
-import GrabButton from './grabbutton';
 import GuiPanel from './gui_panel';
 
 export default class StaffGui extends GuiPanel {
@@ -21,11 +20,6 @@ export default class StaffGui extends GuiPanel {
 		this.ourStaff.ourInteractionAuth=(b===true) ? 1:0;
 	}
 
-	public setScale(n: number): void {
-		if(n>0){ //sanity check
-			//this.ourPiano.setScale(n);
-		}
-	}
 	public setDoSharps(b: boolean){
 		this.ourStaff.doSharps=b;
 	}
