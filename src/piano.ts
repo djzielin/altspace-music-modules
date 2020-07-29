@@ -3,8 +3,8 @@
  */
 /* eslint-disable no-warning-comments */
 
-//import * as MRE from '@microsoft/mixed-reality-extension-sdk';
-import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
+import * as MRE from '@microsoft/mixed-reality-extension-sdk';
+//import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 import App from './app';
 import GrabButton from './grabbutton';
 import WavPlayer from './wavplayer';
@@ -119,7 +119,7 @@ export default class Piano {
 			return true;
 		}
 		if(this.ourInteractionAuth===AuthType.Moderators){
-			return this.ourApp.isAuthorized(user);
+			return this.ourApp.ourUsers.isAuthorized(user);
 		}
 		if(this.ourInteractionAuth===AuthType.SpecificUser){
 			if(user===this.authorizedUser){
@@ -271,7 +271,7 @@ export default class Piano {
 					//this.ourApp.ourConsole.logMessage("  full user name is: " + otherActor.name);
 					//this.ourApp.ourConsole.logMessage("  guid is: " + guid);
 
-					if (this.ourInteractionAuth === AuthType.All || this.ourApp.isAuthorizedString(guid)) {
+					if (this.ourInteractionAuth === AuthType.All || this.ourApp.ourUsers.isAuthorizedString(guid)) {
 						this.keyPressed(i,127);
 
 						if (this.ourStaff) {
@@ -292,7 +292,7 @@ export default class Piano {
 					//this.ourApp.ourConsole.logMessage("  full user name is: " + otherActor.name);
 					//this.ourApp.ourConsole.logMessage("  guid is: " + guid);
 
-					if (this.ourInteractionAuth === AuthType.All || this.ourApp.isAuthorizedString(guid)) {
+					if (this.ourInteractionAuth === AuthType.All || this.ourApp.ourUsers.isAuthorizedString(guid)) {
 						this.keyReleased(i);
 					}
 

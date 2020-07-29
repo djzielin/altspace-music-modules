@@ -2,9 +2,8 @@
  * Licensed under the MIT License.
  */
 
-//import * as MRE from '@microsoft/mixed-reality-extension-sdk';
-import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
-import { Session } from '../../mixed-reality-extension-sdk/packages/sdk/built/internal/adapters/multipeer'
+import * as MRE from '@microsoft/mixed-reality-extension-sdk';
+//import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 
 import { PianoReceiver, RCallback } from './receiver'
 import Piano from './piano'
@@ -18,22 +17,7 @@ import GrabButton from './grabbutton';
 import PianoGui from './piano_gui';
 import StaffGui from './staff_gui';
 import WavPlayerGui from './wavplayer_gui';
-
-/**
- * The main class of this app. All the logic goes here.
- */
-
-interface UserProperties {
-	name: string;
-	user: MRE.User;
-	userID: MRE.Guid;
-	clientId: MRE.Guid;
-	authButton: Button;
-	handButton: Button;
-	lHand: MRE.Actor;
-	rHand: MRE.Actor;
-	isModerator: boolean;
-}
+import Users from './users';
 
 export default class App {
 	public assets: MRE.AssetContainer;
@@ -72,23 +56,12 @@ export default class App {
 	public handTexture: MRE.Texture = null;
 	public handMaterial: MRE.Material = null;
 
-	public allUsers: UserProperties[] = [];
-	public moderatorUsers: string[] = [];
+	public ourUsers: Users;
 
 	private receiverCallback: RCallback;
 
-	//public allHands: MRE.Actor[] = [];
-
-	/*
-		https://stackoverflow.com/questions/10073699/pad-a-number-with-leading-zeros-in-javascript	
-	*/
-	public pad(value: number, maxWidth: number, padChar: string) {
-		const n = value.toString();
-		return n.length >= maxWidth ? n : new Array(maxWidth - n.length + 1).join(padChar) + n;
-	}
-
 	constructor(public context: MRE.Context, public baseUrl: string, public baseDir: string,
-		public ourReceiver: PianoReceiver, public ourSender: OscSender, public session: Session) {
+		public ourReceiver: PianoReceiver, public ourSender: OscSender) {
 		this.ourConsole = new Console(this);
 
 		this.assets = new MRE.AssetContainer(context);
@@ -126,243 +99,12 @@ export default class App {
 		this.menuGrabber = new GrabButton(this);
 		this.menuGrabber.create(new MRE.Vector3(2, 0.1, 0));
 
+		this.ourUsers=new Users(this);
+
 		this.context.onStarted(() => this.started());
 		this.context.onStopped(() => this.stopped());
-		this.context.onUserLeft(user => this.userLeft(user));
-		this.context.onUserJoined(user => this.userJoined(user));
-	}
-
-	//from functional-tests / user-test.ts
-	/*private formatProperties(props: { [key: string]: string }): string {
-		let output = "";
-		for (const k in props) {
-			if (Object.prototype.hasOwnProperty.call(props, k)) {
-				output += `\n   ${k}: ${props[k]}`;
-			}
-		}
-		return output;
-	}*/
-
-	public isAuthorized(user: MRE.User): boolean {
-		const ourRoles = user.properties["altspacevr-roles"];
-
-		if (ourRoles.includes("moderator") || ourRoles.includes("presenter") || ourRoles.includes("terraformer")) {
-			return true;
-		}
-
-		return false;
-	}
-
-	public isAuthorizedString(user: string): boolean {
-		if (this.moderatorUsers.includes(user)) {
-			//this.ourConsole.logMessage("user is moderator based on GUID");
-			return true;
-		}
-
-		//this.ourConsole.logMessage("user is NOT moderator based on GUID");
-		return false;
-	}
-
-
-	private userJoined(user: MRE.User) {
-		this.ourConsole.logMessage("user joined. name: " + user.name + " id: " + user.id);
-
-		let isModerator = false
-
-		if (this.isAuthorized(user)) {
-			isModerator = true;
-		}
-
-		const rHand: MRE.Actor = null;
-		const lHand: MRE.Actor = null;
-
-		let id = MRE.ZeroGuid;
-		const clients = this.session.clients;
-		for (const client of clients) {
-			if (client.userId === user.id) {
-				id = client.id;
-				break;
-			}
-		}
-
-		const ourUser = {
-			name: user.name,
-			user: user,
-			userID: user.id,
-			clientId: id,
-			authButton: null as Button,
-			handButton: null as Button,
-			rHand: rHand,
-			lHand: lHand,
-			isModerator: isModerator
-		}
-		this.allUsers.push(ourUser);
-
-		if (isModerator) {
-			this.moderatorUsers.push(user.id.toString());
-		}
-
-		this.addHands(ourUser);
-		this.updateUserButtons();
-
-		/*const particleActor = MRE.Actor.CreateFromLibrary(this.context, {
-			resourceId: "artifact:1520871632212591055",
-			actor: {
-				name: 'particle burst',
-				//parentId: this.staffGrabber.getGUID(),
-				transform: {
-					local: {
-						scale: new MRE.Vector3(0.1,0.1,0.1)
-					}
-				},
-				attachment: {
-					attachPoint: 'right-hand',
-					userId: user.id
-				},
-				Appearance:{
-					enabled: true
-				}
-			}
-		});*/
-	}
-
-	public findUserRecord(userID: MRE.Guid): UserProperties {
-		for (let i = 0; i < this.allUsers.length; i++) {
-			const ourUser = this.allUsers[i];
-			if (ourUser.userID === userID) {
-				return ourUser;
-			}
-		}
-
-		this.ourConsole.logMessage("ERROR: can't find userID: " + userID);
-		return null;
-	}
-
-	private makeAuthoritative(ourUser: UserProperties) {
-		this.ourConsole.logMessage("making user: " + ourUser.name + " authoritative!");
-		this.session.setAuthoritativeClient(ourUser.clientId); //can't be user.id! needs to be client.id!
-		this.updateUserButtons();
-	}
-
-	private addHands(ourUser: UserProperties) {
-		this.ourConsole.logMessage("creating hands for: " + ourUser.name);
-
-		ourUser.rHand = this.createHand('right-hand', ourUser.userID, new MRE.Vector3(0, 0, 0.1),
-			new MRE.Vector3(0.03, 0.03, 0.14));
-		ourUser.lHand = this.createHand('left-hand', ourUser.userID, new MRE.Vector3(0, 0, 0.1),
-			new MRE.Vector3(0.03, 0.03, 0.14));
-	}
-
-	/*private removeHands(ourUser: UserProperties){
-		this.ourConsole.logMessage("removing hands for: " + ourUser.name);
-
-		if(ourUser.rHand){
-			ourUser.rHand.destroy();
-			ourUser.rHand=null;
-		}
-
-		if(ourUser.lHand){
-			ourUser.lHand.destroy();
-			ourUser.lHand=null;
-		}
-	}
-
-	private updateUserHands(ourUser: UserProperties) {
-		if(ourUser.handButton.getValue()){
-			this.addHands(ourUser);
-		} else{
-			this.removeHands(ourUser);
-		}
-	}
-*/
-	private updateUserButtons() {
-		this.ourConsole.logMessage("updating user buttons");
-
-		if (!this.session) { //prevent errors when last user leaves (session seems to be destroyed already)
-			return;
-		}
-		if (!this.session.authoritativeClient) {
-			return;
-		}
-
-		const authoritativeUserID = this.session.authoritativeClient.userId;
-		this.ourConsole.logMessage("  authoritative user is currently id: " + authoritativeUserID);
-		this.ourConsole.logMessage("  number of users: " + this.allUsers.length);
-
-		let userCount = 0;
-		for (let i = 0; i < this.allUsers.length; i++) {
-			const ourUser = this.allUsers[i];
-
-			if (ourUser.isModerator) {
-				const authButtonPos = new MRE.Vector3(-0.7, 0, -0.15 - userCount * 0.15);
-				const areWeAuthoritative = (ourUser.userID === authoritativeUserID);
-
-				this.ourConsole.logMessage("  user: " + ourUser.name + " is Auth: " + areWeAuthoritative);
-				if (!ourUser.authButton) { //create a button if we don't already have one
-					this.ourConsole.logMessage("  user needs an Auth button: " + ourUser.name);
-					const ourButton = new Button(this);
-					ourButton.createAsync(authButtonPos, this.menuGrabber.getGUID(), ourUser.name, ourUser.name,
-						areWeAuthoritative, this.makeAuthoritative.bind(this, ourUser)).then(() => {
-						ourUser.authButton = ourButton;
-						ourButton.doVisualUpdates = false; //we'll handle toggling
-					});
-				} else {
-					ourUser.authButton.setPos(authButtonPos);
-					ourUser.authButton.setValue(areWeAuthoritative);
-				}
-
-				userCount++;
-			}
-
-			/*const handButtonPos = new MRE.Vector3(1.5 + Math.floor(i / 10) * 1.0, 0, 0.35 + -(i % 10) * 0.15);
-
-			if (!ourUser.handButton) { //create a button if we don't already have one
-				this.ourConsole.logMessage("  user needs an Hand button: " + ourUser.name);
-				const ourButton = new Button(this);
-				ourButton.createAsync(handButtonPos, this.menuGrabber.getGUID(), ourUser.name, ourUser.name,
-					false, this.updateUserHands.bind(this, ourUser)).then(() => {
-						ourUser.handButton = ourButton;
-					});
-			} else {
-				ourUser.handButton.setPos(handButtonPos);
-			}*/
-		}
-	}
-
-	private userLeft(user: MRE.User) {
-		this.ourConsole.logMessage("user left. name: " + user.name + " id: " + user.id);
-		this.ourConsole.logMessage("  user array pre-deletion is size: " + this.allUsers.length);
-
-		for (let i = 0; i < this.allUsers.length; i++) {
-			const ourUser = this.allUsers[i];
-
-			if (ourUser.userID === user.id) {
-				if (ourUser.authButton) {
-					ourUser.authButton.destroy();
-				}
-				if (ourUser.handButton) {
-					ourUser.handButton.destroy();
-				}
-				this.allUsers.splice(i, 1);
-				this.updateUserButtons();
-
-				if (ourUser.isModerator) {
-					const userString = user.id.toString();
-
-					const index = this.moderatorUsers.indexOf(userString);
-					if (index !== -1) {
-						this.moderatorUsers.splice(index, 1);
-						this.ourConsole.logMessage("removed user from moderator string list");
-					}
-				}
-
-				//this.removeHands(ourUser);
-
-				break;
-			}
-		}
-
-		this.ourConsole.logMessage("  user array is now size: " + this.allUsers.length);
+		this.context.onUserLeft(user => this.ourUsers.userLeft(user));
+		this.context.onUserJoined(user => this.ourUsers.userJoined(user));
 	}
 
 	private PianoReceiveCallback(note: number, vel: number): void {
@@ -390,46 +132,7 @@ export default class App {
 				this.ourPiano.keyReleased(note);
 			}
 		}
-	}
-
-	private createHand(aPoint: string, userID: MRE.Guid, handPos: MRE.Vector3, handScale: MRE.Vector3) {
-		const hand = MRE.Actor.Create(this.context, {
-			actor: {
-				name: 'SpawnerUserHand_' + userID.toString(),
-				transform: {
-					local: {
-						position: handPos,
-						scale: handScale
-					}
-				},
-				attachment: {
-					attachPoint: aPoint as MRE.AttachPoint,
-					userId: userID
-				},
-				appearance:
-				{
-					meshId: this.boxMesh.id,
-					enabled: false
-				}
-			}
-		});
-
-		hand.setCollider(MRE.ColliderType.Box, false);
-		hand.enableRigidBody({
-			enabled: true,
-			isKinematic: true,
-			useGravity: false//,
-			//collisionDetectionMode: MRE.CollisionDetectionMode.Discrete
-			//collisionDetectionMode: MRE.CollisionDetectionMode.Continuous
-			//collisionDetectionMode: MRE.CollisionDetectionMode.ContinuousDynamic
-		});
-
-		//hand.subscribe('transform');
-		//hand.subscribe('rigidbody');
-		//hand.subscribe('collider');
-
-		return hand;
-	}
+	}	
 
 	public degToRad(degrees: number) {
 		const pi = Math.PI;
@@ -445,6 +148,13 @@ export default class App {
 			" Z: " + v.z.toFixed(precision) + "}";
 	}
 
+	/*
+		https://stackoverflow.com/questions/10073699/pad-a-number-with-leading-zeros-in-javascript	
+	*/
+	public pad(value: number, maxWidth: number, padChar: string) {
+		const n = value.toString();
+		return n.length >= maxWidth ? n : new Array(maxWidth - n.length + 1).join(padChar) + n;
+	}
 
 	private async loadAsyncItems() {
 		this.ourConsole.logMessage("creating console");
@@ -454,25 +164,6 @@ export default class App {
 		const button = new Button(this);
 		await button.createAsync(new MRE.Vector3(-0.7, 0, 0.5), this.menuGrabber.getGUID(), "Reset", "Reset",
 			false, this.doReset.bind(this));
-
-		const authLabel = MRE.Actor.Create(this.context, {
-			actor: {
-				parentId: this.menuGrabber.getGUID(),
-				name: 'authoritativeLabel',
-				text: {
-					contents: "Authoritative:",
-					height: 0.1,
-					anchor: MRE.TextAnchorLocation.MiddleCenter
-				},
-				transform: {
-					local: {
-						position: { x: 0 - 0.7, y: 0.051, z: 0.0 },
-						rotation: MRE.Quaternion.FromEulerAngles(this.degToRad(90), 0, 0)
-					}
-				}
-			}
-		});
-		await authLabel.created();
 
 		let xPos = 0.5;
 
@@ -527,7 +218,6 @@ export default class App {
 		MRE.log.info("app", "stopped callback has been called");
 		this.ourReceiver.removeReceiver(this.receiverCallback);
 	}
-
 
 	private started() {
 		this.ourConsole.logMessage("started callback has begun");

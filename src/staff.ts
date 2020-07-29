@@ -3,8 +3,8 @@
  */
 /* eslint-disable no-warning-comments */
 
-//import * as MRE from '@microsoft/mixed-reality-extension-sdk';
-import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
+import * as MRE from '@microsoft/mixed-reality-extension-sdk';
+//import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 import App from './app';
 import WavPlayer from './wavplayer';
 import GrabButton from './grabbutton';
@@ -268,7 +268,7 @@ export default class Staff {
 		const buttonBehavior = this.staffBackground.setBehavior(MRE.ButtonBehavior);
 
 		buttonBehavior.onButton("pressed", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
-			if (this.ourApp.isAuthorized(user)) {
+			if (this.ourApp.ourUsers.isAuthorized(user)) {
 				const penPos = buttonData.targetedPoints[0].localSpacePoint;
 				const posVector3 = new MRE.Vector3(penPos.x, penPos.y, penPos.z);
 
@@ -283,7 +283,7 @@ export default class Staff {
 		});
 
 		buttonBehavior.onButton("holding", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
-			if (this.ourApp.isAuthorized(user)) {
+			if (this.ourApp.ourUsers.isAuthorized(user)) {
 
 				if (this.isDrawing) {
 					if (this.drawingUser === user) {
@@ -312,7 +312,7 @@ export default class Staff {
 		});
 
 		buttonBehavior.onButton("released", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
-			if (this.ourApp.isAuthorized(user)) {
+			if (this.ourApp.ourUsers.isAuthorized(user)) {
 				const penPos = buttonData.targetedPoints[0].localSpacePoint;
 				const posVector3 = new MRE.Vector3(penPos.x, penPos.y, penPos.z);
 				this.ourApp.ourConsole.logMessage("user released on staff at: " + posVector3);
@@ -329,7 +329,7 @@ export default class Staff {
 
 
 		buttonBehavior.onHover("exit", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
-			if (this.ourApp.isAuthorized(user)) {
+			if (this.ourApp.ourUsers.isAuthorized(user)) {
 				const penPos = buttonData.targetedPoints[0].localSpacePoint;
 				const posVector3 = new MRE.Vector3(penPos.x, penPos.y, penPos.z);
 				this.ourApp.ourConsole.logMessage("user hover has ended at: " + posVector3);
@@ -449,7 +449,7 @@ export default class Staff {
 			return true;
 		}
 		if(this.ourInteractionAuth===AuthType.Moderators){
-			return this.ourApp.isAuthorized(user);
+			return this.ourApp.ourUsers.isAuthorized(user);
 		}
 		if(this.ourInteractionAuth===AuthType.SpecificUser){
 			if(user===this.authorizedUser){
@@ -568,7 +568,7 @@ export default class Staff {
 				//this.ourApp.ourConsole.logMessage("  full user name is: " + otherActor.name);
 				//this.ourApp.ourConsole.logMessage("  guid is: " + guid);
 
-				if (this.ourInteractionAuth === AuthType.All || this.ourApp.isAuthorizedString(guid)) {
+				if (this.ourInteractionAuth === AuthType.All || this.ourApp.ourUsers.isAuthorizedString(guid)) {
 					if (this.ourWavPlayer) {
 						this.ourWavPlayer.playSound(note, vel, spawnPos, this.audioRange);
 					}

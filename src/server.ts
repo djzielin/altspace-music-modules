@@ -2,8 +2,8 @@
  * Licensed under the MIT License.
  */
 
-//import * as MRE from '@microsoft/mixed-reality-extension-sdk';
-import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
+import * as MRE from '@microsoft/mixed-reality-extension-sdk';
+//import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 
 import dotenv from 'dotenv';
 import { resolve as resolvePath } from 'path';
@@ -35,11 +35,11 @@ const ourSender: OscSender = new OscSender();
 //const ourSender: OscSender=null;
 // Handle new application sessions
 server.adapter.onConnection(context => {
-	const sessionId=context.sessionId;
-	const session=(server.adapter as MRE.MultipeerAdapter).sessions[sessionId];
+	//const sessionId=context.sessionId;
+	//const session=(server.adapter as MRE.MultipeerAdapter).sessions[sessionId];
 	
 	MRE.log.info("app", "about the create new App in server.ts");
-	return new App(context, server.baseUrl, server.baseDir, ourReceiver, ourSender, session);
+	return new App(context, server.baseUrl, server.baseDir, ourReceiver, ourSender);
 });
 
 
