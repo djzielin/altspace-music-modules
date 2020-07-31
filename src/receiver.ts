@@ -8,12 +8,17 @@ import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 import WebSocket from 'ws';
 
 export interface RCallback {
-	(note: number, vel: number): void;
+	(note: number, vel: number, channel: number): void;
 }
 
 export class PianoReceiver {
 	public ourCallbacks: RCallback[] = [];
 	private wss: WebSocket.Server
+
+	private lastNote=0;
+	private lastVel=0;
+	private lastChannel=0;
+	private lastTime=0;
 
 	public addReceiver(callback: RCallback){
 		MRE.log.info("app", "adding receiver callback");
@@ -44,14 +49,29 @@ export class PianoReceiver {
 
 				const note = messageArray[0];
 				const vel = messageArray[1];
+				let channel = 0;
 
-				//MRE.log.info("app", "note: " + note);
-				//MRE.log.info("app", "vel:" + vel);
+				if (messageArray.length > 2) {
+					channel = messageArray[2];
+				}
 
-				for(const singleCallback of this.ourCallbacks){ //broadcast to all listeners
-					if(singleCallback){
-						singleCallback(note, vel);
-					}					
+				const currentTime = Date.now();
+				const timeDiff = currentTime - this.lastTime;
+
+				if (note === this.lastNote && channel === this.lastChannel && timeDiff < 150 && vel >0) {
+					MRE.log.info("app", "rejected! too close: " + timeDiff);
+				}else{
+					for (const singleCallback of this.ourCallbacks) { //broadcast to all listeners
+						if (singleCallback) {
+							singleCallback(note, vel, channel);
+						}
+					}
+				}
+				if (vel > 0) {
+					this.lastNote = note;
+					this.lastVel = vel;
+					this.lastChannel = channel;
+					this.lastTime = currentTime;
 				}
 			});
 		});

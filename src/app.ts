@@ -18,6 +18,7 @@ import PianoGui from './piano_gui';
 import StaffGui from './staff_gui';
 import WavPlayerGui from './wavplayer_gui';
 import Users from './users';
+import Tablature from './tablature';
 
 export default class App {
 	public assets: MRE.AssetContainer;
@@ -27,6 +28,9 @@ export default class App {
 
 	public ourStaff: Staff = null;
 	public ourStaffGui: StaffGui = null;
+
+	public ourTablature: Tablature=null;
+
 
 	public ourWavPlayer: WavPlayer = null;
 	public ourWavPlayerGui: WavPlayerGui = null;
@@ -107,7 +111,7 @@ export default class App {
 		this.context.onUserJoined(user => this.ourUsers.userJoined(user));
 	}
 
-	private PianoReceiveCallback(note: number, vel: number): void {
+	private PianoReceiveCallback(note: number, vel: number, channel: number): void {
 		this.ourConsole.logMessage(`App received - note: ${note} vel: ${vel}`);
 
 		if (vel > 0) {
@@ -125,6 +129,9 @@ export default class App {
 			}
 			if (this.ourStaff) {
 				this.ourStaff.receiveNote(note, vel);
+			}
+			if(this.ourTablature){
+				this.ourTablature.receiveNote(note,vel,channel);
 			}
 		} else {
 			//this.ourPiano.stopSound(note);
@@ -200,6 +207,13 @@ export default class App {
 
 		this.ourStaffGui = new StaffGui(this, this.ourStaff);
 		await this.ourStaffGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Main Staff")
+
+		this.ourTablature=new Tablature(this);
+		await this.ourTablature.createAsyncItems(new MRE.Vector3(2, 3, 0.5),
+			MRE.Quaternion.FromEulerAngles(-90 * Math.PI / 180, 0, 0));
+		this.ourTablature.ourWavPlayer=this.ourWavPlayer;
+
+
 		/*
 				this.ourConsole.logMessage("Loading spawner items");
 				this.ourSpawner = new Spawner(this); 
