@@ -570,7 +570,7 @@ export default class Staff {
 
 				if (this.ourInteractionAuth === AuthType.All || this.ourApp.ourUsers.isAuthorizedString(guid)) {
 					if (this.ourWavPlayer) {
-						this.ourWavPlayer.playSound(note, vel, spawnPos, this.audioRange);
+						this.ourWavPlayer.playSound(note, vel, spawnPos);
 					}
 					this.spawnParticleEffect(spawnPos, scale, noteNum);
 					this.ourApp.ourSender.send(`["/NoteOn",${ourNote.note}]`);

@@ -31,6 +31,11 @@ export default class WavPlayerGui extends GuiPanel{
 	public setCullTime(n: number): void {
 		this.ourWavPlayer.cullTime=n*1000; //convert to ms
 	}
+
+	public setAudioRange(n: number): void {
+		this.ourWavPlayer.audioRange=n;
+	}
+
 	public setDoPedal(b: boolean): void {
 		this.ourWavPlayer.doPedal=b;
 	}
@@ -65,5 +70,11 @@ export default class WavPlayerGui extends GuiPanel{
 			this.guiBackground.id, "cull t",
 			this.ourWavPlayer.cullTime*0.001, 1.0, this.setCullTime.bind(this));
 		zPos -= 0.15;		
+
+		const audDist = new PlusMinus(this.ourApp);
+		await audDist.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
+			this.guiBackground.id, "aud m",
+			this.ourWavPlayer.audioRange, 1.0, this.setAudioRange.bind(this));
+		zPos -= 0.15;
 	}
 }

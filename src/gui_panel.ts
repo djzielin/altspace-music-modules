@@ -17,6 +17,14 @@ export default class GuiPanel {
 		
 	}
 
+	public hide() {
+		this.guiGrabber.hide();
+	}
+
+	public show() {
+		this.guiGrabber.show();
+	}
+
 	public async createBackground(pos: MRE.Vector3, name: string, bgHeight: number) {
 		this.backgroundHeight=bgHeight;
 		this.guiGrabber=new GrabButton(this.ourApp);

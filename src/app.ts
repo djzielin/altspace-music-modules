@@ -19,6 +19,7 @@ import StaffGui from './staff_gui';
 import WavPlayerGui from './wavplayer_gui';
 import Users from './users';
 import Tablature from './tablature';
+import GuiPanel from './gui_panel';
 
 export default class App {
 	public assets: MRE.AssetContainer;
@@ -34,6 +35,8 @@ export default class App {
 
 	public ourWavPlayer: WavPlayer = null;
 	public ourWavPlayerGui: WavPlayerGui = null;
+
+	public showGUIs=false;
 
 	public allGUIs: any[] = [];
 
@@ -163,6 +166,16 @@ export default class App {
 		return n.length >= maxWidth ? n : new Array(maxWidth - n.length + 1).join(padChar) + n;
 	}
 
+	public showAllGuis(b: boolean) {
+		for (const singlePanel of this.allGUIs) {
+			if (b) {
+				singlePanel.show();
+			} else {
+				singlePanel.hide();
+			}
+		}
+	}	
+
 	private async loadAsyncItems() {
 		this.ourConsole.logMessage("creating console");
 		await this.ourConsole.createAsyncItems(this.menuGrabber.getGUID());
@@ -172,6 +185,11 @@ export default class App {
 		await button.createAsync(new MRE.Vector3(-0.7, 0, 0.5), this.menuGrabber.getGUID(), "Reset", "Reset",
 			false, this.doReset.bind(this));
 
+		this.ourConsole.logMessage("Creating ShowGUI Button ");
+		const guiButton = new Button(this);
+		await guiButton.createAsync(new MRE.Vector3(-0.7, 0, 0.1), this.menuGrabber.getGUID(), "GUIs ON", "GUIs OFF",
+			this.showGUIs, this.showAllGuis.bind(this));
+
 		let xPos = 0.5;
 
 		this.ourConsole.logMessage("Creating Wav Player");
@@ -180,6 +198,7 @@ export default class App {
 
 		this.ourWavPlayerGui = new WavPlayerGui(this, this.ourWavPlayer);
 		await this.ourWavPlayerGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Piano WavPlayer")		
+		this.allGUIs.push(this.ourWavPlayerGui);
 		xPos -= 1.75;
 
 		/*this.ourConsole.logMessage("Creating Wav Player2");
@@ -196,6 +215,7 @@ export default class App {
 
 		this.ourPianoGui = new PianoGui(this, this.ourPiano);
 		await this.ourPianoGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Main Piano")
+		this.allGUIs.push(this.ourPianoGui);
 		xPos -= 1.75;
 
 		this.ourConsole.logMessage("Loading staff items");
@@ -207,6 +227,9 @@ export default class App {
 
 		this.ourStaffGui = new StaffGui(this, this.ourStaff);
 		await this.ourStaffGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Main Staff")
+		this.allGUIs.push(this.ourStaffGui);
+
+		this.showAllGuis(false);
 
 		/*this.ourTablature=new Tablature(this);
 		await this.ourTablature.createAsyncItems(new MRE.Vector3(2, 3, 0.5),

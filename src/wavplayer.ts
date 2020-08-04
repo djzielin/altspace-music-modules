@@ -26,6 +26,8 @@ export default class WavPlayer {
 	public cullTime=5000;
 	public doPedal=true;
 
+	public audioRange=50;
+
 	private lowestNote=-1;
 	private highestNote=-1;
 
@@ -97,7 +99,7 @@ export default class WavPlayer {
 		}
 	}	
 
-	public playSound(note: number, vel: number, pos: MRE.Vector3, audioRange: number) {
+	public playSound(note: number, vel: number, pos: MRE.Vector3) {
 		if (!this.ourSounds.has(note)) {
 			this.ourApp.ourConsole.logMessage("cant play midi note: " +
 				note + " as wav set doesnt contain a ogg for it!");
@@ -143,7 +145,7 @@ export default class WavPlayer {
 			looping: false,
 			paused: false,
 			volume: volume,
-			rolloffStartDistance: audioRange 
+			rolloffStartDistance: this.audioRange 
 		});	
 
 		const ourWave={

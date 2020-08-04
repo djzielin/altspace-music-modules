@@ -110,12 +110,5 @@ export default class StaffGui extends GuiPanel {
 			this.guiBackground.id, "pen Δ",
 			this.ourStaff.drawThreshold, 0.01, this.setStaffDrawThreshold.bind(this));
 		zPos -= 0.15;
-
-		const audDist = new PlusMinus(this.ourApp);
-		await audDist.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
-			this.guiBackground.id, "aud m",
-			this.ourStaff.audioRange, 1.0, this.setStaffAudioDistance.bind(this));
-		zPos -= 0.15;
-
 	}
 }

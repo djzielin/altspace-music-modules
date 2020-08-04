@@ -80,11 +80,5 @@ export default class PianoGui extends GuiPanel{
 			this.guiBackground.id, "H key",
 			this.ourPiano.keyHighest, 1, this.setHighestKey.bind(this));
 		zPos -= 0.15;
-
-		const audioRangeSelector = new PlusMinus(this.ourApp);
-		await audioRangeSelector.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
-			this.guiBackground.id, "aud m",
-			this.ourPiano.audioRange, 1, this.setAudioRange.bind(this));
-		zPos -= 0.15;
 	}
 }

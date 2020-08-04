@@ -25,6 +25,13 @@ export default class GrabButton {
 		this.buttonActor.transform.local.rotation=rot;
 	}
 
+	public hide(){
+		this.buttonActor.appearance.enabled=false;
+	}
+	public show(){
+		this.buttonActor.appearance.enabled=true;
+	}
+
 	public destroy() {
 		if (this.buttonActor) {
 			this.buttonActor.destroy();

@@ -341,7 +341,7 @@ export default class Piano {
 			new MRE.Vector3(currentPos.x, currentPos.y - 0.01, currentPos.z);
 			
 		if(this.ourWavPlayer){
-			this.ourWavPlayer.playSound(note,vel,new MRE.Vector3(0,0,0), this.audioRange);
+			this.ourWavPlayer.playSound(note,vel,new MRE.Vector3(0,0,0));
 		}
 
 		this.setFancyKeyColor(note);
