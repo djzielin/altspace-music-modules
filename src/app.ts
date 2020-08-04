@@ -208,11 +208,11 @@ export default class App {
 		this.ourStaffGui = new StaffGui(this, this.ourStaff);
 		await this.ourStaffGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Main Staff")
 
-		this.ourTablature=new Tablature(this);
+		/*this.ourTablature=new Tablature(this);
 		await this.ourTablature.createAsyncItems(new MRE.Vector3(2, 3, 0.5),
 			MRE.Quaternion.FromEulerAngles(-90 * Math.PI / 180, 0, 0));
 		this.ourTablature.ourWavPlayer=this.ourWavPlayer;
-
+		*/
 
 		/*
 				this.ourConsole.logMessage("Loading spawner items");
