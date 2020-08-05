@@ -20,6 +20,14 @@ export default class PianoGui extends GuiPanel{
 	public setAuthAllUsers(b: boolean): void {
 		this.ourPiano.ourInteractionAuth = (b === true) ? 1 : 0;
 	}
+
+	public setShowNoteNames(b: boolean): void {
+		this.ourPiano.showNoteNames=b;
+	}
+	public setDoSharps(b: boolean): void {
+		this.ourPiano.doSharps=b;
+	}
+
 	public setScale(n: number): void {
 		this.ourPiano.setScale(n);
 	}
@@ -80,5 +88,18 @@ export default class PianoGui extends GuiPanel{
 			this.guiBackground.id, "H key",
 			this.ourPiano.keyHighest, 1, this.setHighestKey.bind(this));
 		zPos -= 0.15;
+
+		const showNames = new Button(this.ourApp);
+		await showNames.createAsync(new MRE.Vector3(0, 0.025, zPos),
+			this.guiBackground.id, "Names On", "Names Off",
+			this.ourPiano.showNoteNames, this.setShowNoteNames.bind(this));
+		zPos -= 0.15;
+
+		const doSharps = new Button(this.ourApp);
+		await doSharps.createAsync(new MRE.Vector3(0, 0.025, zPos),
+			this.guiBackground.id, "Sharps", "Flats",
+			this.ourPiano.doSharps, this.setDoSharps.bind(this));
+		zPos -= 0.15;
+		
 	}
 }

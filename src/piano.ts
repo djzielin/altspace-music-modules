@@ -22,7 +22,11 @@ export default class Piano {
 	public authorizedUser: MRE.User;
 
 	//private ourKeys: MRE.Actor[] = [];
-	private ourKeys: Map<number,MRE.Actor>=new Map();
+	private activeNotes: Set<number> = new Set();
+	private ourKeys: Map<number,MRE.Actor>=new Map(); 
+	private ourNoteNames: Map<number,MRE.Actor>=new Map();
+	private ourKeyColliderPositions: Map<number,MRE.Vector3>=new Map(); 
+
 	public keyboardParent: MRE.Actor;
 	public pianoGrabber: GrabButton=null;
 	public ourWavPlayer: WavPlayer;
@@ -32,6 +36,9 @@ export default class Piano {
 	public keyHighest=85;
 	public pianoScale=5.0;
 	public audioRange=50.0;
+
+	public showNoteNames=true;
+	public doSharps=true;
 
 	private inch = 0.0254;
 	private halfinch = this.inch * 0.5;
@@ -59,8 +66,10 @@ export default class Piano {
 			this.inch, -this.inch * 1.75];
 	private octaveSize = this.inch * 7.0;
 
-	private noteOrder =
+	private noteNamesFlats =
 		["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
+	private noteNamesSharps =
+		["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
 	private whiteKeyMaterial: MRE.Material = null;
 	private blackKeyMaterial: MRE.Material = null;
@@ -263,6 +272,8 @@ export default class Piano {
 				}
 			});
 
+			this.ourKeyColliderPositions.set(i,keyPosCollision);
+
 			keyCollisionActor.collider.onTrigger("trigger-enter", (otherActor: MRE.Actor) => {
 				this.ourApp.ourConsole.logMessage("trigger enter on piano note!");
 
@@ -346,12 +357,69 @@ export default class Piano {
 
 		this.setFancyKeyColor(note);
 
+		if(this.showNoteNames){
+			const noteNum = note % 12;
+			let noteName="";
+			if(this.doSharps){
+				noteName=this.noteNamesSharps[noteNum];
+			} else{
+				noteName=this.noteNamesFlats[noteNum];
+			}
+
+			const notePosition=this.ourKeyColliderPositions.get(note).clone();
+			notePosition.y-= 0.01;
+			notePosition.y+=this.halfinch;
+			notePosition.y+= 0.001;
+
+			if (noteName.includes("#") || noteName.includes("b")) {
+				notePosition.x += 0.008;
+			} else {
+				notePosition.x += 0.016;
+			}
+
+			this.ourApp.ourConsole.logMessage("Creating note name: " + noteName + " at pos: " + notePosition);
+
+			const noteNameActor = MRE.Actor.Create(this.ourApp.context, {
+				actor: {
+					name: 'noteName',
+					parentId: this.keyboardParent.id,
+					transform: {
+						local: {
+							position: notePosition,
+							scale: new MRE.Vector3(this.pianoScale,this.pianoScale,this.pianoScale),
+							rotation: MRE.Quaternion.FromEulerAngles(90 * Math.PI / 180, 0, 0)
+						}
+					},
+					text: {
+						contents: noteName,
+						color: { r: 0, g: 0, b: 0 },
+						anchor: MRE.TextAnchorLocation.MiddleCenter,
+						height: 0.005
+					}
+				}
+			});
+
+			if(this.ourNoteNames.has(note)){ //on the off chance was already created and not destroyed
+				this.ourNoteNames.get(note).destroy();
+			}
+			this.ourNoteNames.set(note,noteNameActor);
+		}
+
+		if(!this.activeNotes.has(note)){
+			this.activeNotes.add(note);
+		}
+		//this.ourApp.ourMidiSender.send(`[144,${note},${vel}]`)
+
 	}
 
 	public keyReleased(note: number) {
 		if(!this.ourKeys.has(note)){
 			return;
 		}
+		if(!this.activeNotes.has(note)){
+			return;
+		}
+
 		const noteNum = note % 12;
 
 		const currentPos = this.ourKeys.get(note).transform.local.position;
@@ -363,6 +431,13 @@ export default class Piano {
 			this.ourWavPlayer.stopSound(note);
 		}	
 
+		if(this.ourNoteNames.has(note)){
+			const noteName=this.ourNoteNames.get(note);
+			noteName.destroy();
+		}
+
+		//this.ourApp.ourMidiSender.send(`[128,${note},0]`)
+		this.activeNotes.delete(note);
 		this.setProperKeyColor(note);
 	}
 }

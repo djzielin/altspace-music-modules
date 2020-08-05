@@ -107,7 +107,7 @@ export default class StaffGui extends GuiPanel {
 
 		const drawDist = new PlusMinus(this.ourApp);
 		await drawDist.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
-			this.guiBackground.id, "pen Δ",
+			this.guiBackground.id, "pen",
 			this.ourStaff.drawThreshold, 0.01, this.setStaffDrawThreshold.bind(this));
 		zPos -= 0.15;
 	}
