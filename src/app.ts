@@ -38,7 +38,7 @@ export default class App {
 
 	public showGUIs=false;
 
-	public allGUIs: any[] = [];
+	public allGUIs: GuiPanel[] = [];
 
 
 	//public ourPiano2: Piano = null;
@@ -228,6 +228,7 @@ export default class App {
 		this.ourStaffGui = new StaffGui(this, this.ourStaff);
 		await this.ourStaffGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Main Staff")
 		this.allGUIs.push(this.ourStaffGui);
+		this.ourPianoGui.removeSharpsButton();
 
 		this.showAllGuis(false);
 

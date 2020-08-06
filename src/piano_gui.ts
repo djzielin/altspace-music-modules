@@ -12,6 +12,7 @@ import GuiPanel from './gui_panel';
 
 export default class PianoGui extends GuiPanel{
 	private resetButton: Button=null;
+	private sharpsButton: Button=null;
 
 	constructor(protected ourApp: App, private ourPiano: Piano) {
 		super(ourApp);
@@ -26,6 +27,10 @@ export default class PianoGui extends GuiPanel{
 	}
 	public setDoSharps(b: boolean): void {
 		this.ourPiano.doSharps=b;
+	}
+
+	public setShowIntervals(b: boolean): void {
+		this.ourPiano.showIntervals=b;
 	}
 
 	public setScale(n: number): void {
@@ -95,11 +100,23 @@ export default class PianoGui extends GuiPanel{
 			this.ourPiano.showNoteNames, this.setShowNoteNames.bind(this));
 		zPos -= 0.15;
 
-		const doSharps = new Button(this.ourApp);
-		await doSharps.createAsync(new MRE.Vector3(0, 0.025, zPos),
+		this.sharpsButton = new Button(this.ourApp);
+		await this.sharpsButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
 			this.guiBackground.id, "Sharps", "Flats",
 			this.ourPiano.doSharps, this.setDoSharps.bind(this));
 		zPos -= 0.15;
+
+		const intervalButton = new Button(this.ourApp);
+		await intervalButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
+			this.guiBackground.id, "Intervals", "No Interval",
+			this.ourPiano.showIntervals, this.setShowIntervals.bind(this));
+		zPos -= 0.15;
 		
+	}
+
+	public removeSharpsButton(){
+		if(this.sharpsButton){
+			this.sharpsButton.destroy();
+		}
 	}
 }

@@ -10,6 +10,7 @@ import WavPlayer from './wavplayer';
 import GrabButton from './grabbutton';
 import StaffSharp from './staffsharp';
 import StaffFlat from './staffflat';
+import Button from './button';
 
 interface NoteProperties{
 	timeStamp: number;
@@ -240,6 +241,13 @@ export default class Staff {
 		});
 		await consoleMat.created;
 
+		this.ourApp.ourConsole.logMessage("Creating Reset Button ");
+		const button = new Button(this.ourApp);
+		await button.createAsync(new MRE.Vector3(0.0, 0, 0.5), this.staffGrabber.getGUID(), "Clear", "Clear",
+			false, this.doClear.bind(this),0.4,0.4);
+		button.doVisualUpdates=false;
+
+
 		this.staffBackground = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
 				parentId: this.staffGrabber.getGUID(),
@@ -460,6 +468,19 @@ export default class Staff {
 		return false;
 	}
 
+	public doClear() {
+		//clear previous notes
+		for (const oldNote of this.activeNotes) {
+			this.destroyNote(oldNote, false); //will just clear later
+		}
+		for (const annotations of this.annotationList) {
+			annotations.destroy();
+		}
+		this.activeNotes = []; //clear array
+		this.annotationList = [];
+		this.staffRootTime = -1;
+	}
+
 	public receiveNote(note: number, vel: number) {
 		this.ourApp.ourConsole.logMessage("trying to spawn staff note for: " + note);
 		//const octave = Math.floor(note / 12);		
@@ -484,19 +505,11 @@ export default class Staff {
 			isAccidental=true;
 		}
 
-		let timeDiffSeconds=(Date.now()-this.staffRootTime)/1000.0;
-		if(timeDiffSeconds>this.staffTime){ //TODO: make this pickable from a GUI
-			//clear previous notes
-			for (const oldNote of this.activeNotes) {
-				this.destroyNote(oldNote,false); //will just clear later
-			}
-			for (const annotations of this.annotationList) {
-				annotations.destroy();
-			}
-			this.activeNotes=[]; //clear array
-			this.annotationList=[];
-			this.staffRootTime=Date.now();
-			timeDiffSeconds=0;
+		let timeDiffSeconds = (Date.now() - this.staffRootTime) / 1000.0;
+		if (timeDiffSeconds > this.staffTime) { //TODO: make this pickable from a GUI
+			this.doClear();
+			timeDiffSeconds = 0;
+
 		}
 
 		const xPos=(timeDiffSeconds/this.staffTime)*this.staffWidth*0.9;

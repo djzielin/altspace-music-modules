@@ -36,7 +36,7 @@ export default class Button {
 	}
 
 	public async createAsync(pos: MRE.Vector3, parentId: MRE.Guid, labelOn: 
-		string, labelOff: string, ourVal: boolean, callback: (b: boolean) => any, width=0.75) {
+		string, labelOff: string, ourVal: boolean, callback: (b: boolean) => any, width=0.75, height=0.1) {
 		this.ourValue=ourVal;
 		this.ourLabelOn=labelOn;
 		this.ourLabelOff=labelOff;
@@ -67,7 +67,7 @@ export default class Button {
 				transform: {
 					local: {
 						position: { x: 0, y: 0.00, z: 0.0 },
-						scale: new MRE.Vector3(width, 0.1, 0.1)
+						scale: new MRE.Vector3(width, 0.1, height)
 					}
 				}
 			}
