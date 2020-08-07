@@ -61,7 +61,8 @@ export default class WavPlayer {
 	}
 
 	public async loadAllSounds(subdir: string) {
-		for (let i = 0; i < 128; i++) {
+		//for (let i = 0; i < 128; i++) {
+		for (let i = 36; i < 85; i++) {
 			const filename = `${subdir}/${i}.ogg`;
 			const URL = `${this.ourApp.baseUrl}/` + filename;
 			const diskLocation=`${this.ourApp.baseDir}/` + filename;

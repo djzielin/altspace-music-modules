@@ -9,12 +9,26 @@ import App from './app';
 import GrabButton from './grabbutton';
 import WavPlayer from './wavplayer';
 import Staff from './staff';
+import ButtonMulti from './button_multi';
 
 enum AuthType {
-	Moderators=0,
-	All=1,
-	SpecificUser=2
-  }
+	Moderators = 0,
+	All = 1,
+	SpecificUser = 2
+}
+
+enum IntervalMode {
+	none = 0,
+	western = 1,
+	jazz = 2,
+	numerical = 3
+}
+
+enum NoteNameMode {
+	none = 0,
+	letter = 1,
+	solfege = 2
+}
 
   interface IntervalDisplay{
 	line1: MRE.Actor;
@@ -29,7 +43,6 @@ export default class Piano {
 	public ourInteractionAuth=AuthType.All;
 	public authorizedUser: MRE.User;
 
-	//private ourKeys: MRE.Actor[] = [];
 	private activeNotes: Set<number> = new Set();
 	private activeIntervals: IntervalDisplay[]=[];
 	private ourKeys: Map<number,MRE.Actor>=new Map(); 
@@ -45,10 +58,10 @@ export default class Piano {
 	public keyHighest=85;
 	public pianoScale=5.0;
 	public audioRange=50.0;
-
-	public showNoteNames=true;
 	public doSharps=true;
-	public showIntervals=true;
+
+	public intervalMode: IntervalMode=IntervalMode.western;
+	public noteNameMode: NoteNameMode=NoteNameMode.letter;
 
 	private inch = 0.0254;
 	private halfinch = this.inch * 0.5;
@@ -82,6 +95,10 @@ export default class Piano {
 		["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
 	private intervalNames = ["P1","m2","M2","m3","M3","P4","A4","P5","m6","M6","m7","M7","P8"];
+	private jazzNames= ["1","♭2","2","min3","maj3","4","♭5","5","♯5","6","7","maj7","oct",
+		"♭9","9","♯9","10","11","♯11","12","♭13","13","7","maj7","2oct"];
+	private solfegeSharpNames=["Do","Di","Re","Ri","Mi","Fa","Fi","Sol","Si","La","Li","Ti"];
+	private solfegeFlatNames=["Do","Ra","Re","Me","Mi","Fa","Se","Sol","Le","La","Te","Ti"];
 
 	private whiteKeyMaterial: MRE.Material = null;
 	private blackKeyMaterial: MRE.Material = null;
@@ -240,7 +257,7 @@ export default class Piano {
 				this.yOffset[note],
 				this.zOffset[note]);
 
-			this.keyLocations.set(note,keyPos); //TODO, not accurate if moved (need extra calcs to get in world space)
+			this.keyLocations.set(i,keyPos); 
 
 			const keyPosCollision = keyPos.clone();
 			keyPosCollision.z=this.zOffsetCollision[note]; //different zPos
@@ -352,6 +369,15 @@ export default class Piano {
 			this.ourKeys.set(i,keyActor);
 		}
 	}
+
+	private halfWay(a: MRE.Vector3, b: MRE.Vector3): MRE.Vector3 {
+		return (a.add(b)).multiplyByFloats(0.5,0.5,0.5);
+	}
+
+	private getLength(a: MRE.Vector3, b: MRE.Vector3): number {
+		return (a.subtract(b)).length();
+	}
+
 	
 	public drawInterval(ourInterval: IntervalDisplay, intervalName: string){
 		const notePosition1=this.ourKeyColliderPositions.get(ourInterval.note1).clone();
@@ -363,8 +389,19 @@ export default class Piano {
 		notePosition2.y-=0.01;
 		notePosition1.y+=this.halfinch;
 		notePosition2.y+=this.halfinch;
+		notePosition1.y+=0.001;
+		notePosition2.y+=0.001;
 
-		const halfwayPoint=(notePosition2.subtract(notePosition1)).multiplyByFloats(0.5,0.5,0.5).add(notePosition1);
+		const notePosition1b=notePosition1.clone();
+		notePosition1b.y=0;
+
+		const notePosition2b=notePosition2.clone();
+		notePosition2b.y=0;
+
+		const halfwayPoint=this.halfWay(notePosition1b,notePosition2b);
+		halfwayPoint.y=this.halfinch+0.06;
+
+		const towardsPoint2=(notePosition2b.subtract(notePosition1b)).normalize();
 
 		halfwayPoint.y+=0.06;
 
@@ -394,11 +431,33 @@ export default class Piano {
 			}
 		}); 
 
+		/*const arrowActor3 = MRE.Actor.Create(this.ourApp.context, {
+			actor: {
+				parentId: this.keyboardParent.id,
+				name: "arrow",
+				appearance: {
+					meshId: this.ourApp.boxMesh.id,
+					materialId: this.ourApp.redMat.id,
+					enabled: true
+				},
+				transform: {
+					local: {
+						position: halfwayPoint,
+						scale: new MRE.Vector3(0.002,0.002,0.002)
+					}
+				}
+			}
+		});*/
+
 		halfwayPoint.y-=0.01;
 
+		
+		const insetAmount=0.01;
+		const linePosition1=halfwayPoint.add(towardsPoint2.multiplyByFloats(-insetAmount,-insetAmount,-insetAmount));
+		const linePosition2=halfwayPoint.add(towardsPoint2.multiplyByFloats(insetAmount,insetAmount,insetAmount));
 
-		const halfwayPoint1=(halfwayPoint.subtract(notePosition1)).multiplyByFloats(0.5,0.5,0.5).add(notePosition1);
-		const distance1=(halfwayPoint.subtract(notePosition1)).length();
+		const halfwayLine1=this.halfWay(linePosition1, notePosition1); 
+		const distance1=this.getLength(linePosition1, notePosition1);
 
 		const arrowActor1 = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
@@ -411,17 +470,16 @@ export default class Piano {
 				},
 				transform: {
 					local: {
-						position: halfwayPoint1,
-						rotation: MRE.Quaternion.LookAt(notePosition1,halfwayPoint),
+						position: halfwayLine1,
+						rotation: MRE.Quaternion.LookAt(notePosition1,linePosition1),
 						scale: new MRE.Vector3(0.001,0.001,distance1)
 					}
 				}
 			}
 		});
 
-		const halfwayPoint2=(notePosition2.subtract(halfwayPoint)).multiplyByFloats(0.5,0.5,0.5).add(halfwayPoint);
-		const distance2=(halfwayPoint.subtract(notePosition2)).length();
-
+		const halfwayLine2 = this.halfWay(notePosition2, linePosition2);
+		const distance2 = this.getLength(notePosition2, linePosition2);
 
 		const arrowActor2 = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
@@ -434,9 +492,31 @@ export default class Piano {
 				},
 				transform: {
 					local: {
-						position: halfwayPoint2,
-						rotation: MRE.Quaternion.LookAt(notePosition2,halfwayPoint),
+						position: halfwayLine2,
+						rotation: MRE.Quaternion.LookAt(notePosition2,linePosition2),
 						scale: new MRE.Vector3(0.001,0.001,distance2)
+					}
+				}
+			}
+		});
+
+		const halfwayLine3=this.halfWay(linePosition1, linePosition2);
+		const distance3=this.getLength(linePosition1,linePosition2);
+
+		const arrowActor3 = MRE.Actor.Create(this.ourApp.context, {
+			actor: {
+				parentId: this.keyboardParent.id,
+				name: "arrow",
+				appearance: {
+					meshId: this.ourApp.boxMesh.id,
+					materialId: this.ourApp.grayMat.id,
+					enabled: true
+				},
+				transform: {
+					local: {
+						position: halfwayLine3,
+						rotation: MRE.Quaternion.LookAt(linePosition1,linePosition2),
+						scale: new MRE.Vector3(0.001,0.001,distance3)
 					}
 				}
 			}
@@ -445,45 +525,56 @@ export default class Piano {
 		ourInterval.text=intervalTextActor;
 		ourInterval.line1=arrowActor1;	
 		ourInterval.line2=arrowActor2;
-
+		ourInterval.line3=arrowActor3;
 	}
 
 
 	public keyPressed(note: number, vel: number) {
-		if(!this.ourKeys.has(note)){
+		if(!this.ourKeys.has(note) || (!this.keyLocations.has(note))){
 			return;
 		}
 
-		const currentPos = this.ourKeys.get(note).transform.local.position;
+		let doSharpsComputed = this.doSharps;
+		if (this.ourStaff) {
+			doSharpsComputed = this.ourStaff.doSharps;
+		}
 
-		this.ourKeys.get(note).transform.local.position =
-			new MRE.Vector3(currentPos.x, currentPos.y - 0.01, currentPos.z);
+		const newPos = this.keyLocations.get(note).clone();
+		newPos.y-=0.01;
+
+		this.ourKeys.get(note).transform.local.position = newPos;
 			
 		if(this.ourWavPlayer){
-			this.ourWavPlayer.playSound(note,vel,new MRE.Vector3(0,0,0));
+			this.ourWavPlayer.playSound(note,vel,new MRE.Vector3(0,0,0)); //TODO get pos correct
 		}
 
 		this.setFancyKeyColor(note);
 
-		if(this.showNoteNames){
+		if (this.noteNameMode > 0) {
 			const noteNum = note % 12;
-			let noteName="";
+			let noteName = "";
+			let noteHeight=0.005;
 
-			let doSharpsComputed=this.doSharps;
-			if(this.ourStaff){
-				doSharpsComputed=this.ourStaff.doSharps;
+			if (this.noteNameMode === NoteNameMode.letter) {
+				if (doSharpsComputed) {
+					noteName = this.noteNamesSharps[noteNum];
+				} else {
+					noteName = this.noteNamesFlats[noteNum];
+				}
+			} else if (this.noteNameMode === NoteNameMode.solfege) {
+				if (doSharpsComputed) {
+					noteName = this.solfegeSharpNames[noteNum];
+				} else {
+					noteName = this.solfegeFlatNames[noteNum];
+				}
+				noteHeight=noteHeight*0.5;
 			}
 
-			if(doSharpsComputed){
-				noteName=this.noteNamesSharps[noteNum];
-			} else{
-				noteName=this.noteNamesFlats[noteNum];
-			}
 
-			const notePosition=this.ourKeyColliderPositions.get(note).clone();
-			notePosition.y-= 0.01;
-			notePosition.y+=this.halfinch;
-			notePosition.y+= 0.001;
+			const notePosition = this.ourKeyColliderPositions.get(note).clone();
+			notePosition.y -= 0.01;
+			notePosition.y += this.halfinch;
+			notePosition.y += 0.001;
 
 			if (noteName.includes("#") || noteName.includes("b")) {
 				notePosition.x += 0.008;
@@ -508,7 +599,7 @@ export default class Piano {
 						contents: noteName,
 						color: { r: 0.25, g: 0.25, b: 0.25 },
 						anchor: MRE.TextAnchorLocation.MiddleCenter,
-						height: 0.005
+						height: noteHeight
 					}
 				}
 			});
@@ -521,7 +612,7 @@ export default class Piano {
 
 		if (!this.activeNotes.has(note)) {
 
-			if (this.showIntervals) {
+			if (this.intervalMode>0) {
 				if (this.activeNotes.size > 0) {
 					let lowestNote = this.activeNotes.values().next().value;
 					let highestNote = lowestNote;
@@ -552,27 +643,39 @@ export default class Piano {
 
 						let noteDistance = note2 - note1;
 						this.ourApp.ourConsole.logMessage("computed note distance: " + noteDistance);
-						while(noteDistance>12){
-							noteDistance-=12;
+						
+						let intervalName = "";
+
+						if (this.intervalMode === IntervalMode.western) {
+							while (noteDistance > 12) {
+								noteDistance -= 12;
+							}
+							intervalName = this.intervalNames[noteDistance];
+						} else if (this.intervalMode === IntervalMode.numerical) {
+							while (noteDistance > 11) {
+								noteDistance -= 12;
+							}
+							intervalName = noteDistance.toString();
+						} else if (this.intervalMode === IntervalMode.jazz) {
+							while (noteDistance > 24) {
+								noteDistance -= 12;
+							}
+							intervalName = this.jazzNames[noteDistance];
 						}
-						if (noteDistance < 13) {
-							const intervalName = this.intervalNames[noteDistance];
 
-							const ourInterval = {
-								line1: null as MRE.Actor,
-								line2: null as MRE.Actor,
-								line3: null as MRE.Actor,
-								text: null as MRE.Actor,
-								note1: note1,
-								note2: note2
-							};
+						const ourInterval = {
+							line1: null as MRE.Actor,
+							line2: null as MRE.Actor,
+							line3: null as MRE.Actor,
+							text: null as MRE.Actor,
+							note1: note1,
+							note2: note2
+						};
 
-							this.ourApp.ourConsole.logMessage("interval name is: " + intervalName);
-							this.drawInterval(ourInterval,intervalName);
+						this.ourApp.ourConsole.logMessage("interval name is: " + intervalName);
+						this.drawInterval(ourInterval, intervalName);
 
-							this.activeIntervals.push(ourInterval);
-						}
-
+						this.activeIntervals.push(ourInterval);
 					} else {
 						this.ourApp.ourConsole.logMessage(
 							"note is in the middle of existing notes - need to get fancy!");
@@ -587,18 +690,19 @@ export default class Piano {
 
 	public keyReleased(note: number) {
 		if(!this.ourKeys.has(note)){
+			//this.ourApp.ourConsole.logMessage("ERROR: note is outside the range of our piano");
 			return;
-		}
+		}		
+		
 		if(!this.activeNotes.has(note)){
+			//this.ourApp.ourConsole.logMessage("ERROR: keyReleased called for note that was not pressed");
 			return;
 		}
 
-		const noteNum = note % 12;
+		//const noteNum = note % 12;
 
-		const currentPos = this.ourKeys.get(note).transform.local.position;
-
-		this.ourKeys.get(note).transform.local.position =
-			new MRE.Vector3(currentPos.x, this.yOffset[noteNum], currentPos.z);
+		const newPos = this.keyLocations.get(note).clone();
+		this.ourKeys.get(note).transform.local.position = newPos;
 
 		if(this.ourWavPlayer){
 			this.ourWavPlayer.stopSound(note);
@@ -613,7 +717,7 @@ export default class Piano {
 		this.activeNotes.delete(note);
 		this.setProperKeyColor(note);
 
-		if (this.showIntervals) {
+		if (this.intervalMode>0) {
 			const intervalsToDelete: IntervalDisplay[] = [];
 
 			for (const singleInterval of this.activeIntervals) {

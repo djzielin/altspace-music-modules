@@ -9,6 +9,7 @@ import PlusMinus from './plusminus';
 import Button from './button';
 import Piano from './piano';
 import GuiPanel from './gui_panel';
+import ButtonMulti from './button_multi';
 
 export default class PianoGui extends GuiPanel{
 	private resetButton: Button=null;
@@ -21,16 +22,17 @@ export default class PianoGui extends GuiPanel{
 	public setAuthAllUsers(b: boolean): void {
 		this.ourPiano.ourInteractionAuth = (b === true) ? 1 : 0;
 	}
-
-	public setShowNoteNames(b: boolean): void {
-		this.ourPiano.showNoteNames=b;
-	}
+	
 	public setDoSharps(b: boolean): void {
 		this.ourPiano.doSharps=b;
 	}
 
-	public setShowIntervals(b: boolean): void {
-		this.ourPiano.showIntervals=b;
+	public setIntervals(n: number): void {
+		this.ourPiano.intervalMode=n;
+	}
+
+	public setNoteNames(n: number): void {
+		this.ourPiano.noteNameMode=n;
 	}
 
 	public setScale(n: number): void {
@@ -94,10 +96,11 @@ export default class PianoGui extends GuiPanel{
 			this.ourPiano.keyHighest, 1, this.setHighestKey.bind(this));
 		zPos -= 0.15;
 
-		const showNames = new Button(this.ourApp);
-		await showNames.createAsync(new MRE.Vector3(0, 0.025, zPos),
-			this.guiBackground.id, "Names On", "Names Off",
-			this.ourPiano.showNoteNames, this.setShowNoteNames.bind(this));
+		const noteLabels: string[]=["Names Off","Letter Names","Solfege"];
+		const noteNamesButton = new ButtonMulti(this.ourApp);
+		await noteNamesButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
+			this.guiBackground.id, noteLabels ,
+			this.ourPiano.noteNameMode, this.setNoteNames.bind(this));
 		zPos -= 0.15;
 
 		this.sharpsButton = new Button(this.ourApp);
@@ -106,12 +109,12 @@ export default class PianoGui extends GuiPanel{
 			this.ourPiano.doSharps, this.setDoSharps.bind(this));
 		zPos -= 0.15;
 
-		const intervalButton = new Button(this.ourApp);
+		const intervalLabels: string[]=["no intervals","western int","jazz int","num int"];
+		const intervalButton = new ButtonMulti(this.ourApp);
 		await intervalButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
-			this.guiBackground.id, "Intervals", "No Interval",
-			this.ourPiano.showIntervals, this.setShowIntervals.bind(this));
-		zPos -= 0.15;
-		
+			this.guiBackground.id, intervalLabels ,
+			this.ourPiano.intervalMode, this.setIntervals.bind(this));
+		zPos -= 0.15;		
 	}
 
 	public removeSharpsButton(){
