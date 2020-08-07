@@ -10,6 +10,7 @@ import GrabButton from './grabbutton';
 import WavPlayer from './wavplayer';
 import Staff from './staff';
 import ButtonMulti from './button_multi';
+import { listenerCount } from 'process';
 
 enum AuthType {
 	Moderators = 0,
@@ -94,7 +95,9 @@ export default class Piano {
 	private noteNamesSharps =
 		["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
-	private intervalNames = ["P1","m2","M2","m3","M3","P4","A4","P5","m6","M6","m7","M7","P8"];
+	private intervalNamesSharps = ["P1","m2","M2","m3","M3","P4","A4","P5","m6","M6","m7","M7","P8"];
+	private intervalNamesFlats = ["P1","m2","M2","m3","M3","P4","d5","P5","m6","M6","m7","M7","P8"];
+
 	private jazzNames= ["1","♭2","2","min3","maj3","4","♭5","5","♯5","6","7","maj7","oct",
 		"♭9","9","♯9","10","11","♯11","12","♭13","13","7","maj7","2oct"];
 	private solfegeSharpNames=["Do","Di","Re","Ri","Mi","Fa","Fi","Sol","Si","La","Li","Ti"];
@@ -528,16 +531,64 @@ export default class Piano {
 		ourInterval.line3=arrowActor3;
 	}
 
+	private addInterval(note1: number, note2: number){
+		let noteDistance = note2 - note1;
+		this.ourApp.ourConsole.logMessage("computed note distance: " + noteDistance);
+		
+		let intervalName = "";
+
+		if (this.intervalMode === IntervalMode.western) {
+			while (noteDistance > 12) {
+				noteDistance -= 12;
+			}
+			const doSharpsComputed = this.getSharpsMode();
+			if(doSharpsComputed){
+				intervalName = this.intervalNamesSharps[noteDistance];
+			}else{
+				intervalName = this.intervalNamesFlats[noteDistance];
+			}
+		} else if (this.intervalMode === IntervalMode.numerical) {
+			while (noteDistance > 11) {
+				noteDistance -= 12;
+			}
+			intervalName = noteDistance.toString();
+		} else if (this.intervalMode === IntervalMode.jazz) {
+			while (noteDistance > 24) {
+				noteDistance -= 12;
+			}
+			intervalName = this.jazzNames[noteDistance];
+		}
+
+		const ourInterval = {
+			line1: null as MRE.Actor,
+			line2: null as MRE.Actor,
+			line3: null as MRE.Actor,
+			text: null as MRE.Actor,
+			note1: note1,
+			note2: note2
+		};
+
+		this.ourApp.ourConsole.logMessage("interval name is: " + intervalName);
+		this.drawInterval(ourInterval, intervalName);
+
+		this.activeIntervals.push(ourInterval);
+	}
+
+	private getSharpsMode(){
+		let doSharpsComputed = this.doSharps;
+		if (this.ourStaff) {
+			doSharpsComputed = this.ourStaff.doSharps;
+		}
+		return doSharpsComputed;
+	}
+
 
 	public keyPressed(note: number, vel: number) {
 		if(!this.ourKeys.has(note) || (!this.keyLocations.has(note))){
 			return;
 		}
 
-		let doSharpsComputed = this.doSharps;
-		if (this.ourStaff) {
-			doSharpsComputed = this.ourStaff.doSharps;
-		}
+		const doSharpsComputed = this.getSharpsMode();
 
 		const newPos = this.keyLocations.get(note).clone();
 		newPos.y-=0.01;
@@ -640,51 +691,43 @@ export default class Piano {
 							note1 = highestNote;
 							note2 = note;
 						}
-
-						let noteDistance = note2 - note1;
-						this.ourApp.ourConsole.logMessage("computed note distance: " + noteDistance);
-						
-						let intervalName = "";
-
-						if (this.intervalMode === IntervalMode.western) {
-							while (noteDistance > 12) {
-								noteDistance -= 12;
-							}
-							intervalName = this.intervalNames[noteDistance];
-						} else if (this.intervalMode === IntervalMode.numerical) {
-							while (noteDistance > 11) {
-								noteDistance -= 12;
-							}
-							intervalName = noteDistance.toString();
-						} else if (this.intervalMode === IntervalMode.jazz) {
-							while (noteDistance > 24) {
-								noteDistance -= 12;
-							}
-							intervalName = this.jazzNames[noteDistance];
-						}
-
-						const ourInterval = {
-							line1: null as MRE.Actor,
-							line2: null as MRE.Actor,
-							line3: null as MRE.Actor,
-							text: null as MRE.Actor,
-							note1: note1,
-							note2: note2
-						};
-
-						this.ourApp.ourConsole.logMessage("interval name is: " + intervalName);
-						this.drawInterval(ourInterval, intervalName);
-
-						this.activeIntervals.push(ourInterval);
+						this.addInterval(note1,note2);
+					
 					} else {
-						this.ourApp.ourConsole.logMessage(
-							"note is in the middle of existing notes - need to get fancy!");
+						for (const singleInterval of this.activeIntervals) {
+							if(note>singleInterval.note1 && note<singleInterval.note2){
+								const oldNote1=singleInterval.note1;
+								const oldNote2=singleInterval.note2;
+
+								this.destroyInterval(singleInterval);
+								const index = this.activeIntervals.indexOf(singleInterval);
+								this.activeIntervals.splice(index, 1);
+
+								this.addInterval(oldNote1,note); //now have 2 intervals
+								this.addInterval(note,oldNote2);
+								break;
+							}
+						}
 					}
 				}				
 			}
 			this.activeNotes.add(note);
 			//this.ourApp.ourMidiSender.send(`[144,${note},${vel}]`)
+		}
+	}
 
+	private destroyInterval(singleInterval: IntervalDisplay){
+		if (singleInterval.line1) {
+			singleInterval.line1.destroy();
+		}
+		if (singleInterval.line2) {
+			singleInterval.line2.destroy();
+		}
+		if (singleInterval.line3) {
+			singleInterval.line3.destroy();
+		}
+		if (singleInterval.text) {
+			singleInterval.text.destroy();
 		}
 	}
 
@@ -720,28 +763,29 @@ export default class Piano {
 		if (this.intervalMode>0) {
 			const intervalsToDelete: IntervalDisplay[] = [];
 
+			let outerLeft=-1;
+			let outerRight=-1;
+
 			for (const singleInterval of this.activeIntervals) {
 				if (singleInterval.note1 === note || singleInterval.note2 === note) {
-					if (singleInterval.line1) {
-						singleInterval.line1.destroy();
+					if(singleInterval.note1===note){
+						outerRight=singleInterval.note2;
 					}
-					if (singleInterval.line2) {
-						singleInterval.line2.destroy();
+					if(singleInterval.note2===note){
+						outerLeft=singleInterval.note1;
 					}
-					if (singleInterval.line3) {
-						singleInterval.line3.destroy();
-					}
-					if (singleInterval.text) {
-						singleInterval.text.destroy();
-					}
-
+					this.destroyInterval(singleInterval);
 					intervalsToDelete.push(singleInterval);
 				}
-			}
+			}			
 
 			for (const singleInterval of intervalsToDelete) {
 				const index = this.activeIntervals.indexOf(singleInterval);
 				this.activeIntervals.splice(index, 1);
+			}
+
+			if(outerLeft!==-1 && outerRight!==-1){
+				this.addInterval(outerLeft,outerRight);
 			}
 		}
 	}
