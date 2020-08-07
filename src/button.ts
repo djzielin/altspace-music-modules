@@ -55,13 +55,18 @@ export default class Button {
 			}
 		});
 
+		let mat=this.ourApp.greenMat.id;
+		if(!ourVal){
+			mat=this.ourApp.redMat.id;
+		}
+
 		this.buttonActor = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
 				parentId: this.ourHolder.id,
 				name: "toggleButton",
 				appearance: {
 					meshId: this.ourApp.boxMesh.id,
-					materialId: this.ourApp.greenMat.id
+					materialId: mat
 				},
 				collider: { geometry: { shape: MRE.ColliderType.Auto } },
 				transform: {
