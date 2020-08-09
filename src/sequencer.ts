@@ -26,18 +26,67 @@ export default class Sequencer extends MusicModule{
 	public sphereMesh: MRE.Mesh;
 	public boxMesh: MRE.Mesh;
 	public cylinderMesh: MRE.Mesh;
-	public prevNotes: number[]=[];
+	public activeNotes: number[]=[];
 
 	//private ourGrabber: GrabButton=null;
 	public seBackground: MRE.Actor=null;
-
+	private ourTimer: NodeJS.Timeout=null;
 	private ourColumns: SequencerColumn[]=[];
 	private columnIndex=0;
+	private isPlaying=true;
+	public sequencerInterval=400;
 
 	public graySeeThrough: MRE.Material;
 
 	constructor(protected ourApp: App) {
 		super(ourApp);
+	}
+
+	public setPlaying(b: boolean){
+		if(this.isPlaying){
+			this.isPlaying=false;
+		} else{
+			this.isPlaying=true;
+		}
+	}
+
+	public setRewind(b: boolean){
+		this.ourColumns[this.columnIndex].resetHeight();
+		this.columnIndex=this.ourColumns.length-1; //start at end of sequencer
+	}
+
+	public restartSequencer(){
+		if(this.ourTimer){ //clear out the old one (if it exists)
+			clearInterval(this.ourTimer);
+		}
+
+		this.ourTimer=setInterval(() => { 
+			if(this.isPlaying){
+				this.ourColumns[this.columnIndex].resetHeight();
+				this.columnIndex=(this.columnIndex+1) % this.ourColumns.length;
+				this.ourColumns[this.columnIndex].bumpHeight();
+			}
+		}, this.sequencerInterval);
+	}
+
+	public turnOffActiveNotes(){
+		for (const note of this.activeNotes) {
+			this.noteOff(note);
+		}
+		this.activeNotes = [];
+	}
+
+	public noteOff(note: number) {
+		const message = [note, 0];
+		this.sendData(message);
+		//this.ourSequencer.ourApp.ourMidiSender.send(`[128,${this.prevNote},0]`)
+	}
+
+	public noteOn(note: number, vel: number) {
+		const message = [note, vel];
+		this.sendData(message);
+
+		//this.ourSequencer.ourApp.ourMidiSender.send(`[144,${note},${vel}]`)
 	}
 	
 	public async createAsyncItems(pos: MRE.Vector3, rot=new MRE.Quaternion()) {
@@ -78,13 +127,23 @@ export default class Sequencer extends MusicModule{
 
 		this.ourApp.ourConsole.logMessage("completed all sequencer object creation");
 
-		setInterval(() => { 
-			this.ourColumns[this.columnIndex].resetHeight();
+		let zPos=-0.5;
+		const playButton = new Button(this.ourApp);
+		await playButton.createAsync(new MRE.Vector3(0.0, 0.0, zPos),
+			this.ourGrabber.getGUID(), "Playing", "Stopped",
+			this.isPlaying, this.setPlaying.bind(this));
+		zPos-=0.15;
 
-			this.columnIndex=(this.columnIndex+1) % this.ourColumns.length;
-			this.ourColumns[this.columnIndex].bumpHeight();
+		const resetButton = new Button(this.ourApp);
+		await resetButton.createAsync(new MRE.Vector3(0.0, 0.0, zPos),
+			this.ourGrabber.getGUID(), "Rewind", "Rewind",
+			false, this.setRewind.bind(this));
+		resetButton.doVisualUpdates=false;
 
-		}, 400);
+		//TODO RESET BUTTON HERE
+
+		this.restartSequencer();
+
 	}
 	
 	public isAuthorized(user: MRE.User): boolean{

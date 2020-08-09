@@ -94,36 +94,16 @@ export default class SequencerColumn {
 		}
 	}
 
-	public resetHeight(){
-		this.columnParent.transform.local.position.y=0.0;
+	public resetHeight() {
+		this.columnParent.transform.local.position.y = 0.0;
 
 		for (let i = 0; i < this.ourCells.length; i++) {
 			const ourCell = this.ourCells[i];
-			if (this.activeCells[i]){
-				ourCell.transform.local.position.y=0.0;
+			if (ourCell.transform.local.position.y > 0.0) {
+				ourCell.transform.local.position.y = 0.0;
 			}
 		}
-	}
-
-	public noteOff(note: number) {
-		const message = [note, 0];
-		this.ourSequencer.sendData(message);
-		//this.ourSequencer.ourApp.ourMidiSender.send(`[128,${this.prevNote},0]`)
-	}
-
-	public noteOn(note: number, vel: number) {
-		const message = [note, vel];
-		this.ourSequencer.sendData(message);
-
-		//this.ourSequencer.ourApp.ourMidiSender.send(`[144,${note},${vel}]`)
-	}
-
-	public turnOffPrevNotes(){
-		for (const note of this.ourSequencer.prevNotes) {
-			this.noteOff(note);
-		}
-		this.ourSequencer.prevNotes = [];
-	}
+	}	
 
 	public bumpHeight() {
 		let didNoteOff=false;
@@ -134,30 +114,14 @@ export default class SequencerColumn {
 			const ourCell = this.ourCells[i];
 			if (this.activeCells[i]){
 				if(!didNoteOff){
-					this.turnOffPrevNotes();
+					this.ourSequencer.turnOffActiveNotes();
 					didNoteOff=true;
 				}
 				ourCell.transform.local.position.y=0.075;
 				const note=((this.ourCells.length-1)-i)+this.ourSequencer.baseNote;
-				this.noteOn(note,100);
-				this.ourSequencer.prevNotes.push(note);
+				this.ourSequencer.noteOn(note,100);
+				this.ourSequencer.activeNotes.push(note);
 			} 
 		}		
 	}
-
-	/*private isAuthorized(user: MRE.User): boolean {
-		if (this.ourInteractionAuth === AuthType.All) {
-			return true;
-		}
-		if (this.ourInteractionAuth === AuthType.Moderators) {
-			return this.ourSequencer.ourApp.ourUsers.isAuthorized(user);
-		}
-		if (this.ourInteractionAuth === AuthType.SpecificUser) {
-			if (user === this.authorizedUser) {
-				return true;
-			}
-		}
-
-		return false;
-	}*/
 }

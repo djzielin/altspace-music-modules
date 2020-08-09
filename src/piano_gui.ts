@@ -134,14 +134,12 @@ export default class PianoGui extends GuiPanel{
 		await this.sendButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
 			this.guiBackground.id, "SEND MIDI", "SEND MIDI",
 			true, this.sendMidiPatcher.bind(this));
-		this.sendButton.doVisualUpdates=false;
 		zPos -= 0.15;
 
 		this.receiveButton = new Button(this.ourApp);
 		await this.receiveButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
 			this.guiBackground.id, "RECV MIDI", "RECV MIDI",
 			true, this.recvMidiPatch.bind(this));
-		this.receiveButton.doVisualUpdates=false;
 		zPos -= 0.15;
 
 		this.guiGrabber.setGrabReleaseCallback(this.grabRelease.bind(this));

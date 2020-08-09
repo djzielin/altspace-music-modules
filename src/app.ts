@@ -224,8 +224,12 @@ export default class App {
 
 			if(sender && receiver){ //great, we got both a sender and a receiver
 				if(sender.messageType===receiver.messageType){ //do message types match? ie both midi?
-					this.ourConsole.logMessage("  we have a match!");
-					this.applyPatch(sender,receiver);
+					if(sender.gui!==receiver.gui){
+						this.ourConsole.logMessage("  we have a match!");
+						this.applyPatch(sender,receiver);
+					} else{
+						this.ourConsole.logMessage("  not allowing user to route back to self");
+					}
 				} else{
 					this.ourConsole.logMessage("  incompatible message type");
 				}
@@ -233,6 +237,9 @@ export default class App {
 				this.ourConsole.logMessage("  no match. both are senders or receivers");
 			}
 		
+			sender.button.setValue(true);
+			receiver.button.setValue(true);
+
 			this.potentialPatchStack.pop();
 			this.potentialPatchStack.pop();
 		}
@@ -451,6 +458,12 @@ export default class App {
 		}
 
 		this.applyPatch(sendPatchSequencer,receivePatchPiano);
+
+		this.ourConsole.logMessage("Waiting for all patch lines to be created");
+
+		for(const singlePatch of this.ourPatches){
+			await singlePatch.line.created();
+		}
 
 		/*this.ourTablature=new Tablature(this);
 		await this.ourTablature.createAsyncItems(new MRE.Vector3(2, 3, 0.5),
