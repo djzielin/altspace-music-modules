@@ -11,6 +11,7 @@ import Staff from './staff';
 import GuiPanel from './gui_panel';
 
 export default class StaffGui extends GuiPanel {
+	public receiveButton: Button = null;
 
 	constructor(protected ourApp: App, private ourStaff: Staff) {
 		super(ourApp);
@@ -54,6 +55,14 @@ export default class StaffGui extends GuiPanel {
 
 	public setStaffAudioDistance(n: number){
 		this.ourStaff.audioRange=n;
+	}
+
+	public sendMidiPatcher(b: boolean){
+		this.ourApp.patcherClickEvent(this.ourStaff,"midi",false,this,this.receiveButton);
+	}
+
+	public grabRelease(){
+		this.ourApp.updatePatchLines(this);
 	}
 
 	public async createAsync(pos: MRE.Vector3, name: string) {
@@ -110,5 +119,15 @@ export default class StaffGui extends GuiPanel {
 			this.guiBackground.id, "pen",
 			this.ourStaff.drawThreshold, 0.01, this.setStaffDrawThreshold.bind(this));
 		zPos -= 0.15;
+
+		this.receiveButton = new Button(this.ourApp);
+		await this.receiveButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
+			this.guiBackground.id, "RECV MIDI", "RECV MIDI",
+			true, this.sendMidiPatcher.bind(this));
+		this.receiveButton.doVisualUpdates=false;
+		zPos -= 0.15;
+
+		this.guiGrabber.setGrabReleaseCallback(this.grabRelease.bind(this));
+
 	}
 }

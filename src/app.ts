@@ -20,6 +20,23 @@ import WavPlayerGui from './wavplayer_gui';
 import Users from './users';
 import Tablature from './tablature';
 import GuiPanel from './gui_panel';
+import MusicModule from './music_module';
+import Sequencer from './sequencer';
+import SequencerGui from './sequencer_gui';
+
+interface PatchPointProperties{
+	module: MusicModule;
+	messageType: string;
+	isSender: boolean;
+	gui: GuiPanel;
+	button: Button;
+}
+
+interface PatchProperties{
+	sender: PatchPointProperties;
+	receiver: PatchPointProperties;
+	line: MRE.Actor;
+}
 
 export default class App {
 	public assets: MRE.AssetContainer;
@@ -36,10 +53,12 @@ export default class App {
 	public ourWavPlayer: WavPlayer = null;
 	public ourWavPlayerGui: WavPlayerGui = null;
 
+	public ourSequencer: Sequencer = null;
+	public ourSequencerGui: SequencerGui = null;
+
 	public showGUIs=false;
 
 	public allGUIs: GuiPanel[] = [];
-
 
 	//public ourPiano2: Piano = null;
 	//public ourStaff2: Staff=null;
@@ -66,6 +85,158 @@ export default class App {
 	public ourUsers: Users;
 
 	private receiverCallback: RCallback;
+
+	private ourPatches: PatchProperties[]=[]; //TODO patcher could be its own class
+	private potentialPatchStack: PatchPointProperties[] = [];
+
+	public isPatchPointEqual(patchP1: PatchPointProperties, patchP2: PatchPointProperties){
+		if(patchP1.gui!==patchP2.gui){
+			return false;
+		}
+
+		if(patchP1.isSender!==patchP2.isSender){
+			return false;
+		}
+
+		if(patchP1.messageType!==patchP2.messageType){
+			return false;
+		}
+		if(patchP1.module!==patchP2.module){
+			return false;
+		}
+		if(patchP1.button!==patchP2.button){
+			return false;
+		}
+
+		return true;
+	}
+
+	public isPatchEqual(patch1: PatchProperties, patch2: PatchProperties){
+		if(!this.isPatchPointEqual(patch1.sender,patch2.sender)){
+			return false;
+		}
+
+		if(!this.isPatchPointEqual(patch1.receiver,patch2.receiver)){
+			return false;
+		}
+
+		return true;
+	}
+
+	public getPatchPointWorldPosition(patchPoint: PatchPointProperties, isSender: boolean): MRE.Vector3{
+		const offset=new MRE.Vector3(0.75/2,0.1/2,0);
+		if(!isSender){
+			offset.x=-0.75/2
+		}
+
+		return patchPoint.gui.transformPoint(patchPoint.button.getHolderPos().add(offset));
+	}
+
+	public updatePatchLines(gui: GuiPanel){
+		this.ourConsole.logMessage("Grab Release happening. Updating Patcher Lines!");
+
+		for (const existingPatch of this.ourPatches) {
+			if(existingPatch.sender.gui===gui || existingPatch.receiver.gui===gui){
+				const pos1=this.getPatchPointWorldPosition(existingPatch.sender,true);
+				const pos2=this.getPatchPointWorldPosition(existingPatch.receiver,false);
+				existingPatch.sender.gui.updatePatchLine(existingPatch.line,pos1,pos2);		
+			}
+		}
+	}
+
+	public showPatchLines(){
+		for (const existingPatch of this.ourPatches) {
+			if(existingPatch.line){
+				existingPatch.line.appearance.enabled=true;
+			}
+		}
+	}
+
+	public hidePatchLines(){
+		for (const existingPatch of this.ourPatches) {
+			if(existingPatch.line){
+				existingPatch.line.appearance.enabled=false;
+			}
+		}
+	}
+
+	public applyPatch(sender: PatchPointProperties, receiver: PatchPointProperties) {
+		const newPatch = {
+			sender: sender,
+			receiver: receiver,
+			line: null as MRE.Actor
+		}
+
+		for (const existingPatch of this.ourPatches) {
+			if (this.isPatchEqual(existingPatch,newPatch)) { //already exists! so DELETE
+				this.ourConsole.logMessage("  patch already exists. deleting!");
+				sender.module.removeSendDestination(receiver.module);
+				if(existingPatch.line){
+					existingPatch.line.destroy();
+				}
+				const index = this.ourPatches.indexOf(existingPatch);
+				this.ourPatches.splice(index, 1);
+
+				return;
+			}
+		}
+
+		this.ourConsole.logMessage("  patch doesn't yet exist. adding!");
+		sender.module.sendDestinations.push(receiver.module);
+
+		if (newPatch.sender.gui && newPatch.receiver.gui) {
+			const pos1 = this.getPatchPointWorldPosition(newPatch.sender, true);
+			const pos2 = this.getPatchPointWorldPosition(newPatch.receiver, false);
+			newPatch.line = sender.gui.createPatchLine(pos1, pos2);
+		}
+
+		this.ourPatches.push(newPatch);
+	}
+
+	public patcherClickEvent(module: MusicModule, messageType: string, isSender: boolean, 
+			gui: GuiPanel, button: Button) {
+		const patchType: string = isSender ? "sender" : "receiver";
+		this.ourConsole.logMessage("received patch point: " + messageType + " " + patchType );
+		
+		const potentialPatchPoint = {
+			module: module,
+			messageType: messageType,
+			isSender: isSender,
+			gui: gui,
+			button: button
+		}
+
+		this.potentialPatchStack.push(potentialPatchPoint);
+
+		if(this.potentialPatchStack.length===2){ 
+			this.ourConsole.logMessage("  have 2 pending patch points, checking if we have a match!");
+
+			let sender: PatchPointProperties=null;
+			let receiver: PatchPointProperties=null;
+
+			for(const singlePatchPoint of this.potentialPatchStack){
+				if(singlePatchPoint.isSender){
+					sender=singlePatchPoint;
+				}else{
+					receiver=singlePatchPoint;
+				}
+			}
+
+			if(sender && receiver){ //great, we got both a sender and a receiver
+				if(sender.messageType===receiver.messageType){ //do message types match? ie both midi?
+					this.ourConsole.logMessage("  we have a match!");
+					this.applyPatch(sender,receiver);
+				} else{
+					this.ourConsole.logMessage("  incompatible message type");
+				}
+			} else {
+				this.ourConsole.logMessage("  no match. both are senders or receivers");
+			}
+		
+			this.potentialPatchStack.pop();
+			this.potentialPatchStack.pop();
+		}
+	}
 
 	constructor(public context: MRE.Context, public baseUrl: string, public baseDir: string,
 		public ourReceiver: PianoReceiver, public ourSender: OscSender) {
@@ -104,7 +275,7 @@ export default class App {
 		this.handMesh = this.assets.createBoxMesh('boxMesh', 0.25, 0.1, 0.25);
 
 		this.menuGrabber = new GrabButton(this);
-		this.menuGrabber.create(new MRE.Vector3(2, 0.1, 0));
+		this.menuGrabber.create(new MRE.Vector3(3, 0.1, 0));
 
 		this.ourUsers=new Users(this);
 
@@ -130,9 +301,9 @@ export default class App {
 			if (this.ourSpawner2) {
 				this.ourSpawner2.spawnBubble(note, vel);
 			}
-			if (this.ourStaff) {
-				this.ourStaff.receiveNote(note, vel);
-			}
+			//if (this.ourStaff) {
+			//	this.ourStaff.receiveNote(note, vel);
+			//}
 			if(this.ourTablature){
 				this.ourTablature.receiveNote(note,vel,channel);
 			}
@@ -170,15 +341,22 @@ export default class App {
 		for (const singlePanel of this.allGUIs) {
 			if (b) {
 				singlePanel.show();
+
 			} else {
 				singlePanel.hide();
 			}
+		}
+
+		if (b) {
+			this.showPatchLines();
+		} else {
+			this.hidePatchLines();
 		}
 	}	
 
 	private async loadAsyncItems() {
 		this.ourConsole.logMessage("creating console");
-		await this.ourConsole.createAsyncItems(this.menuGrabber.getGUID());
+		await this.ourConsole.createAsyncItems(new MRE.Vector3(-0.7, 0, 0.9),this.menuGrabber.getGUID());
 
 		this.ourConsole.logMessage("Creating Reset Button ");
 		const button = new Button(this);
@@ -190,7 +368,7 @@ export default class App {
 		await guiButton.createAsync(new MRE.Vector3(-0.7, 0, 0.1), this.menuGrabber.getGUID(), "GUIs ON", "GUIs OFF",
 			this.showGUIs, this.showAllGuis.bind(this));
 
-		let xPos = 0.5;
+		let xPos = 1.5;
 
 		this.ourConsole.logMessage("Creating Wav Player");
 		this.ourWavPlayer = new WavPlayer(this);
@@ -211,26 +389,68 @@ export default class App {
 		this.ourPiano = new Piano(this);
 		this.ourPiano.ourWavPlayer = this.ourWavPlayer;
 		await this.ourPiano.createAllKeys(new MRE.Vector3(2, 1, 0),
-			MRE.Quaternion.FromEulerAngles(-30 * Math.PI / 180, 0, 0));
-
-		this.ourPianoGui = new PianoGui(this, this.ourPiano);
-		await this.ourPianoGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Main Piano")
-		this.allGUIs.push(this.ourPianoGui);
-		xPos -= 1.75;
+			MRE.Quaternion.FromEulerAngles(-30 * Math.PI / 180, 0, 0));	
 
 		this.ourConsole.logMessage("Loading staff items");
 		this.ourStaff = new Staff(this);
 		this.ourStaff.ourWavPlayer = this.ourWavPlayer;
-		this.ourPiano.ourStaff=this.ourStaff;
 		await this.ourStaff.createAsyncItems(new MRE.Vector3(2, 2, 0.5),
-			MRE.Quaternion.FromEulerAngles(-90 * Math.PI / 180, 0, 0));
+			MRE.Quaternion.FromEulerAngles(-90 * Math.PI / 180, 0, 0));			
 
 		this.ourStaffGui = new StaffGui(this, this.ourStaff);
-		await this.ourStaffGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Main Staff")
+		await this.ourStaffGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Staff")
 		this.allGUIs.push(this.ourStaffGui);
+		xPos -= 1.75;
+
+		this.ourPianoGui = new PianoGui(this, this.ourPiano);
+		await this.ourPianoGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Piano")
+		this.allGUIs.push(this.ourPianoGui);
 		this.ourPianoGui.removeSharpsButton();
 
-		this.showAllGuis(false);
+
+		const sendPatchPiano = {
+			module: this.ourPiano,
+			messageType: "midi",
+			isSender: true,
+			gui: this.ourPianoGui,
+			button: this.ourPianoGui.sendButton
+		}
+
+		const receivePatchStaff = {
+			module: this.ourStaff,
+			messageType: "midi",
+			isSender: false,
+			gui: this.ourStaffGui,
+			button: this.ourStaffGui.receiveButton
+		}
+
+		this.applyPatch(sendPatchPiano,receivePatchStaff);
+
+		this.ourSequencer = new Sequencer(this);
+		await this.ourSequencer.createAsyncItems(new MRE.Vector3(-2, 2.0, 0.0),
+			MRE.Quaternion.FromEulerAngles(-45 * Math.PI / 180, 0, 0));
+
+		this.ourSequencerGui = new SequencerGui(this, this.ourSequencer);
+		await this.ourSequencerGui.createAsync(new MRE.Vector3(xPos, 0.1, -2), "Sequencer")
+		this.allGUIs.push(this.ourSequencerGui);
+
+		const sendPatchSequencer = {
+			module: this.ourSequencer,
+			messageType: "midi",
+			isSender: true,
+			gui: this.ourSequencerGui,
+			button: this.ourSequencerGui.sendButton
+		}
+
+		const receivePatchPiano = {
+			module: this.ourPiano,
+			messageType: "midi",
+			isSender: false,
+			gui: this.ourPianoGui,
+			button: this.ourPianoGui.receiveButton
+		}
+
+		this.applyPatch(sendPatchSequencer,receivePatchPiano);
 
 		/*this.ourTablature=new Tablature(this);
 		await this.ourTablature.createAsyncItems(new MRE.Vector3(2, 3, 0.5),
@@ -251,6 +471,7 @@ export default class App {
 		
 		*/
 
+		this.showAllGuis(false);
 	}
 	private stopped() {
 		MRE.log.info("app", "stopped callback has been called");

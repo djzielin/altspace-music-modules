@@ -7,37 +7,24 @@ import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 import App from './app';
 import PlusMinus from './plusminus';
 import Button from './button';
-import Piano from './piano';
 import GuiPanel from './gui_panel';
 import ButtonMulti from './button_multi';
+import Sequencer from './sequencer';
 
-export default class PianoGui extends GuiPanel{
+export default class SequencerGui extends GuiPanel{
 	private resetButton: Button=null;
 	private sharpsButton: Button=null;
 	public sendButton: Button=null;
-	public receiveButton: Button=null;
 
-	constructor(protected ourApp: App, private ourPiano: Piano) {
+	constructor(protected ourApp: App, private ourSequencer: Sequencer) {
 		super(ourApp);
 	}
 
 	public setAuthAllUsers(b: boolean): void {
-		this.ourPiano.ourInteractionAuth = (b === true) ? 1 : 0;
+		this.ourSequencer.ourInteractionAuth = (b === true) ? 1 : 0;
 	}
 	
-	public setDoSharps(b: boolean): void {
-		this.ourPiano.doSharps=b;
-	}
-
-	public setIntervals(n: number): void {
-		this.ourPiano.intervalMode=n;
-	}
-
-	public setNoteNames(n: number): void {
-		this.ourPiano.noteNameMode=n;
-	}
-
-	public setScale(n: number): void {
+	/*public setScale(n: number): void {
 		this.ourPiano.setScale(n);
 	}
 	public setLowestKey(n: number): void {
@@ -48,33 +35,18 @@ export default class PianoGui extends GuiPanel{
 	}
 	public setAudioRange(n: number): void {
 		this.ourPiano.audioRange = n;
-	}
+	}*/
 
 	public sendMidiPatcher(b: boolean){
-		this.ourApp.patcherClickEvent(this.ourPiano,"midi",true,this,this.sendButton);
-	}
-
-	public recvMidiPatch(b: boolean){
-		this.ourApp.patcherClickEvent(this.ourPiano,"midi",false,this,this.receiveButton);
+		this.ourApp.patcherClickEvent(this.ourSequencer,"midi",true,this,this.sendButton);
 	}
 	
-	public doReset(b: boolean): void {
-		const pos = this.ourPiano.ourGrabber.getPos();
-		const rot = this.ourPiano.ourGrabber.getRot();
-
-		this.ourPiano.destroyKeys();
-		this.ourPiano.createAllKeys(pos, rot).then(() => {
-			this.ourApp.ourConsole.logMessage("piano reset complete!");
-			this.resetButton.setValue(false);
-		});
-	}
-
 	public grabRelease(){
 		this.ourApp.updatePatchLines(this);
 	}
 
 	public async createAsync(pos: MRE.Vector3, name: string) {
-		this.ourApp.ourConsole.logMessage("creating piano gui");
+		this.ourApp.ourConsole.logMessage("creating sequencer gui");
 
 		await this.createBackground(pos, name, 1.5);
 
@@ -83,16 +55,10 @@ export default class PianoGui extends GuiPanel{
 		const authButton = new Button(this.ourApp);
 		await authButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
 			this.guiBackground.id, "All Users", "Auth Only",
-			this.ourPiano.ourInteractionAuth === 1, this.setAuthAllUsers.bind(this));
+			this.ourSequencer.ourInteractionAuth === 1, this.setAuthAllUsers.bind(this));
 		zPos -= 0.15;
 
-		this.resetButton = new Button(this.ourApp);
-		await this.resetButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
-			this.guiBackground.id, "Relayout", "Relayout",
-			false, this.doReset.bind(this));
-		zPos -= 0.15;
-
-		const scaleSelector = new PlusMinus(this.ourApp);
+		/*const scaleSelector = new PlusMinus(this.ourApp);
 		await scaleSelector.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
 			this.guiBackground.id, "scale",
 			this.ourPiano.pianoScale, 0.1, this.setScale.bind(this));
@@ -115,20 +81,7 @@ export default class PianoGui extends GuiPanel{
 		await noteNamesButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
 			this.guiBackground.id, noteLabels ,
 			this.ourPiano.noteNameMode, this.setNoteNames.bind(this));
-		zPos -= 0.15;
-
-		this.sharpsButton = new Button(this.ourApp);
-		await this.sharpsButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
-			this.guiBackground.id, "Sharps", "Flats",
-			this.ourPiano.doSharps, this.setDoSharps.bind(this));
-		zPos -= 0.15;
-
-		const intervalLabels: string[]=["no intervals","western int","jazz int","num int"];
-		const intervalButton = new ButtonMulti(this.ourApp);
-		await intervalButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
-			this.guiBackground.id, intervalLabels ,
-			this.ourPiano.intervalMode, this.setIntervals.bind(this));
-		zPos -= 0.15;		
+		zPos -= 0.15;*/
 
 		this.sendButton = new Button(this.ourApp);
 		await this.sendButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
@@ -137,20 +90,7 @@ export default class PianoGui extends GuiPanel{
 		this.sendButton.doVisualUpdates=false;
 		zPos -= 0.15;
 
-		this.receiveButton = new Button(this.ourApp);
-		await this.receiveButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
-			this.guiBackground.id, "RECV MIDI", "RECV MIDI",
-			true, this.recvMidiPatch.bind(this));
-		this.receiveButton.doVisualUpdates=false;
-		zPos -= 0.15;
-
 		this.guiGrabber.setGrabReleaseCallback(this.grabRelease.bind(this));
 
 	}	
-
-	public removeSharpsButton(){
-		if(this.sharpsButton){
-			this.sharpsButton.destroy();
-		}
-	}
 }

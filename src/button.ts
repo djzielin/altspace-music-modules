@@ -71,7 +71,7 @@ export default class Button {
 				collider: { geometry: { shape: MRE.ColliderType.Auto } },
 				transform: {
 					local: {
-						position: { x: 0, y: 0.00, z: 0.0 },
+						position: { x: 0, y: 0, z: 0 },
 						scale: new MRE.Vector3(width, 0.1, height)
 					}
 				}
@@ -125,6 +125,10 @@ export default class Button {
 	public setValue(val: boolean){
 		this.ourValue=val;
 		this.updateDisplayValue();		
+	}
+
+	public getHolderPos(): MRE.Vector3 {
+		return this.ourHolder.transform.local.position;
 	}
 
 	public getValue(){

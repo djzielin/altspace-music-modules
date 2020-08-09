@@ -11,6 +11,7 @@ import GrabButton from './grabbutton';
 import StaffSharp from './staffsharp';
 import StaffFlat from './staffflat';
 import Button from './button';
+import MusicModule from './music_module';
 
 interface NoteProperties{
 	timeStamp: number;
@@ -31,7 +32,7 @@ enum AuthType {
   }
 
 
-export default class Staff {
+export default class Staff extends MusicModule {
 	public ourInteractionAuth=AuthType.All;
 	public authorizedUser: MRE.User;
 
@@ -97,8 +98,6 @@ export default class Staff {
 	private sphereMesh: MRE.Mesh;
 	private boxMesh: MRE.Mesh;
 
-	private staffGrabber: GrabButton=null;
-
 	public activeNotes: NoteProperties[]=[]; 
 	private annotationList: MRE.Actor[]=[];
 
@@ -122,8 +121,8 @@ export default class Staff {
 	private computedStaffScale: number;
 
 
-	constructor(private ourApp: App) {
-
+	constructor(protected ourApp: App) {
+		super(ourApp);
 	}
 
 	private drawStart(pos: MRE.Vector3){
@@ -158,7 +157,7 @@ export default class Staff {
 		//this.ourApp.ourConsole.logMessage(`hyp: ${length} opp: ${opposite}`);
 
 		const tah=Math.atan2(y,x);
-		this.ourApp.ourConsole.logMessage(`tah: ${tah}`);
+		//this.ourApp.ourConsole.logMessage(`tah: ${tah}`);
 
 
 		const rot=MRE.Quaternion.FromEulerAngles(0,-tah,0);
@@ -166,7 +165,7 @@ export default class Staff {
 
 		const drawSegment = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
-				parentId: this.staffGrabber.getGUID(),
+				parentId: this.ourGrabber.getGUID(),
 				name: "annotations",
 				appearance: {
 					meshId: this.ourApp.boxMesh.id,
@@ -198,7 +197,7 @@ export default class Staff {
 
 	private computeStaffScale(){
 		this.computedStaffScale = (this.staffHeight/(this.noteZpos.size+2))*1.75; 
-		this.ourApp.ourConsole.logMessage("computed staff scale is: " + this.computedStaffScale);
+		//this.ourApp.ourConsole.logMessage("computed staff scale is: " + this.computedStaffScale);
 	}
 
 	public updateStaffHeight() {
@@ -225,7 +224,7 @@ export default class Staff {
 	}
 
 	public async createAsyncItems(pos: MRE.Vector3, rot=new MRE.Quaternion()) {
-		this.ourApp.ourConsole.logMessage("creating staff asyn items");
+		this.ourApp.ourConsole.logMessage("STAFF: creating staff asyn items");
 
 		this.boxMesh = this.ourApp.assets.createBoxMesh('boxMesh', 1.0, 1.0, 1.0);
 		await this.boxMesh.created;
@@ -233,24 +232,23 @@ export default class Staff {
 		this.sphereMesh = this.ourApp.assets.createSphereMesh('sphereMesh',0.5,10,10);
 		await this.sphereMesh.created;
 
-		this.staffGrabber=new GrabButton(this.ourApp);
-		this.staffGrabber.create(pos,rot);
+		this.createGrabber(pos,rot);
 
 		const consoleMat = this.ourApp.assets.createMaterial('consolemat', {
 			color: new MRE.Color3(1.0,1.0,1.0) //TODO move material over to app
 		});
 		await consoleMat.created;
 
-		this.ourApp.ourConsole.logMessage("Creating Reset Button ");
+		this.ourApp.ourConsole.logMessage("STAFF: Creating Clear Button ");
 		const button = new Button(this.ourApp);
-		await button.createAsync(new MRE.Vector3(0.0, 0, 0.5), this.staffGrabber.getGUID(), "Clear", "Clear",
+		await button.createAsync(new MRE.Vector3(0.0, 0, 0.5), this.ourGrabber.getGUID(), "Clear", "Clear",
 			false, this.doClear.bind(this),0.4,0.4);
 		button.doVisualUpdates=false;
 
 
 		this.staffBackground = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
-				parentId: this.staffGrabber.getGUID(),
+				parentId: this.ourGrabber.getGUID(),
 				name: "staffBackground",
 				appearance: {
 					meshId: this.ourApp.boxMesh.id,
@@ -280,8 +278,8 @@ export default class Staff {
 				const penPos = buttonData.targetedPoints[0].localSpacePoint;
 				const posVector3 = new MRE.Vector3(penPos.x, penPos.y, penPos.z);
 
-				this.ourApp.ourConsole.logMessage("user pressed on staff at: " + posVector3);
-				this.ourApp.ourConsole.logMessage("number of points: " + buttonData.targetedPoints.length);
+				//this.ourApp.ourConsole.logMessage("user pressed on staff at: " + posVector3);
+				//this.ourApp.ourConsole.logMessage("number of points: " + buttonData.targetedPoints.length);
 
 				if(!this.isDrawing){
 					this.drawStart(posVector3);
@@ -295,20 +293,20 @@ export default class Staff {
 
 				if (this.isDrawing) {
 					if (this.drawingUser === user) {
-						this.ourApp.ourConsole.logMessage("user is holding ");
-						this.ourApp.ourConsole.logMessage("number of points: " + buttonData.targetedPoints.length);
+						//this.ourApp.ourConsole.logMessage("user is holding ");
+						//this.ourApp.ourConsole.logMessage("number of points: " + buttonData.targetedPoints.length);
 
 						for (const point of buttonData.targetedPoints) {
 							const penPos = point.localSpacePoint;
 							const posVector3 = new MRE.Vector3(penPos.x, penPos.y, penPos.z);
 							posVector3.y = this.drawPreviousPos.y; //hack to fix MRE bug
-							this.ourApp.ourConsole.logMessage("point: " + posVector3);
-							this.ourApp.ourConsole.logMessage("prev: " + this.drawPreviousPos);
+							//this.ourApp.ourConsole.logMessage("point: " + posVector3);
+							//this.ourApp.ourConsole.logMessage("prev: " + this.drawPreviousPos);
 
 							const dist = posVector3.subtract(this.drawPreviousPos).length()
 							if (dist > this.drawThreshold) {
-								this.ourApp.ourConsole.logMessage("pen dist: " + dist +
-									" is greater then threshold: " + this.drawThreshold);
+								//this.ourApp.ourConsole.logMessage("pen dist: " + dist +
+								//	" is greater then threshold: " + this.drawThreshold);
 								this.drawSegment(this.drawPreviousPos, posVector3);
 								this.drawPreviousPos = posVector3;
 							}
@@ -323,7 +321,7 @@ export default class Staff {
 			if (this.ourApp.ourUsers.isAuthorized(user)) {
 				const penPos = buttonData.targetedPoints[0].localSpacePoint;
 				const posVector3 = new MRE.Vector3(penPos.x, penPos.y, penPos.z);
-				this.ourApp.ourConsole.logMessage("user released on staff at: " + posVector3);
+				//this.ourApp.ourConsole.logMessage("user released on staff at: " + posVector3);
 				posVector3.y = this.drawPreviousPos.y; //hack to fix MRE bug
 
 				if (this.isDrawing) {
@@ -340,7 +338,7 @@ export default class Staff {
 			if (this.ourApp.ourUsers.isAuthorized(user)) {
 				const penPos = buttonData.targetedPoints[0].localSpacePoint;
 				const posVector3 = new MRE.Vector3(penPos.x, penPos.y, penPos.z);
-				this.ourApp.ourConsole.logMessage("user hover has ended at: " + posVector3);
+				//this.ourApp.ourConsole.logMessage("user hover has ended at: " + posVector3);
 
 				if (this.isDrawing) {
 					if (this.drawingUser === user) {
@@ -368,7 +366,7 @@ export default class Staff {
 
 			const staffLine = MRE.Actor.Create(this.ourApp.context, {
 				actor: {
-					parentId: this.staffGrabber.getGUID(),
+					parentId: this.ourGrabber.getGUID(),
 					name: "staffLine",
 					appearance: {
 						meshId: this.ourApp.boxMesh.id,
@@ -399,7 +397,7 @@ export default class Staff {
 			this.noteMaterials.push(ourMat);
 		}
 
-		this.ourApp.ourConsole.logMessage("completed all staff object creation");
+		this.ourApp.ourConsole.logMessage("STAFF: completed all staff object creation");
 	}
 
 	private spawnParticleEffect(pos: MRE.Vector3, scale: number, colorIndex: number) {
@@ -408,12 +406,12 @@ export default class Staff {
 		}
 		const particleScale=scale*1.0;
 
-		this.ourApp.ourConsole.logMessage("creating particle at: " + pos + " with scale: " + scale);
+		this.ourApp.ourConsole.logMessage("STAFF: creating particle at: " + pos + " with scale: " + scale);
 		const particleActor = MRE.Actor.CreateFromLibrary(this.ourApp.context, {
 			resourceId: this.particleEffects[colorIndex],
 			actor: {
 				name: 'particle burst',
-				parentId: this.staffGrabber.getGUID(),
+				parentId: this.ourGrabber.getGUID(),
 				transform: {
 					local: {
 						position: pos,
@@ -423,7 +421,7 @@ export default class Staff {
 			}
 		});
 		setTimeout(() => {
-			this.ourApp.ourConsole.logMessage("3 seconds has expired. deleting particle effect");
+			this.ourApp.ourConsole.logMessage("STAFF: 3 seconds has expired. deleting particle effect");
 			particleActor.destroy();
 		}, 3000);
 	}
@@ -469,6 +467,7 @@ export default class Staff {
 	}
 
 	public doClear() {
+		this.ourApp.ourConsole.logMessage("STAFF: clearing staff");
 		//clear previous notes
 		for (const oldNote of this.activeNotes) {
 			this.destroyNote(oldNote, false); //will just clear later
@@ -481,8 +480,18 @@ export default class Staff {
 		this.staffRootTime = -1;
 	}
 
-	public receiveNote(note: number, vel: number) {
-		this.ourApp.ourConsole.logMessage("trying to spawn staff note for: " + note);
+	public receiveData(data: number[]){
+		if(data.length>1){
+			this.receiveNote(data[0],data[1]);
+		}
+	}
+
+	private receiveNote(note: number, vel: number) {
+		if(vel===0){ //dont do anything for note off
+			return;
+		}
+
+		this.ourApp.ourConsole.logMessage("STAFF: trying to spawn staff note for: " + note);
 		//const octave = Math.floor(note / 12);		
 
 		if(this.staffRootTime===-1){
@@ -493,23 +502,25 @@ export default class Staff {
 
 		if(!this.noteZpos.has(note)){
 			if(note<this.staffMidi[0]){
-				this.ourApp.ourConsole.logMessage("note is lower then staff, need 8VB support!");
+				this.ourApp.ourConsole.logMessage("STAFF: note is lower then staff, need 8VB support!");
 				return;
 			}
 			if(note>this.staffMidi[this.staffMidi.length-1]){
-				this.ourApp.ourConsole.logMessage("note is high then staff, need 8VA support!");
+				this.ourApp.ourConsole.logMessage("STAFF: note is high then staff, need 8VA support!");
 				return;
 			}
 
-			this.ourApp.ourConsole.logMessage("note must be accidental");
+			//this.ourApp.ourConsole.logMessage("note must be accidental");
 			isAccidental=true;
 		}
 
 		let timeDiffSeconds = (Date.now() - this.staffRootTime) / 1000.0;
-		if (timeDiffSeconds > this.staffTime) { //TODO: make this pickable from a GUI
-			this.doClear();
-			timeDiffSeconds = 0;
+		//this.ourApp.ourConsole.logMessage("note time: " + timeDiffSeconds);
 
+		if (timeDiffSeconds > this.staffTime) { 
+			this.doClear();
+			this.staffRootTime=Date.now();
+			timeDiffSeconds = 0;
 		}
 
 		const xPos=(timeDiffSeconds/this.staffTime)*this.staffWidth*0.9;
@@ -540,14 +551,14 @@ export default class Staff {
 					const noteDist = Math.abs(existingNote.pos.x - spawnPos.x);
 					if (noteDist < (scale*0.9)) {
 						spawnPos.x = (existingNote.pos.x+(scale*0.9));
-						this.ourApp.ourConsole.logMessage("notes are too close, doing typesetting adjustment");
+						//this.ourApp.ourConsole.logMessage("notes are too close, doing typesetting adjustment");
 						break; //only ever do one adjustment
 					}
 				}
 			}
 		}
 
-		this.ourApp.ourConsole.logMessage("going to create note at pos: " + spawnPos);
+		//this.ourApp.ourConsole.logMessage("going to create note: " + note + " at pos: " + spawnPos);
 
 		const notAdjustedNoteNum=note % 12;
 		const noteNum = adjustedNote % 12;
@@ -561,20 +572,20 @@ export default class Staff {
 				const sharpPos = spawnPos.clone();
 				sharpPos.x -= scale * 1.0;
 				sharpPos.y += scale * 0.1;
-				ourSharp.create(sharpPos, this.staffGrabber.getGUID(), scale, this.noteMaterials[noteNum].id);
+				ourSharp.create(sharpPos, this.ourGrabber.getGUID(), scale, this.noteMaterials[noteNum].id);
 				ourNote.sharp = ourSharp;
 			} else {
 				const ourFlat = new StaffFlat(this.ourApp, this);
 				const flatPos = spawnPos.clone();
 				flatPos.x -= scale * 0.85;
 				flatPos.y += scale * 0.1;
-				ourFlat.create(flatPos, this.staffGrabber.getGUID(), scale, this.noteMaterials[noteNum].id);
+				ourFlat.create(flatPos, this.ourGrabber.getGUID(), scale, this.noteMaterials[noteNum].id);
 				ourNote.flat = ourFlat;
 			}
 		}
 
 		ourNote.actor.collider.onTrigger("trigger-enter", (otherActor: MRE.Actor) => {
-			this.ourApp.ourConsole.logMessage("trigger enter on staff note!");
+			//.ourApp.ourConsole.logMessage("trigger enter on staff note!");
 
 			if (otherActor.name.includes('SpawnerUserHand')) { //note touches hand
 				const guid = otherActor.name.substr(16);
@@ -641,7 +652,7 @@ export default class Staff {
 		const noteActor = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
 				name: 'sphere',
-				parentId: this.staffGrabber.getGUID(),
+				parentId: this.ourGrabber.getGUID(),
 				transform: {
 					local: {
 						position: pos,
@@ -681,7 +692,7 @@ export default class Staff {
 
 			bonusLineActor = MRE.Actor.Create(this.ourApp.context, {
 				actor: {
-					parentId: this.staffGrabber.getGUID(),
+					parentId: this.ourGrabber.getGUID(),
 					name: "staffLine",
 					appearance: {
 						meshId: this.ourApp.boxMesh.id,
@@ -714,7 +725,7 @@ export default class Staff {
 			pos2.z=z;
 			bonusLineActor2 = MRE.Actor.Create(this.ourApp.context, {
 				actor: {
-					parentId: this.staffGrabber.getGUID(),
+					parentId: this.ourGrabber.getGUID(),
 					name: "staffLine",
 					appearance: {
 						meshId: this.ourApp.boxMesh.id,

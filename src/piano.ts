@@ -9,8 +9,7 @@ import App from './app';
 import GrabButton from './grabbutton';
 import WavPlayer from './wavplayer';
 import Staff from './staff';
-import ButtonMulti from './button_multi';
-import { listenerCount } from 'process';
+import MusicModule from './music_module';
 
 enum AuthType {
 	Moderators = 0,
@@ -40,7 +39,7 @@ enum NoteNameMode {
 	note2: number;
 }
 
-export default class Piano {
+export default class Piano extends MusicModule{
 	public ourInteractionAuth=AuthType.All;
 	public authorizedUser: MRE.User;
 
@@ -51,9 +50,7 @@ export default class Piano {
 	private ourKeyColliderPositions: Map<number,MRE.Vector3>=new Map(); 
 
 	public keyboardParent: MRE.Actor;
-	public pianoGrabber: GrabButton=null;
 	public ourWavPlayer: WavPlayer;
-	public ourStaff: Staff;
 
 	public keyLowest=36;
 	public keyHighest=85;
@@ -109,6 +106,16 @@ export default class Piano {
 
 	private keyLocations: Map<number,MRE.Vector3>=new Map();
 
+	constructor(protected ourApp: App) {
+		super(ourApp);
+		this.whiteKeyMaterial = this.ourApp.assets.createMaterial('cubemat', {
+			color: new MRE.Color4(1, 1, 1)
+		});
+		this.blackKeyMaterial = this.ourApp.assets.createMaterial('cubemat', {
+			color: new MRE.Color4(0, 0, 0)
+		});
+	}
+
 	public setScale(scale: number){
 		this.pianoScale=scale;
 		this.keyboardParent.transform.local.scale=new MRE.Vector3(this.pianoScale, this.pianoScale, this.pianoScale);
@@ -138,21 +145,12 @@ export default class Piano {
 	public setFancyKeyColor(midiNote: number) {
 		const note = midiNote % 12;
 
-		if (this.ourStaff) {
-			const materialID = this.ourStaff.noteMaterials[note].id;
+		if (this.ourApp.ourStaff) {
+			const materialID = this.ourApp.ourStaff.noteMaterials[note].id;
 			if (this.ourKeys.has(midiNote)) {
 				this.ourKeys.get(midiNote).appearance.materialId = materialID;
 			}
 		}
-	}
-
-	constructor(private ourApp: App) {
-		this.whiteKeyMaterial = this.ourApp.assets.createMaterial('cubemat', {
-			color: new MRE.Color4(1, 1, 1)
-		});
-		this.blackKeyMaterial = this.ourApp.assets.createMaterial('cubemat', {
-			color: new MRE.Color4(0, 0, 0)
-		});
 	}
 
 	private isAuthorized(user: MRE.User): boolean{
@@ -179,7 +177,7 @@ export default class Piano {
 		this.keyLocations.clear();
 
 		this.keyboardParent.destroy();
-		//this.pianoGrabber.destroy();
+		//this.ourGrabber.destroy();
 	}
 
 	private computeKeyPositionX(i: number): number{
@@ -214,18 +212,17 @@ export default class Piano {
 		await blackKeyMaterial.created;
 
 		
-		if(!this.pianoGrabber){
-			this.pianoGrabber=new GrabButton(this.ourApp);
-			this.pianoGrabber.create(pos,rot);
+		if(!this.ourGrabber){
+			this.createGrabber(pos,rot);
 		}else{
-			this.pianoGrabber.setPos(pos);
-			this.pianoGrabber.setRot(rot);
+			this.ourGrabber.setPos(pos);
+			this.ourGrabber.setRot(rot);
 		}
 		
 		this.keyboardParent = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
 				name: 'keyboard_parent',
-				parentId: this.pianoGrabber.getGUID(),
+				parentId: this.ourGrabber.getGUID(),
 				transform: {
 					local: {
 						position: new MRE.Vector3(-0.5, 0, 0),
@@ -315,11 +312,7 @@ export default class Piano {
 					//this.ourApp.ourConsole.logMessage("  guid is: " + guid);
 
 					if (this.ourInteractionAuth === AuthType.All || this.ourApp.ourUsers.isAuthorizedString(guid)) {
-						this.keyPressed(i,127);
-
-						if (this.ourStaff) {
-							this.ourStaff.receiveNote(i, 127);
-						}
+						this.keyPressed(i,100);						
 					}
 
 				} else {
@@ -349,11 +342,7 @@ export default class Piano {
 				if (this.isAuthorized(user)) { 
 
 					this.ourApp.ourConsole.logMessage("user clicked on piano note!");
-					this.keyPressed(i,127);
-
-					if (this.ourStaff) {
-						this.ourStaff.receiveNote(i, 127);
-					}
+					this.keyPressed(i,100);
 				}
 			});
 			buttonBehavior.onButton("released", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
@@ -574,16 +563,30 @@ export default class Piano {
 		this.activeIntervals.push(ourInterval);
 	}
 
-	private getSharpsMode(){
+	private getSharpsMode(){ //TODO sharp mode should really be pulled out into a global setting
 		let doSharpsComputed = this.doSharps;
-		if (this.ourStaff) {
-			doSharpsComputed = this.ourStaff.doSharps;
+		if (this.ourApp.ourStaff) {
+			doSharpsComputed = this.ourApp.ourStaff.doSharps;
 		}
 		return doSharpsComputed;
 	}
 
+	public receiveData(data: number[]) {
+		if (data.length > 1) {
+			if (data[1] > 0) {
+				this.keyPressed(data[0], data[1]);
+			} else {
+				this.keyReleased(data[0]);
+			}
+		}
+	}
 
 	public keyPressed(note: number, vel: number) {
+		//this.ourApp.ourConsole.logMessage("piano received note ON message! note: " + note);
+
+		const message=[note,vel];
+		this.sendData(message);
+
 		if(!this.ourKeys.has(note) || (!this.keyLocations.has(note))){
 			return;
 		}
@@ -633,7 +636,7 @@ export default class Piano {
 				notePosition.x += 0.016;
 			}
 
-			this.ourApp.ourConsole.logMessage("Creating note name: " + noteName + " at pos: " + notePosition);
+			//this.ourApp.ourConsole.logMessage("Creating note name: " + noteName + " at pos: " + notePosition);
 
 			const noteNameActor = MRE.Actor.Create(this.ourApp.context, {
 				actor: {
@@ -732,6 +735,11 @@ export default class Piano {
 	}
 
 	public keyReleased(note: number) {
+		//this.ourApp.ourConsole.logMessage("piano received note OFF message! note: " + note);
+
+		const message=[note,0];
+		this.sendData(message)
+
 		if(!this.ourKeys.has(note)){
 			//this.ourApp.ourConsole.logMessage("ERROR: note is outside the range of our piano");
 			return;

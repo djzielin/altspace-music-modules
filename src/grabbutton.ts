@@ -51,11 +51,19 @@ export default class GrabButton {
 		}
 	}
 
+	public setGrabReleaseCallback(callback: () => any) {
+
+		this.buttonActor.onGrab("end", (user: MRE.User) => {
+			setTimeout(() => { callback() }, 1000); //wait a second so the pos is accurate
+		});
+
+	}
+
 	public getGUID(): MRE.Guid {
 		return this.buttonActor.id;
 	}
 
-	public getPos(): MRE.Vector3{
+	public getPos(): MRE.Vector3 {
 		return this.buttonActor.transform.local.position;
 	}
 	public getRot(): MRE.Quaternion{
@@ -89,7 +97,7 @@ export default class GrabButton {
 
 		if(this.unLocked){
 			this.buttonActor.grabbable=true;
-		}
+		}		
 
 		this.lockButton=new Button(this.ourApp);
 		this.lockButton.createAsync(new MRE.Vector3(0.0,0.0,-0.25),this.buttonActor.id,"unlocked","locked",
