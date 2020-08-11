@@ -581,6 +581,8 @@ export default class Piano extends MusicModule{
 		}
 	}
 
+	
+
 	public keyPressed(note: number, vel: number) {
 		//this.ourApp.ourConsole.logMessage("piano received note ON message! note: " + note);
 
@@ -597,9 +599,21 @@ export default class Piano extends MusicModule{
 		newPos.y-=0.01;
 
 		this.ourKeys.get(note).transform.local.position = newPos;
-			
-		if(this.ourWavPlayer){
-			this.ourWavPlayer.playSound(note,vel,new MRE.Vector3(0,0,0)); //TODO get pos correct
+
+		if (this.ourWavPlayer) {
+			const mKeyboard = MRE.Matrix.Compose(
+				this.keyboardParent.transform.local.scale,
+				this.keyboardParent.transform.local.rotation,
+				this.keyboardParent.transform.local.position);
+
+			const mPoint = MRE.Matrix.Compose(
+				new MRE.Vector3(1, 1, 1),
+				MRE.Quaternion.Identity(),
+				this.keyLocations.get(note));
+
+			const transformedPoint = mPoint.multiply(mKeyboard);
+
+			this.ourWavPlayer.playSound(note,vel,this.getWorldPosFromMatrix(transformedPoint)); 
 		}
 
 		this.setFancyKeyColor(note);

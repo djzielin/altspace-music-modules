@@ -433,15 +433,16 @@ export default class App {
 
 		this.applyPatch(sendPatchPiano,receivePatchStaff);
 
-		this.ourSequencer = new Sequencer(this);
+		/*this.ourSequencer = new Sequencer(this);
 		await this.ourSequencer.createAsyncItems(new MRE.Vector3(-2, 2.0, 0.0),
 			MRE.Quaternion.FromEulerAngles(-45 * Math.PI / 180, 0, 0));
 
 		this.ourSequencerGui = new SequencerGui(this, this.ourSequencer);
 		await this.ourSequencerGui.createAsync(new MRE.Vector3(xPos, 0.1, -2), "Sequencer")
 		this.allGUIs.push(this.ourSequencerGui);
+		*/
 
-		const sendPatchSequencer = {
+	/*	const sendPatchSequencer = {
 			module: this.ourSequencer,
 			messageType: "midi",
 			isSender: true,
@@ -457,7 +458,7 @@ export default class App {
 			button: this.ourPianoGui.receiveButton
 		}
 
-		this.applyPatch(sendPatchSequencer,receivePatchPiano);
+		this.applyPatch(sendPatchSequencer,receivePatchPiano);*/
 
 		this.ourConsole.logMessage("Waiting for all patch lines to be created");
 

@@ -15,6 +15,28 @@ export default class MusicModule {
 		
 	}
 
+	public getWorldPosFromMatrix(mPoint: MRE.Matrix) {
+		const mGrabber = MRE.Matrix.Compose(new MRE.Vector3(1, 1, 1), 
+			this.ourGrabber.getRot(), this.ourGrabber.getPos());
+		
+		const transformedPoint = mPoint.multiply(mGrabber);
+		const transformedPointPosition = transformedPoint.getTranslation();
+
+		return transformedPointPosition;
+	}
+
+	public getWorldPos(pos: MRE.Vector3) {
+		const mGrabber = MRE.Matrix.Compose(new MRE.Vector3(1, 1, 1), 
+			this.ourGrabber.getRot(), this.ourGrabber.getPos());
+		const mPoint = MRE.Matrix.Compose(new MRE.Vector3(1, 1, 1), 
+			MRE.Quaternion.Identity(), pos);
+
+		const transformedPoint = mPoint.multiply(mGrabber);
+		const transformedPointPosition = transformedPoint.getTranslation();
+
+		return transformedPointPosition;
+	}
+
 	public hide() {
 		this.ourGrabber.hide();
 	}
