@@ -77,18 +77,18 @@ export default class Staff extends MusicModule {
 		new MRE.Color4(145 / 255, 0 / 255, 190 / 255)]; //B
 
 	private particleEffects: string [] = [
-		"artifact:1520777605018550624", //C
-		"artifact:1520777605018550624",
-		"artifact:1520777597938565470", //D
-		"artifact:1520777597938565470",
-		"artifact:1520777583518548308", //E
-		"artifact:1520777576572780882", //F
-		"artifact:1520777576572780882",
-		"artifact:1520777562286981452", //G
-		"artifact:1520777562286981452",
-		"artifact:1520777568838484302", //A
-		"artifact:1520777568838484302",
-		"artifact:1520777590866968922"  //B
+		"artifact:1537524726837019514", //C
+		"artifact:1537524726837019514",
+		"artifact:1537524692359840625", //D
+		"artifact:1537524692359840625",
+		"artifact:1537524704162612084", //E
+		"artifact:1537524714388325238", //F
+		"artifact:1537524714388325238",
+		"artifact:1537524658411144041", //G
+		"artifact:1537524658411144041",
+		"artifact:1537524667848328043", //A
+		"artifact:1537524667848328043",
+		"artifact:1537524680699675501"  //B
 	]
 
 	private staffMidi: number[]=[36,38,40,41,43,45,47,48,50,52,53,55,57,59,
@@ -594,7 +594,7 @@ export default class Staff extends MusicModule {
 
 				if (this.ourInteractionAuth === AuthType.All || this.ourApp.ourUsers.isAuthorizedString(guid)) {
 					if (this.ourWavPlayer) {
-						this.ourWavPlayer.playSound(note, vel, spawnPos);
+						this.ourWavPlayer.playSound(note, vel, this.getWorldPos(spawnPos));
 					}
 					this.spawnParticleEffect(spawnPos, scale, noteNum);
 					this.ourApp.ourSender.send(`["/NoteOn",${ourNote.note}]`);

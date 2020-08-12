@@ -150,18 +150,18 @@ export default class Users {
 				{
 					meshId: this.ourApp.boxMesh.id,
 					enabled: true
+				},
+				collider: {
+					geometry: {
+						shape: MRE.ColliderType.Box
+					},
+					isTrigger: false
+				},
+				rigidBody: {
+					enabled: true,
+					isKinematic: true
 				}
 			}
-		});
-
-		hand.setCollider(MRE.ColliderType.Box, false);
-		hand.enableRigidBody({
-			enabled: true,
-			isKinematic: true,
-			useGravity: false//,
-			//collisionDetectionMode: MRE.CollisionDetectionMode.Discrete
-			//collisionDetectionMode: MRE.CollisionDetectionMode.Continuous
-			//collisionDetectionMode: MRE.CollisionDetectionMode.ContinuousDynamic
 		});
 
 		//hand.subscribe('transform');

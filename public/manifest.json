@@ -1,0 +1,8 @@
+{
+	"name": "altspace music modules",
+	"description": "various music generators and displayers",
+	"author": "djzielin",
+	"license": "MIT",
+	"repositoryUrl": "https://github.com/djzielin/altspace-spawner",
+	"optionalPermissions": ["user-interaction"]
+}
