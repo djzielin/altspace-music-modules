@@ -149,7 +149,7 @@ export default class Users {
 				appearance:
 				{
 					meshId: this.ourApp.boxMesh.id,
-					enabled: true
+					enabled: false
 				},
 				collider: {
 					geometry: {

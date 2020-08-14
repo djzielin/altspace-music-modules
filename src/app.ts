@@ -394,13 +394,11 @@ export default class App {
 
 		this.ourConsole.logMessage("creating piano keys");
 		this.ourPiano = new Piano(this);
-		this.ourPiano.ourWavPlayer = this.ourWavPlayer;
 		await this.ourPiano.createAllKeys(new MRE.Vector3(2, 1, 0),
 			MRE.Quaternion.FromEulerAngles(-30 * Math.PI / 180, 0, 0));	
 
 		this.ourConsole.logMessage("Loading staff items");
 		this.ourStaff = new Staff(this);
-		this.ourStaff.ourWavPlayer = this.ourWavPlayer;
 		await this.ourStaff.createAsyncItems(new MRE.Vector3(2, 2, 0.5),
 			MRE.Quaternion.FromEulerAngles(-90 * Math.PI / 180, 0, 0));			
 
@@ -430,8 +428,25 @@ export default class App {
 			gui: this.ourStaffGui,
 			button: this.ourStaffGui.receiveButton
 		}
-
 		this.applyPatch(sendPatchPiano,receivePatchStaff);
+
+		const receiveWavPlayer = {
+			module: this.ourWavPlayer,
+			messageType: "midi",
+			isSender: false,
+			gui: this.ourWavPlayerGui,
+			button: this.ourWavPlayerGui.receiveButton
+		}
+		this.applyPatch(sendPatchPiano,receiveWavPlayer);
+
+		const sendPatchStaff = {
+			module: this.ourStaff,
+			messageType: "midi",
+			isSender: true,
+			gui: this.ourStaffGui,
+			button: this.ourStaffGui.sendButton
+		}
+		this.applyPatch(sendPatchStaff,receiveWavPlayer);
 
 		/*this.ourSequencer = new Sequencer(this);
 		await this.ourSequencer.createAsyncItems(new MRE.Vector3(-2, 2.0, 0.0),

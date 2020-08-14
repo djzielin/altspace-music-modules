@@ -57,6 +57,10 @@ export default class PianoGui extends GuiPanel{
 	public recvMidiPatch(b: boolean){
 		this.ourApp.patcherClickEvent(this.ourPiano,"midi",false,this,this.receiveButton);
 	}
+
+	public grabRelease(){
+		this.ourApp.updatePatchLines(this);
+	}
 	
 	public doReset(b: boolean): void {
 		const pos = this.ourPiano.ourGrabber.getPos();
@@ -67,10 +71,6 @@ export default class PianoGui extends GuiPanel{
 			this.ourApp.ourConsole.logMessage("piano reset complete!");
 			this.resetButton.setValue(false);
 		});
-	}
-
-	public grabRelease(){
-		this.ourApp.updatePatchLines(this);
 	}
 
 	public async createAsync(pos: MRE.Vector3, name: string) {
@@ -128,18 +128,18 @@ export default class PianoGui extends GuiPanel{
 		await intervalButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
 			this.guiBackground.id, intervalLabels ,
 			this.ourPiano.intervalMode, this.setIntervals.bind(this));
-		zPos -= 0.15;		
-
-		this.sendButton = new Button(this.ourApp);
-		await this.sendButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
-			this.guiBackground.id, "SEND MIDI", "SEND MIDI",
-			true, this.sendMidiPatcher.bind(this));
-		zPos -= 0.15;
+		zPos -= 0.15;			
 
 		this.receiveButton = new Button(this.ourApp);
 		await this.receiveButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
 			this.guiBackground.id, "RECV MIDI", "RECV MIDI",
 			true, this.recvMidiPatch.bind(this));
+		zPos -= 0.15;
+
+		this.sendButton = new Button(this.ourApp);
+		await this.sendButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
+			this.guiBackground.id, "SEND MIDI", "SEND MIDI",
+			true, this.sendMidiPatcher.bind(this));
 		zPos -= 0.15;
 
 		this.guiGrabber.setGrabReleaseCallback(this.grabRelease.bind(this));

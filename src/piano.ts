@@ -7,7 +7,7 @@ import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 //import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 import App from './app';
 import GrabButton from './grabbutton';
-import WavPlayer from './wavplayer';
+//import WavPlayer from './wavplayer';
 import Staff from './staff';
 import MusicModule from './music_module';
 
@@ -50,7 +50,7 @@ export default class Piano extends MusicModule{
 	private ourKeyColliderPositions: Map<number,MRE.Vector3>=new Map(); 
 
 	public keyboardParent: MRE.Actor;
-	public ourWavPlayer: WavPlayer;
+	//public ourWavPlayer: WavPlayer;
 
 	public keyLowest=36;
 	public keyHighest=85;
@@ -586,10 +586,7 @@ export default class Piano extends MusicModule{
 	public keyPressed(note: number, vel: number) {
 		//this.ourApp.ourConsole.logMessage("piano received note ON message! note: " + note);
 
-		const message=[note,vel];
-		this.sendData(message);
-
-		if(!this.ourKeys.has(note) || (!this.keyLocations.has(note))){
+		if (!this.ourKeys.has(note) || (!this.keyLocations.has(note))){
 			return;
 		}
 
@@ -600,21 +597,21 @@ export default class Piano extends MusicModule{
 
 		this.ourKeys.get(note).transform.local.position = newPos;
 
-		if (this.ourWavPlayer) {
-			const mKeyboard = MRE.Matrix.Compose(
-				this.keyboardParent.transform.local.scale,
-				this.keyboardParent.transform.local.rotation,
-				this.keyboardParent.transform.local.position);
+		const mKeyboard = MRE.Matrix.Compose(
+			this.keyboardParent.transform.local.scale,
+			this.keyboardParent.transform.local.rotation,
+			this.keyboardParent.transform.local.position);
 
-			const mPoint = MRE.Matrix.Compose(
-				new MRE.Vector3(1, 1, 1),
-				MRE.Quaternion.Identity(),
-				this.keyLocations.get(note));
+		const mPoint = MRE.Matrix.Compose(
+			new MRE.Vector3(1, 1, 1),
+			MRE.Quaternion.Identity(),
+			this.keyLocations.get(note));
 
-			const transformedPoint = mPoint.multiply(mKeyboard);
+		const transformedPoint = mPoint.multiply(mKeyboard);
+		const posInWorld = this.getWorldPosFromMatrix(transformedPoint);
 
-			this.ourWavPlayer.playSound(note,vel,this.getWorldPosFromMatrix(transformedPoint)); 
-		}
+		const message = [note, vel, posInWorld.x, posInWorld.y, posInWorld.z];
+		this.sendData(message);
 
 		this.setFancyKeyColor(note);
 
@@ -751,9 +748,6 @@ export default class Piano extends MusicModule{
 	public keyReleased(note: number) {
 		//this.ourApp.ourConsole.logMessage("piano received note OFF message! note: " + note);
 
-		const message=[note,0];
-		this.sendData(message)
-
 		if(!this.ourKeys.has(note)){
 			//this.ourApp.ourConsole.logMessage("ERROR: note is outside the range of our piano");
 			return;
@@ -766,12 +760,11 @@ export default class Piano extends MusicModule{
 
 		//const noteNum = note % 12;
 
+		const message=[note,0];
+		this.sendData(message)
+		
 		const newPos = this.keyLocations.get(note).clone();
 		this.ourKeys.get(note).transform.local.position = newPos;
-
-		if(this.ourWavPlayer){
-			this.ourWavPlayer.stopSound(note);
-		}	
 
 		if(this.ourNoteNames.has(note)){
 			const noteName=this.ourNoteNames.get(note);

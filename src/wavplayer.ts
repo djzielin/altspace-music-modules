@@ -7,6 +7,7 @@ import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 //import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 import App from './app';
 import fs from 'fs';
+import MusicModule from './music_module';
 
 interface WavProperties{
 	timeStamp: number;
@@ -16,7 +17,7 @@ interface WavProperties{
 	vol: number;
 }
 
-export default class WavPlayer {
+export default class WavPlayer extends MusicModule{
 	private ourSounds: Map<number, MRE.Sound> = new Map();
 
 	public playingWavs: WavProperties[]=[]; 
@@ -26,7 +27,7 @@ export default class WavPlayer {
 	public cullTime=5000;
 	public doPedal=true;
 
-	public audioRange=50;
+	public audioRange=3;
 
 	private lowestNote=-1;
 	private highestNote=-1;
@@ -41,7 +42,9 @@ export default class WavPlayer {
 		}
 	}	
 
-	constructor(private ourApp: App) {
+	constructor(protected ourApp: App) {
+		super(ourApp);
+
 		setInterval(() => { //cull bubbles that have been around too long
 			const currentTime = Date.now();
 			const listOfPlayingWavsToDelete: WavProperties[] = [];
@@ -98,9 +101,35 @@ export default class WavPlayer {
 			this.ourSounds.set(i,newSound);
 			this.ourApp.ourConsole.logMessage(" success!");
 		}
-	}	
+	}
 
-	public playSound(note: number, vel: number, pos: MRE.Vector3) {
+	public receiveData(data: number[]) {
+		if (data.length < 2) {
+			return;
+		}
+
+		const note=data[0];
+		const vel=data[1];
+
+		let x=0;
+		let y=0;
+		let z=0;
+		
+		if (vel === 0) {
+			this.stopSound(note);
+			return;
+		}
+		
+		if (data.length>=5) {
+			x=data[2];
+			y=data[3];
+			z=data[4];
+		}
+		
+		this.playSound(note, vel, new MRE.Vector3(x,y,z));
+	}
+
+	private playSound(note: number, vel: number, pos: MRE.Vector3) {
 		if (!this.ourSounds.has(note)) {
 			this.ourApp.ourConsole.logMessage("cant play midi note: " +
 				note + " as wav set doesnt contain a ogg for it!");
@@ -160,7 +189,7 @@ export default class WavPlayer {
 		this.playingWavs.push(ourWave);		
 	}
 	
-	public stopSound(note: number) {
+	private stopSound(note: number) {
 		if(this.doPedal){
 			return; //let all notes ring out
 		}

@@ -12,6 +12,7 @@ import WavPlayer from './wavplayer';
 
 export default class WavPlayerGui extends GuiPanel{
 	private resetButton: Button=null;
+	public receiveButton: Button=null;
 
 	constructor(protected ourApp: App, private ourWavPlayer: WavPlayer) {
 		super(ourApp);
@@ -38,6 +39,14 @@ export default class WavPlayerGui extends GuiPanel{
 
 	public setDoPedal(b: boolean): void {
 		this.ourWavPlayer.doPedal=b;
+	}
+
+	public recvMidiPatch(b: boolean){
+		this.ourApp.patcherClickEvent(this.ourWavPlayer,"midi",false,this,this.receiveButton);
+	}
+
+	public grabRelease(){
+		this.ourApp.updatePatchLines(this);
 	}
 
 	public async createAsync(pos: MRE.Vector3, name: string) {
@@ -76,5 +85,13 @@ export default class WavPlayerGui extends GuiPanel{
 			this.guiBackground.id, "aud m",
 			this.ourWavPlayer.audioRange, 1.0, this.setAudioRange.bind(this));
 		zPos -= 0.15;
+
+		this.receiveButton = new Button(this.ourApp);
+		await this.receiveButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
+			this.guiBackground.id, "RECV MIDI", "RECV MIDI",
+			true, this.recvMidiPatch.bind(this));
+		zPos -= 0.15;
+
+		this.guiGrabber.setGrabReleaseCallback(this.grabRelease.bind(this));
 	}
 }

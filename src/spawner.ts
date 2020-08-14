@@ -354,7 +354,7 @@ export default class Spawner {
 				
 				const collisionPos=data.contacts[0].point; //ourBubble.actor.transform.app.position
 
-				this.ourWavPlayer.playSound(note,127,collisionPos);
+				//this.ourWavPlayer.playSound(note,127,collisionPos);
 				this.spawnParticleEffect(collisionPos, noteNum);
 				this.ourApp.ourSender.send(`["/NoteOn",${ourBubble.note}]`);
 				

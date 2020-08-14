@@ -12,6 +12,7 @@ import GuiPanel from './gui_panel';
 
 export default class StaffGui extends GuiPanel {
 	public receiveButton: Button = null;
+	public sendButton: Button=null;
 
 	constructor(protected ourApp: App, private ourStaff: Staff) {
 		super(ourApp);
@@ -58,6 +59,10 @@ export default class StaffGui extends GuiPanel {
 	}
 
 	public sendMidiPatcher(b: boolean){
+		this.ourApp.patcherClickEvent(this.ourStaff,"midi",true,this,this.sendButton);
+	}
+
+	public recvMidiPatch(b: boolean){
 		this.ourApp.patcherClickEvent(this.ourStaff,"midi",false,this,this.receiveButton);
 	}
 
@@ -123,6 +128,12 @@ export default class StaffGui extends GuiPanel {
 		this.receiveButton = new Button(this.ourApp);
 		await this.receiveButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
 			this.guiBackground.id, "RECV MIDI", "RECV MIDI",
+			true, this.recvMidiPatch.bind(this));
+		zPos -= 0.15;
+
+		this.sendButton = new Button(this.ourApp);
+		await this.sendButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
+			this.guiBackground.id, "SEND MIDI", "SEND MIDI",
 			true, this.sendMidiPatcher.bind(this));
 		zPos -= 0.15;
 

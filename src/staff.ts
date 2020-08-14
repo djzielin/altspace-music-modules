@@ -6,7 +6,7 @@
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 //import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 import App from './app';
-import WavPlayer from './wavplayer';
+//import WavPlayer from './wavplayer';
 import GrabButton from './grabbutton';
 import StaffSharp from './staffsharp';
 import StaffFlat from './staffflat';
@@ -109,7 +109,7 @@ export default class Staff extends MusicModule {
 	public doParticleEffect=true;
 	public audioRange=50;
 
-	public ourWavPlayer: WavPlayer;
+	//public ourWavPlayer: WavPlayer;
 
 	public staffBackground: MRE.Actor=null;
 	private staffRootTime=-1;
@@ -593,9 +593,10 @@ export default class Staff extends MusicModule {
 				//this.ourApp.ourConsole.logMessage("  guid is: " + guid);
 
 				if (this.ourInteractionAuth === AuthType.All || this.ourApp.ourUsers.isAuthorizedString(guid)) {
-					if (this.ourWavPlayer) {
-						this.ourWavPlayer.playSound(note, vel, this.getWorldPos(spawnPos));
-					}
+					const posInWorld: MRE.Vector3 = this.getWorldPos(spawnPos);
+					const message = [note, vel, posInWorld.x, posInWorld.y, posInWorld.z];
+					this.sendData(message);
+
 					this.spawnParticleEffect(spawnPos, scale, noteNum);
 					this.ourApp.ourSender.send(`["/NoteOn",${ourNote.note}]`);
 				}
