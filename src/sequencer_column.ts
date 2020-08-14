@@ -9,11 +9,21 @@ import GrabButton from './grabbutton';
 import Sequencer from './sequencer';
 
 enum AuthType {
-	Moderators=0,
-	All=1,
-	SpecificUser=2
-  }
+	Moderators = 0,
+	All = 1,
+	SpecificUser = 2
+}
 
+enum NoteOffMode {
+	nextNote = 0,
+	nextCell = 1,
+	anyNoteOn = 2
+}
+
+enum NoteBlankColors {
+	gray = 0,
+	piano = 1
+}
 
 export default class SequencerColumn {
 	public ourInteractionAuth=AuthType.All;
@@ -34,8 +44,10 @@ export default class SequencerColumn {
 	private activeCells: boolean[]=[];
 	private columnParent: MRE.Actor;
 
+	private accidentals = [false, true, false, true, false, false, true, false, true, false, true, false];
+	
 	constructor(protected ourApp: App, private ourSequencer: Sequencer) {
-
+	
 	}
 
 	public async createAsyncItems(height: number, startPos: MRE.Vector3, incAmount: MRE.Vector3, parentID: MRE.Guid) {
@@ -79,7 +91,7 @@ export default class SequencerColumn {
 				.onButton("released", (user: MRE.User) => {
 					if (this.ourSequencer.isAuthorized(user)) {
 						if (this.activeCells[i]) {
-							this.ourCells[i].appearance.materialId = this.ourApp.grayMat.id;
+							this.ourCells[i].appearance.materialId = this.getBlankMaterialID(i);
 							this.activeCells[i]=false;
 
 						} else {
@@ -104,8 +116,42 @@ export default class SequencerColumn {
 			}
 		}
 	}	
+	
+	public computeMidiNote(i: number): number{
+		const note=((this.ourCells.length-1)-i)+this.ourSequencer.baseNote;
+		return note;
+	}
+
+	public getBlankMaterialID(i: number){
+		if(this.ourSequencer.noteBlankColors===NoteBlankColors.gray){
+			return this.ourApp.grayMat.id;
+		}
+		if(this.ourSequencer.noteBlankColors===NoteBlankColors.piano){
+			const midiNote=this.computeMidiNote(i);
+			const pitchClass=midiNote % 12;
+			const isAccidental: boolean=this.accidentals[pitchClass];
+
+			if(isAccidental){
+				return this.ourApp.grayMat.id;
+			} else{
+				return this.ourApp.lightgrayMat.id;
+			}
+		}
+	}
+
+	public updateBlankColor() {
+		for (let i = 0; i < this.ourCells.length; i++) {
+			if (!this.activeCells[i]) {
+				this.ourCells[i].appearance.materialId = this.getBlankMaterialID(i);
+			}
+		}
+	}
 
 	public bumpHeight() {
+		if(this.ourSequencer.noteOffMode===NoteOffMode.nextCell){
+			this.ourSequencer.turnOffActiveNotes();
+		}
+
 		let didNoteOff=false;
 
 		this.columnParent.transform.local.position.y=0.025;
@@ -113,12 +159,17 @@ export default class SequencerColumn {
 		for (let i = 0; i < this.ourCells.length; i++) {
 			const ourCell = this.ourCells[i];
 			if (this.activeCells[i]){
-				if(!didNoteOff){
+				if(this.ourSequencer.noteOffMode===NoteOffMode.anyNoteOn && !didNoteOff){
 					this.ourSequencer.turnOffActiveNotes();
 					didNoteOff=true;
 				}
 				ourCell.transform.local.position.y=0.075;
-				const note=((this.ourCells.length-1)-i)+this.ourSequencer.baseNote;
+				const note=this.computeMidiNote(i);
+
+				if(this.ourSequencer.noteOffMode===NoteOffMode.nextNote){
+					this.ourSequencer.noteOff(note);
+				}
+
 				this.ourSequencer.noteOn(note,100);
 				this.ourSequencer.activeNotes.push(note);
 			} 

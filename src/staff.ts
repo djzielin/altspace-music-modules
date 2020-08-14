@@ -595,7 +595,7 @@ export default class Staff extends MusicModule {
 				if (this.ourInteractionAuth === AuthType.All || this.ourApp.ourUsers.isAuthorizedString(guid)) {
 					const posInWorld: MRE.Vector3 = this.getWorldPos(spawnPos);
 					const message = [note, vel, posInWorld.x, posInWorld.y, posInWorld.z];
-					this.sendData(message);
+					this.sendData(message,"midi");
 
 					this.spawnParticleEffect(spawnPos, scale, noteNum);
 					this.ourApp.ourSender.send(`["/NoteOn",${ourNote.note}]`);

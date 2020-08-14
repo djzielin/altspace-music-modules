@@ -5,11 +5,12 @@
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 import App from './app';
 import GrabButton from './grabbutton';
+import PatchPoint from './patch_point';
 
 export default class MusicModule {
 	public ourGrabber: GrabButton=null;
 
-	public sendDestinations: MusicModule[]=[];
+	public sendDestinations: PatchPoint[]=[];
 
 	constructor(protected ourApp: App) {
 		
@@ -55,16 +56,18 @@ export default class MusicModule {
 
 	}
 
-	public removeSendDestination(module: MusicModule){
-		const index=this.sendDestinations.indexOf(module);
+	public removeSendDestination(patchPoint: PatchPoint){
+		const index=this.sendDestinations.indexOf(patchPoint);
 		if(index>-1){
 			this.sendDestinations.splice(index,1);
 		}
 	}
 
-	public sendData(data: number[]){
-		for(const singleModule of this.sendDestinations){
-			singleModule.receiveData(data);
+	public sendData(data: number[], messageType: string){
+		for(const singlePatch of this.sendDestinations){
+			if(singlePatch.messageType===messageType){
+				singlePatch.module.receiveData(data);
+			}
 		}
 	}
 }

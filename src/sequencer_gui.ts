@@ -15,6 +15,7 @@ export default class SequencerGui extends GuiPanel{
 	private resetButton: Button=null;
 	private sharpsButton: Button=null;
 	public sendButton: Button=null;
+	public volSelector: PlusMinus= null;
 
 	constructor(protected ourApp: App, private ourSequencer: Sequencer) {
 		super(ourApp);
@@ -38,9 +39,30 @@ export default class SequencerGui extends GuiPanel{
 	public setHighestKey(n: number): void {
 		this.ourPiano.keyHighest = n;
 	}
-	public setAudioRange(n: number): void {
-		this.ourPiano.audioRange = n;
-	}*/
+	*/
+	public setVolume(n: number): void {
+		if(n<0){
+			this.ourSequencer.volume = 0;
+			this.volSelector.setValue(0.0);
+			return;
+		}
+		if(n>1.0){
+			this.ourSequencer.volume = 1.0;
+			this.volSelector.setValue(1.0);
+			return;
+		}
+
+		this.ourSequencer.volume = n;
+	}
+
+	public setNoteOffMode(n: number): void {
+		this.ourSequencer.noteOffMode=n;
+	}
+
+	public setNoteBlankColors(n: number): void {
+		this.ourSequencer.noteBlankColors=n;
+		this.ourSequencer.updateBlankColor();
+	}
 
 	public sendMidiPatcher(b: boolean){
 		this.ourApp.patcherClickEvent(this.ourSequencer,"midi",true,this,this.sendButton);
@@ -74,23 +96,32 @@ export default class SequencerGui extends GuiPanel{
 			this.guiBackground.id, "L key",
 			this.ourPiano.keyLowest, 1, this.setLowestKey.bind(this));
 		zPos -= 0.15;
-
-		const highestKeySelector = new PlusMinus(this.ourApp);
-		await highestKeySelector.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
-			this.guiBackground.id, "H key",
-			this.ourPiano.keyHighest, 1, this.setHighestKey.bind(this));
+*/
+		const noteBlankColors: string[] = ["Blank Gray", "Blank Piano"];
+		const noteBlankSelector = new ButtonMulti(this.ourApp);
+		await noteBlankSelector.createAsync(new MRE.Vector3(0, 0.025, zPos),
+			this.guiBackground.id, noteBlankColors,
+			this.ourSequencer.noteBlankColors, this.setNoteBlankColors.bind(this));
 		zPos -= 0.15;
 
-		const noteLabels: string[]=["Names Off","Letter Names","Solfege"];
-		const noteNamesButton = new ButtonMulti(this.ourApp);
-		await noteNamesButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
-			this.guiBackground.id, noteLabels ,
-			this.ourPiano.noteNameMode, this.setNoteNames.bind(this));
-		zPos -= 0.15;*/
+
+		this.volSelector = new PlusMinus(this.ourApp);
+		await this.volSelector.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
+			this.guiBackground.id, "vol",
+			this.ourSequencer.volume, 0.05, this.setVolume.bind(this));
+		zPos -= 0.15;
+
+		const noteOffLabels: string[] = ["Note Off", "Cell Off", "Any Note Off"];
+		const noteOffButton = new ButtonMulti(this.ourApp);
+		await noteOffButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
+			this.guiBackground.id, noteOffLabels,
+			this.ourSequencer.noteOffMode, this.setNoteOffMode.bind(this));
+		zPos -= 0.15;
+
 		const seqPlusMinus = new PlusMinus(this.ourApp);
 		await seqPlusMinus.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
 			this.guiBackground.id, "time",
-			this.ourSequencer.sequencerInterval*0.001, 0.1, this.setIntervalTime.bind(this));
+			this.ourSequencer.sequencerInterval * 0.001, 0.1, this.setIntervalTime.bind(this));
 		zPos -= 0.15;		
 
 		this.sendButton = new Button(this.ourApp);

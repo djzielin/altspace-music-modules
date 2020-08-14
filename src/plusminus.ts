@@ -190,4 +190,9 @@ export default class PlusMinus {
 		this.ourApp.ourConsole.logMessage(this.ourLabel + " is now: " + this.ourValue);
 		this.buttonValueDisplay.text.contents= this.ourValue.toFixed(2);
 	}
+
+	public setValue(n: number){
+		this.ourValue=n;
+		this.updateDisplayValue();
+	}
 }

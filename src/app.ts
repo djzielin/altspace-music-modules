@@ -23,18 +23,11 @@ import GuiPanel from './gui_panel';
 import MusicModule from './music_module';
 import Sequencer from './sequencer';
 import SequencerGui from './sequencer_gui';
-
-interface PatchPointProperties{
-	module: MusicModule;
-	messageType: string;
-	isSender: boolean;
-	gui: GuiPanel;
-	button: Button;
-}
+import PatchPoint from './patch_point';
 
 interface PatchProperties{
-	sender: PatchPointProperties;
-	receiver: PatchPointProperties;
+	sender: PatchPoint;
+	receiver: PatchPoint;
 	line: MRE.Actor;
 }
 
@@ -77,6 +70,7 @@ export default class App {
 	public whiteMat: MRE.Material;
 	public blackMat: MRE.Material;
 	public grayMat: MRE.Material;
+	public lightgrayMat: MRE.Material;
 
 	public handMesh: MRE.Mesh = null;
 	public handTexture: MRE.Texture = null;
@@ -87,9 +81,9 @@ export default class App {
 	private receiverCallback: RCallback;
 
 	private ourPatches: PatchProperties[]=[]; //TODO patcher could be its own class
-	private potentialPatchStack: PatchPointProperties[] = [];
+	private potentialPatchStack: PatchPoint[] = [];
 
-	public isPatchPointEqual(patchP1: PatchPointProperties, patchP2: PatchPointProperties){
+	public isPatchPointEqual(patchP1: PatchPoint, patchP2: PatchPoint){
 		if(patchP1.gui!==patchP2.gui){
 			return false;
 		}
@@ -123,7 +117,7 @@ export default class App {
 		return true;
 	}
 
-	public getPatchPointWorldPosition(patchPoint: PatchPointProperties, isSender: boolean): MRE.Vector3{
+	public getPatchPointWorldPosition(patchPoint: PatchPoint, isSender: boolean): MRE.Vector3{
 		const offset=new MRE.Vector3(0.75/2,0.1/2,0);
 		if(!isSender){
 			offset.x=-0.75/2
@@ -160,7 +154,7 @@ export default class App {
 		}
 	}
 
-	public applyPatch(sender: PatchPointProperties, receiver: PatchPointProperties) {
+	public applyPatch(sender: PatchPoint, receiver: PatchPoint) {
 		const newPatch = {
 			sender: sender,
 			receiver: receiver,
@@ -170,7 +164,7 @@ export default class App {
 		for (const existingPatch of this.ourPatches) {
 			if (this.isPatchEqual(existingPatch,newPatch)) { //already exists! so DELETE
 				this.ourConsole.logMessage("  patch already exists. deleting!");
-				sender.module.removeSendDestination(receiver.module);
+				sender.module.removeSendDestination(receiver);
 				if(existingPatch.line){
 					existingPatch.line.destroy();
 				}
@@ -182,7 +176,7 @@ export default class App {
 		}
 
 		this.ourConsole.logMessage("  patch doesn't yet exist. adding!");
-		sender.module.sendDestinations.push(receiver.module);
+		sender.module.sendDestinations.push(receiver);
 
 		if (newPatch.sender.gui && newPatch.receiver.gui) {
 			const pos1 = this.getPatchPointWorldPosition(newPatch.sender, true);
@@ -193,26 +187,26 @@ export default class App {
 		this.ourPatches.push(newPatch);
 	}
 
-	public patcherClickEvent(module: MusicModule, messageType: string, isSender: boolean, 
-			gui: GuiPanel, button: Button) {
+	public patcherClickEvent(module: MusicModule, messageType: string, isSender: boolean,
+		gui: GuiPanel, button: Button) {
+
 		const patchType: string = isSender ? "sender" : "receiver";
-		this.ourConsole.logMessage("received patch point: " + messageType + " " + patchType );
-		
-		const potentialPatchPoint = {
-			module: module,
-			messageType: messageType,
-			isSender: isSender,
-			gui: gui,
-			button: button
-		}
+		this.ourConsole.logMessage("received patch point: " + messageType + " " + patchType);
+
+		const potentialPatchPoint = new PatchPoint();
+		potentialPatchPoint.module = module;
+		potentialPatchPoint.messageType = messageType;
+		potentialPatchPoint.isSender = isSender;
+		potentialPatchPoint.gui = gui;
+		potentialPatchPoint.button= button;		
 
 		this.potentialPatchStack.push(potentialPatchPoint);
 
 		if(this.potentialPatchStack.length===2){ 
 			this.ourConsole.logMessage("  have 2 pending patch points, checking if we have a match!");
 
-			let sender: PatchPointProperties=null;
-			let receiver: PatchPointProperties=null;
+			let sender: PatchPoint=null;
+			let receiver: PatchPoint=null;
 
 			for(const singlePatchPoint of this.potentialPatchStack){
 				if(singlePatchPoint.isSender){
@@ -256,7 +250,7 @@ export default class App {
 			color: new MRE.Color4(1, 0, 0)
 		});
 
-		this.greenMat = this.assets.createMaterial('redmat', {
+		this.greenMat = this.assets.createMaterial('greenMat', {
 			color: new MRE.Color4(0, 1, 0)
 		});
 		this.blackMat = this.assets.createMaterial('blackMat', {
@@ -265,8 +259,11 @@ export default class App {
 		this.whiteMat = this.assets.createMaterial('whiteMat', {
 			color: new MRE.Color4(1, 1, 1)
 		});
-		this.grayMat = this.assets.createMaterial('whiteMat', {
+		this.grayMat = this.assets.createMaterial('grayMat', {
 			color: new MRE.Color4(0.5, 0.5, 0.5)
+		});
+		this.lightgrayMat = this.assets.createMaterial('lightgrayMat', {
+			color: new MRE.Color4(0.75, 0.75, 0.75)
 		});
 
 		const filename = `${this.baseUrl}/` + "hand_grey.png";

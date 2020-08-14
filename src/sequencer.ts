@@ -15,6 +15,17 @@ enum AuthType {
 	SpecificUser=2
   }
 
+enum NoteOffMode {
+	nextNote = 0,
+	nextCell = 1,
+	anyNoteOn = 2
+}
+
+enum NoteBlankColors {
+	gray = 0,
+	piano = 1
+}
+
 export default class Sequencer extends MusicModule{
 	public ourInteractionAuth=AuthType.All;
 	public authorizedUser: MRE.User;
@@ -22,6 +33,8 @@ export default class Sequencer extends MusicModule{
 	public seScale=1.0;
 	public baseNote=48;	
 	public showBackground=true;
+	public volume=1.0;
+	public noteOffMode=NoteOffMode.nextNote;
 
 	public sphereMesh: MRE.Mesh;
 	public boxMesh: MRE.Mesh;
@@ -35,6 +48,7 @@ export default class Sequencer extends MusicModule{
 	private columnIndex=0;
 	private isPlaying=true;
 	public sequencerInterval=400;
+	public noteBlankColors=NoteBlankColors.gray;
 
 	public graySeeThrough: MRE.Material;
 
@@ -69,6 +83,13 @@ export default class Sequencer extends MusicModule{
 		}, this.sequencerInterval);
 	}
 
+	public updateBlankColor(){
+		for(let x=0;x<16;x++){
+			const oneColumn=this.ourColumns[x];
+			oneColumn.updateBlankColor();			
+		}
+	}
+
 	public turnOffActiveNotes(){
 		for (const note of this.activeNotes) {
 			this.noteOff(note);
@@ -78,13 +99,13 @@ export default class Sequencer extends MusicModule{
 
 	public noteOff(note: number) {
 		const message = [note, 0];
-		this.sendData(message);
+		this.sendData(message,"midi");
 		//this.ourSequencer.ourApp.ourMidiSender.send(`[128,${this.prevNote},0]`)
 	}
 
 	public noteOn(note: number, vel: number) {
-		const message = [note, vel];
-		this.sendData(message);
+		const message = [note, vel*this.volume];
+		this.sendData(message,"midi");
 
 		//this.ourSequencer.ourApp.ourMidiSender.send(`[144,${note},${vel}]`)
 	}
@@ -140,10 +161,7 @@ export default class Sequencer extends MusicModule{
 			false, this.setRewind.bind(this));
 		resetButton.doVisualUpdates=false;
 
-		//TODO RESET BUTTON HERE
-
 		this.restartSequencer();
-
 	}
 	
 	public isAuthorized(user: MRE.User): boolean{

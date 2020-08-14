@@ -579,9 +579,7 @@ export default class Piano extends MusicModule{
 				this.keyReleased(data[0]);
 			}
 		}
-	}
-
-	
+	}	
 
 	public keyPressed(note: number, vel: number) {
 		//this.ourApp.ourConsole.logMessage("piano received note ON message! note: " + note);
@@ -611,7 +609,7 @@ export default class Piano extends MusicModule{
 		const posInWorld = this.getWorldPosFromMatrix(transformedPoint);
 
 		const message = [note, vel, posInWorld.x, posInWorld.y, posInWorld.z];
-		this.sendData(message);
+		this.sendData(message,"midi");
 
 		this.setFancyKeyColor(note);
 
@@ -761,7 +759,7 @@ export default class Piano extends MusicModule{
 		//const noteNum = note % 12;
 
 		const message=[note,0];
-		this.sendData(message)
+		this.sendData(message,"midi")
 		
 		const newPos = this.keyLocations.get(note).clone();
 		this.ourKeys.get(note).transform.local.position = newPos;

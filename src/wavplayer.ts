@@ -133,6 +133,8 @@ export default class WavPlayer extends MusicModule{
 		if (!this.ourSounds.has(note)) {
 			this.ourApp.ourConsole.logMessage("cant play midi note: " +
 				note + " as wav set doesnt contain a ogg for it!");
+
+			//TODO: find closest note in set, and use playback speed to adjust
 			if(note<this.lowestNote){				
 				do{
 					note+=12;
