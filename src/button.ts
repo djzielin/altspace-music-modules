@@ -104,17 +104,15 @@ export default class Button {
 		// Set a click handler on the button.
 		this.buttonActor.setBehavior(MRE.ButtonBehavior)
 			.onButton("released", (user: MRE.User) => {
-				const ourRoles = user.properties["altspacevr-roles"];
-				if (ourRoles.includes("moderator") ||
-					ourRoles.includes("presenter") || ourRoles.includes("terraformer")) {
+				if (this.ourApp.ourUsers.isAuthorized(user)) {
 
 					if (this.ourValue) {
-						this.ourValue=false;
+						this.ourValue = false;
 					} else {
-						this.ourValue=true;
+						this.ourValue = true;
 					}
 
-					if(this.doVisualUpdates){
+					if (this.doVisualUpdates) {
 						this.updateDisplayValue();
 					}
 					callback(this.ourValue);

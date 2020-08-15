@@ -102,10 +102,7 @@ export default class ButtonMulti {
 		// Set a click handler on the button.
 		this.buttonActor.setBehavior(MRE.ButtonBehavior)
 			.onButton("released", (user: MRE.User) => {
-				const ourRoles = user.properties["altspacevr-roles"];
-				if (ourRoles.includes("moderator") ||
-					ourRoles.includes("presenter") || ourRoles.includes("terraformer")) {
-					
+				if (this.ourApp.ourUsers.isAuthorized(user)) {					
 					this.ourChoice=(this.ourChoice+1) % this.ourLabels.length;
 
 					this.updateDisplayValue();

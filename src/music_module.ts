@@ -57,7 +57,15 @@ export default class MusicModule {
 	}
 
 	public removeSendDestination(patchPoint: PatchPoint){
-		const index=this.sendDestinations.indexOf(patchPoint);
+		let index=-1;
+
+		for(let i=0;i<this.sendDestinations.length;i++){
+			const singlePatch = this.sendDestinations[i];
+			if(singlePatch.isEqual(patchPoint)){
+				index=i;
+			}
+		}
+
 		if(index>-1){
 			this.sendDestinations.splice(index,1);
 		}

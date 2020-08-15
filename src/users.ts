@@ -33,11 +33,12 @@ export default class Users {
 	public isAuthorized(user: MRE.User): boolean {
 		const ourRoles = user.properties["altspacevr-roles"];
 
-		if (ourRoles.includes("moderator") || ourRoles.includes("presenter") || ourRoles.includes("terraformer")) {
+		if (ourRoles.includes("moderator") || ourRoles.includes("presenter") ||
+			ourRoles.includes("terraformer")) {
 			return true;
 		}
 
-		return false;
+		return true;
 	}
 
 	public isAuthorizedString(user: string): boolean {
@@ -47,7 +48,7 @@ export default class Users {
 		}
 
 		//this.ourConsole.logMessage("user is NOT moderator based on GUID");
-		return false;
+		return true;
 	}
 
 
@@ -57,7 +58,10 @@ export default class Users {
 		let isModerator = false
 
 		if (this.isAuthorized(user)) {
+			this.ourApp.ourConsole.logMessage("  user is authorized");
 			isModerator = true;
+		} else{
+			this.ourApp.ourConsole.logMessage("  user is NOT authorized");
 		}
 
 		const rHand: MRE.Actor = null;

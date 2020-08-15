@@ -65,11 +65,11 @@ export default class SequencerGui extends GuiPanel{
 	}
 
 	public sendMidiPatcher(b: boolean){
-		this.ourApp.patcherClickEvent(this.ourSequencer,"midi",true,this,this.sendButton);
+		this.ourApp.ourPatcher.patcherClickEvent(this.ourSequencer,"midi",true,this,this.sendButton);
 	}
 	
 	public grabRelease(){
-		this.ourApp.updatePatchLines(this);
+		this.ourApp.ourPatcher.updatePatchLines(this);
 	}
 
 	public async createAsync(pos: MRE.Vector3, name: string) {

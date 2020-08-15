@@ -42,11 +42,11 @@ export default class WavPlayerGui extends GuiPanel{
 	}
 
 	public recvMidiPatch(b: boolean){
-		this.ourApp.patcherClickEvent(this.ourWavPlayer,"midi",false,this,this.receiveButton);
+		this.ourApp.ourPatcher.patcherClickEvent(this.ourWavPlayer,"midi",false,this,this.receiveButton);
 	}
 
 	public grabRelease(){
-		this.ourApp.updatePatchLines(this);
+		this.ourApp.ourPatcher.updatePatchLines(this);
 	}
 
 	public async createAsync(pos: MRE.Vector3, name: string) {

@@ -59,15 +59,15 @@ export default class StaffGui extends GuiPanel {
 	}
 
 	public sendMidiPatcher(b: boolean){
-		this.ourApp.patcherClickEvent(this.ourStaff,"midi",true,this,this.sendButton);
+		this.ourApp.ourPatcher.patcherClickEvent(this.ourStaff,"midi",true,this,this.sendButton);
 	}
 
 	public recvMidiPatch(b: boolean){
-		this.ourApp.patcherClickEvent(this.ourStaff,"midi",false,this,this.receiveButton);
+		this.ourApp.ourPatcher.patcherClickEvent(this.ourStaff,"midi",false,this,this.receiveButton);
 	}
 
 	public grabRelease(){
-		this.ourApp.updatePatchLines(this);
+		this.ourApp.ourPatcher.updatePatchLines(this);
 	}
 
 	public async createAsync(pos: MRE.Vector3, name: string) {

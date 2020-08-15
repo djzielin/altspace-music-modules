@@ -51,15 +51,15 @@ export default class PianoGui extends GuiPanel{
 	}
 
 	public sendMidiPatcher(b: boolean){
-		this.ourApp.patcherClickEvent(this.ourPiano,"midi",true,this,this.sendButton);
+		this.ourApp.ourPatcher.patcherClickEvent(this.ourPiano,"midi",true,this,this.sendButton);
 	}
 
 	public recvMidiPatch(b: boolean){
-		this.ourApp.patcherClickEvent(this.ourPiano,"midi",false,this,this.receiveButton);
+		this.ourApp.ourPatcher.patcherClickEvent(this.ourPiano,"midi",false,this,this.receiveButton);
 	}
 
 	public grabRelease(){
-		this.ourApp.updatePatchLines(this);
+		this.ourApp.ourPatcher.updatePatchLines(this);
 	}
 	
 	public doReset(b: boolean): void {
