@@ -98,14 +98,14 @@ export default class Sequencer extends MusicModule{
 	}
 
 	public noteOff(note: number) {
-		const message = [note, 0];
-		this.sendData(message,"midi");
+		const message = [note, 0, 0];
+		this.sendData(message, "midi");
 		//this.ourSequencer.ourApp.ourMidiSender.send(`[128,${this.prevNote},0]`)
 	}
 
 	public noteOn(note: number, vel: number) {
-		const message = [note, vel*this.volume];
-		this.sendData(message,"midi");
+		const message = [note, vel * this.volume, 0];
+		this.sendData(message, "midi");
 
 		//this.ourSequencer.ourApp.ourMidiSender.send(`[144,${note},${vel}]`)
 	}

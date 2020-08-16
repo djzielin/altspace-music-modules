@@ -46,9 +46,11 @@ export default class App {
 	public ourSequencer: Sequencer = null;
 	public ourSequencerGui: SequencerGui = null;
 
-	public showGUIs=false;
+	public showGUIs=true;
+	public showGrabbers=true;
 
 	public allGUIs: GuiPanel[] = [];
+	public allModules: MusicModule[]=[];
 
 	//public ourPiano2: Piano = null;
 	//public ourStaff2: Staff=null;
@@ -60,6 +62,8 @@ export default class App {
 	public ourWavPlayer2: WavPlayer = null;
 	public ourConsole: Console = null;
 	public menuGrabber: GrabButton = null;
+	public showGUIsButton: Button = null;
+	public showGrabbersButton: Button = null;
 
 	public boxMesh: MRE.Mesh;
 	public redMat: MRE.Material;
@@ -81,8 +85,18 @@ export default class App {
 		public ourReceiver: PianoReceiver, public ourSender: OscSender) {
 		this.ourConsole = new Console(this);
 		this.ourPatcher = new Patcher(this);
+		this.ourUsers=new Users(this);
 
-		this.assets = new MRE.AssetContainer(context);
+		this.assets = new MRE.AssetContainer(context);		
+
+		this.context.onUserLeft(user => this.ourUsers.userLeft(user));
+		this.context.onUserJoined(user => this.ourUsers.userJoined(user));
+
+		this.context.onStarted(() => this.started());
+		this.context.onStopped(() => this.stopped());
+	}
+
+	private createMeshAndMaterial(){
 		this.boxMesh = this.assets.createBoxMesh('boxMesh', 1.0, 1.0, 1.0);
 
 		this.redMat = this.assets.createMaterial('redmat', {
@@ -116,18 +130,9 @@ export default class App {
 		});
 
 		this.handMesh = this.assets.createBoxMesh('boxMesh', 0.25, 0.1, 0.25);
-
-		this.menuGrabber = new GrabButton(this);
-		this.menuGrabber.create(new MRE.Vector3(3, 0.1, 0));
-
-		this.ourUsers=new Users(this);
-
-		this.context.onStarted(() => this.started());
-		this.context.onStopped(() => this.stopped());
-		this.context.onUserLeft(user => this.ourUsers.userLeft(user));
-		this.context.onUserJoined(user => this.ourUsers.userJoined(user));
 	}
 
+	//TODO: move this to midiReceive module
 	private PianoReceiveCallback(note: number, vel: number, channel: number): void {
 		this.ourConsole.logMessage(`App received - note: ${note} vel: ${vel}`);
 
@@ -181,6 +186,11 @@ export default class App {
 	}
 
 	public showAllGuis(b: boolean) {
+		if (b) {
+			this.ourConsole.logMessage("trying to show all GUIs");
+		} else {
+			this.ourConsole.logMessage("trying to hide all GUIs");
+		}
 		for (const singlePanel of this.allGUIs) {
 			if (b) {
 				singlePanel.show();
@@ -195,27 +205,68 @@ export default class App {
 		} else {
 			this.ourPatcher.hidePatchLines();
 		}
-	}	
+	}
+
+	public showAllGrabbers(b: boolean) {
+		if (b) {
+			this.ourConsole.logMessage("trying to show all grabbers");
+			this.menuGrabber.showOnlyGrabber();
+		} else {
+			this.ourConsole.logMessage("trying to hide all grabbers");
+			this.menuGrabber.hideOnlyGrabber();
+		}
+
+		for (const singlePanel of this.allGUIs) {
+			if (b) {
+				singlePanel.showGrabber();
+
+			} else {
+				singlePanel.hideGrabber();
+			}
+		}
+
+		for (const singleModule of this.allModules) {
+			if (b) {
+				singleModule.showGrabber();
+
+			} else {
+				singleModule.hideGrabber();
+			}
+		}
+	}
 
 	private async loadAsyncItems() {
 		this.ourConsole.logMessage("creating console");
 		await this.ourConsole.createAsyncItems(new MRE.Vector3(-0.7, 0, 0.9),this.menuGrabber.getGUID());
 
+		let buttonZPos=0.5;
+
 		this.ourConsole.logMessage("Creating Reset Button ");
 		const button = new Button(this);
-		await button.createAsync(new MRE.Vector3(-0.7, 0, 0.5), this.menuGrabber.getGUID(), "Reset", "Reset",
+		await button.createAsync(new MRE.Vector3(-0.7, 0, buttonZPos), this.menuGrabber.getGUID(), "Reset", "Reset",
 			false, this.doReset.bind(this));
+		buttonZPos -= 0.4;
 
 		this.ourConsole.logMessage("Creating ShowGUI Button ");
-		const guiButton = new Button(this);
-		await guiButton.createAsync(new MRE.Vector3(-0.7, 0, 0.1), this.menuGrabber.getGUID(), "GUIs ON", "GUIs OFF",
+		this.showGUIsButton = new Button(this);
+		await this.showGUIsButton.createAsync(new MRE.Vector3(-0.7, 0, buttonZPos),
+			this.menuGrabber.getGUID(), "GUIs ON", "GUIs OFF",
 			this.showGUIs, this.showAllGuis.bind(this));
+		buttonZPos -= 0.2;
+
+		this.ourConsole.logMessage("Creating ShowGUI Button ");
+		this.showGrabbersButton = new Button(this);
+		await this.showGrabbersButton.createAsync(new MRE.Vector3(-0.7, 0, buttonZPos),
+			this.menuGrabber.getGUID(), "Grabbers ON", "Grabbers OFF",
+			this.showGrabbers, this.showAllGrabbers.bind(this));
+		buttonZPos -= 0.2;
 
 		let xPos = 1.5;
 
 		this.ourConsole.logMessage("Creating Wav Player");
 		this.ourWavPlayer = new WavPlayer(this);
 		await this.ourWavPlayer.loadAllSounds("piano");
+		this.allModules.push(this.ourWavPlayer);
 
 		this.ourWavPlayerGui = new WavPlayerGui(this, this.ourWavPlayer);
 		await this.ourWavPlayerGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Piano WavPlayer")		
@@ -232,11 +283,14 @@ export default class App {
 		this.ourPiano = new Piano(this);
 		await this.ourPiano.createAllKeys(new MRE.Vector3(2, 1, 0),
 			MRE.Quaternion.FromEulerAngles(-30 * Math.PI / 180, 0, 0));	
+		this.allModules.push(this.ourPiano);
 
 		this.ourConsole.logMessage("Loading staff items");
 		this.ourStaff = new Staff(this);
 		await this.ourStaff.createAsyncItems(new MRE.Vector3(2, 2, 0.5),
-			MRE.Quaternion.FromEulerAngles(-90 * Math.PI / 180, 0, 0));			
+			MRE.Quaternion.FromEulerAngles(-90 * Math.PI / 180, 0, 0));		
+		this.allModules.push(this.ourStaff);
+	
 
 		this.ourStaffGui = new StaffGui(this, this.ourStaff);
 		await this.ourStaffGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Staff")
@@ -334,7 +388,8 @@ export default class App {
 		
 		*/
 
-		this.showAllGuis(false);
+		this.showGUIsButton.setValue(false);
+		this.showGrabbersButton.setValue(false);
 	}
 	private stopped() {
 		MRE.log.info("app", "stopped callback has been called");
@@ -343,6 +398,11 @@ export default class App {
 
 	private started() {
 		this.ourConsole.logMessage("started callback has begun");
+
+		this.createMeshAndMaterial();
+
+		this.menuGrabber = new GrabButton(this);
+		this.menuGrabber.create(new MRE.Vector3(3, 0.1, 0));
 
 		this.loadAsyncItems().then(() => {
 			this.ourConsole.logMessage("all async items created/loaded!");

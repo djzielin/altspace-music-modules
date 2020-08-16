@@ -70,6 +70,16 @@ export default class GrabButton {
 		return this.buttonActor.transform.local.rotation;
 	}
 
+	public hideOnlyGrabber(){
+		this.buttonActor.appearance.meshId=null;
+		this.lockButton.hide();
+	}
+
+	public showOnlyGrabber(){
+		this.buttonActor.appearance.meshId=this.ourApp.handMesh.id;
+		this.lockButton.show();
+	}
+
 	public create(pos: MRE.Vector3,rot=new MRE.Quaternion()) { //TODO: should this be async?
 
 		this.buttonActor = MRE.Actor.Create(this.ourApp.context, {

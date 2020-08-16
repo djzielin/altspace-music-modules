@@ -110,6 +110,7 @@ export default class WavPlayer extends MusicModule{
 
 		const note=data[0];
 		const vel=data[1];
+		const channel=data[2];
 
 		let x=0;
 		let y=0;
@@ -120,7 +121,7 @@ export default class WavPlayer extends MusicModule{
 			return;
 		}
 		
-		if (data.length>=5) {
+		if (data.length>=6) {
 			x=data[2];
 			y=data[3];
 			z=data[4];

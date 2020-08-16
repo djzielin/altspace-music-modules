@@ -234,7 +234,7 @@ export default class Piano extends MusicModule{
 
 		this.updateKeyboardCenter();
 
-		this.ourApp.ourConsole.logMessage(`creating new keyboard with range ${this.keyLowest} to ${this.keyHighest}`);
+		this.ourApp.ourConsole.logMessage(`PIANO: creating new keyboard with range ${this.keyLowest} to ${this.keyHighest}`);
 		//this.ourApp.ourConsole.logMessage(`octaves: ${totalOctaves}`);
 		
 
@@ -304,7 +304,7 @@ export default class Piano extends MusicModule{
 			this.ourKeyColliderPositions.set(i,keyPosCollision);
 
 			keyCollisionActor.collider.onTrigger("trigger-enter", (otherActor: MRE.Actor) => {
-				this.ourApp.ourConsole.logMessage("trigger enter on piano note!");
+				this.ourApp.ourConsole.logMessage("PIANO: trigger enter on piano note!");
 
 				if (otherActor.name.includes('SpawnerUserHand')) { //bubble touches hand
 					const guid = otherActor.name.substr(16);
@@ -321,7 +321,7 @@ export default class Piano extends MusicModule{
 			});
 
 			keyCollisionActor.collider.onTrigger("trigger-exit", (otherActor: MRE.Actor) => {
-				this.ourApp.ourConsole.logMessage("trigger enter on piano note!");
+				this.ourApp.ourConsole.logMessage("PIANO: trigger enter on piano note!");
 
 				if (otherActor.name.includes('SpawnerUserHand')) { //bubble touches hand
 					const guid = otherActor.name.substr(16);
@@ -341,15 +341,19 @@ export default class Piano extends MusicModule{
 			buttonBehavior.onButton("pressed", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
 				if (this.isAuthorized(user)) { 
 
-					this.ourApp.ourConsole.logMessage("user clicked on piano note!");
+					this.ourApp.ourConsole.logMessage("PIANO: user clicked on piano note: " + i);
 					this.keyPressed(i,100);
 				}
 			});
+
+			//TODO: only do release if user had triggered note
 			buttonBehavior.onButton("released", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
 				if (this.isAuthorized(user)) {
 					this.keyReleased(i);
 				}
 			});
+
+			//TODO: only do release if user had triggered note
 			buttonBehavior.onHover("exit", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
 				if (this.isAuthorized(user)) {
 					this.keyReleased(i);
@@ -522,7 +526,7 @@ export default class Piano extends MusicModule{
 
 	private addInterval(note1: number, note2: number){
 		let noteDistance = note2 - note1;
-		this.ourApp.ourConsole.logMessage("computed note distance: " + noteDistance);
+		//this.ourApp.ourConsole.logMessage("PIANO: computed note distance: " + noteDistance);
 		
 		let intervalName = "";
 
@@ -557,7 +561,7 @@ export default class Piano extends MusicModule{
 			note2: note2
 		};
 
-		this.ourApp.ourConsole.logMessage("interval name is: " + intervalName);
+		this.ourApp.ourConsole.logMessage("PIANO: interval name is: " + intervalName);
 		this.drawInterval(ourInterval, intervalName);
 
 		this.activeIntervals.push(ourInterval);
@@ -608,7 +612,7 @@ export default class Piano extends MusicModule{
 		const transformedPoint = mPoint.multiply(mKeyboard);
 		const posInWorld = this.getWorldPosFromMatrix(transformedPoint);
 
-		const message = [note, vel, posInWorld.x, posInWorld.y, posInWorld.z];
+		const message = [note, vel, 0, posInWorld.x, posInWorld.y, posInWorld.z];
 		this.sendData(message,"midi");
 
 		this.setFancyKeyColor(note);
@@ -758,14 +762,14 @@ export default class Piano extends MusicModule{
 
 		//const noteNum = note % 12;
 
-		const message=[note,0];
-		this.sendData(message,"midi")
-		
+		const message = [note, 0, 0];
+		this.sendData(message, "midi")
+
 		const newPos = this.keyLocations.get(note).clone();
 		this.ourKeys.get(note).transform.local.position = newPos;
 
-		if(this.ourNoteNames.has(note)){
-			const noteName=this.ourNoteNames.get(note);
+		if (this.ourNoteNames.has(note)) {
+			const noteName = this.ourNoteNames.get(note);
 			noteName.destroy();
 		}
 		

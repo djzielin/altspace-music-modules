@@ -44,7 +44,15 @@ export default class StaffGui extends GuiPanel {
 		this.ourStaff.updateStaffWidth();
 	}
 
-	public showBackground(b: boolean){
+	public setShowClear(b: boolean) {
+		if (b) {
+			this.ourStaff.clearButton.show();
+		} else {
+			this.ourStaff.clearButton.hide();
+		}
+	}
+
+	public showBackground(b: boolean) {
 		this.ourStaff.showBackground=b;
 
 		this.ourStaff.staffBackground.appearance.enabled=b;
@@ -87,6 +95,12 @@ export default class StaffGui extends GuiPanel {
 		await sharpButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
 			this.guiBackground.id, "sharps", "flats",
 			this.ourStaff.doSharps, this.setDoSharps.bind(this));
+		zPos -= 0.15;
+
+		const clearButton = new Button(this.ourApp);
+		await clearButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
+			this.guiBackground.id, "clear avail", "no clear",
+			this.ourStaff.showClear, this.setShowClear.bind(this));
 		zPos -= 0.15;
 
 		const backgroundVis = new Button(this.ourApp);
@@ -136,6 +150,8 @@ export default class StaffGui extends GuiPanel {
 			this.guiBackground.id, "SEND MIDI", "SEND MIDI",
 			true, this.sendMidiPatcher.bind(this));
 		zPos -= 0.15;
+
+		
 
 		this.guiGrabber.setGrabReleaseCallback(this.grabRelease.bind(this));
 

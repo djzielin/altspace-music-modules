@@ -28,6 +28,14 @@ export default class GuiPanel {
 		this.guiGrabber.show();
 	}
 
+	public hideGrabber(){
+		this.guiGrabber.hideOnlyGrabber();
+	}
+
+	public showGrabber(){
+		this.guiGrabber.showOnlyGrabber();
+	}
+
 	private halfWay(a: MRE.Vector3, b: MRE.Vector3): MRE.Vector3 { //TODO should be in util class
 		return (a.add(b)).multiplyByFloats(0.5,0.5,0.5);
 	}

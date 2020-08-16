@@ -6,6 +6,10 @@ import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 //import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 import App from './app';
 
+interface BCallback {
+	(b: boolean): void;
+}
+
 export default class Button {
 	private ourValue=true;
 	private ourLabelOn="";
@@ -13,10 +17,22 @@ export default class Button {
     public doVisualUpdates=true;
 	private buttonActor: MRE.Actor=null;
 	private buttonText: MRE.Actor=null;
-	public ourHolder: MRE.Actor=null;
+	private ourHolder: MRE.Actor=null;
+	private ourCallback: BCallback;
 
 	constructor(private ourApp: App) {
 		
+	}
+
+	public show(){
+		this.ourHolder.appearance.enabled=true;
+	}
+	public hide(){
+		this.ourHolder.appearance.enabled=false;
+	}
+
+	public setVisible(b: boolean){
+		this.ourHolder.appearance.enabled=b;
 	}
 
 	public destroy() {
@@ -40,6 +56,7 @@ export default class Button {
 		this.ourValue=ourVal;
 		this.ourLabelOn=labelOn;
 		this.ourLabelOff=labelOff;
+		this.ourCallback=callback;
 
 		this.ourHolder = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
@@ -115,14 +132,15 @@ export default class Button {
 					if (this.doVisualUpdates) {
 						this.updateDisplayValue();
 					}
-					callback(this.ourValue);
+					this.ourCallback(this.ourValue);
 				}
 			});
 	}
 
 	public setValue(val: boolean){
 		this.ourValue=val;
-		this.updateDisplayValue();		
+		this.updateDisplayValue();	
+		this.ourCallback(this.ourValue);	
 	}
 
 	public getHolderPos(): MRE.Vector3 {

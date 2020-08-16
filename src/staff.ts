@@ -109,6 +109,9 @@ export default class Staff extends MusicModule {
 	public doParticleEffect=true;
 	public audioRange=50;
 
+	public clearButton: Button=null;
+	public showClear=false;
+
 	//public ourWavPlayer: WavPlayer;
 
 	public staffBackground: MRE.Actor=null;
@@ -240,11 +243,11 @@ export default class Staff extends MusicModule {
 		await consoleMat.created;
 
 		this.ourApp.ourConsole.logMessage("STAFF: Creating Clear Button ");
-		const button = new Button(this.ourApp);
-		await button.createAsync(new MRE.Vector3(0.0, 0, 0.5), this.ourGrabber.getGUID(), "Clear", "Clear",
+		this.clearButton = new Button(this.ourApp);
+		await this.clearButton.createAsync(new MRE.Vector3(0.0, 0, 0.5), this.ourGrabber.getGUID(), "Clear", "Clear",
 			false, this.doClear.bind(this),0.4,0.4);
-		button.doVisualUpdates=false;
-
+		this.clearButton.doVisualUpdates=false;
+		this.clearButton.setVisible(this.showClear);
 
 		this.staffBackground = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
@@ -594,7 +597,7 @@ export default class Staff extends MusicModule {
 
 				if (this.ourInteractionAuth === AuthType.All || this.ourApp.ourUsers.isAuthorizedString(guid)) {
 					const posInWorld: MRE.Vector3 = this.getWorldPos(spawnPos);
-					const message = [note, vel, posInWorld.x, posInWorld.y, posInWorld.z];
+					const message = [note, vel, 0, posInWorld.x, posInWorld.y, posInWorld.z];
 					this.sendData(message,"midi");
 
 					this.spawnParticleEffect(spawnPos, scale, noteNum);

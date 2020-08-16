@@ -39,11 +39,27 @@ export default class MusicModule {
 	}
 
 	public hide() {
-		this.ourGrabber.hide();
+		if (this.ourGrabber) {
+			this.ourGrabber.hide();
+		}
 	}
 
 	public show() {
-		this.ourGrabber.show();
+		if (this.ourGrabber) {
+			this.ourGrabber.show();
+		}
+	}
+
+	public hideGrabber() {
+		if (this.ourGrabber) {
+			this.ourGrabber.hideOnlyGrabber();
+		}
+	}
+
+	public showGrabber() {
+		if (this.ourGrabber) {
+			this.ourGrabber.showOnlyGrabber();
+		}
 	}
 
 	public createGrabber(pos: MRE.Vector3, quat: MRE.Quaternion) {
