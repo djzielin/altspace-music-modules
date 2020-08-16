@@ -95,9 +95,6 @@ export default class Staff extends MusicModule {
 		60,62,64,65,67,69,71,72,74,76,77,79,81,83,84];
 	private staffLineIndex: number[]=[43,47,50,53,57,64,67,71,74,77];
 
-	private sphereMesh: MRE.Mesh;
-	private boxMesh: MRE.Mesh;
-
 	public activeNotes: NoteProperties[]=[]; 
 	private annotationList: MRE.Actor[]=[];
 
@@ -227,20 +224,9 @@ export default class Staff extends MusicModule {
 	}
 
 	public async createAsyncItems(pos: MRE.Vector3, rot=new MRE.Quaternion()) {
-		this.ourApp.ourConsole.logMessage("STAFF: creating staff asyn items");
-
-		this.boxMesh = this.ourApp.assets.createBoxMesh('boxMesh', 1.0, 1.0, 1.0);
-		await this.boxMesh.created;
-
-		this.sphereMesh = this.ourApp.assets.createSphereMesh('sphereMesh',0.5,10,10);
-		await this.sphereMesh.created;
+		this.ourApp.ourConsole.logMessage("STAFF: creating staff asyn items");	
 
 		this.createGrabber(pos,rot);
-
-		const consoleMat = this.ourApp.assets.createMaterial('consolemat', {
-			color: new MRE.Color3(1.0,1.0,1.0) //TODO move material over to app
-		});
-		await consoleMat.created;
 
 		this.ourApp.ourConsole.logMessage("STAFF: Creating Clear Button ");
 		this.clearButton = new Button(this.ourApp);
@@ -664,7 +650,7 @@ export default class Staff extends MusicModule {
 					}
 				},
 				appearance: {
-					meshId: this.sphereMesh.id,
+					meshId: this.ourApp.sphereMesh.id,
 					materialId: mat.id
 				},
 				collider: {

@@ -92,22 +92,12 @@ export default class Piano extends MusicModule{
 	private solfegeSharpNames=["Do","Di","Re","Ri","Mi","Fa","Fi","Sol","Si","La","Li","Ti"];
 	private solfegeFlatNames=["Do","Ra","Re","Me","Mi","Fa","Se","Sol","Le","La","Te","Ti"];
 
-	private whiteKeyMaterial: MRE.Material = null;
-	private blackKeyMaterial: MRE.Material = null;
-	private redKeyMaterial: MRE.Material= null;
-
 	private keyLocations: Map<number,MRE.Vector3>=new Map();
 
 	private ourIntervals: PianoIntervals = null;
 
 	constructor(protected ourApp: App) {
-		super(ourApp);
-		this.whiteKeyMaterial = this.ourApp.assets.createMaterial('cubemat', {
-			color: new MRE.Color4(1, 1, 1)
-		});
-		this.blackKeyMaterial = this.ourApp.assets.createMaterial('cubemat', {
-			color: new MRE.Color4(0, 0, 0)
-		});
+		super(ourApp);		
 
 		this.ourIntervals=new PianoIntervals(ourApp,this);
 	}
@@ -129,10 +119,10 @@ export default class Piano extends MusicModule{
 	public setProperKeyColor(midiNote: number) {
 		const note = midiNote % 12;
 
-		let matt = this.blackKeyMaterial;
+		let matt = this.ourApp.blackMat;
 
 		if (this.zOffset[note] === 0) {
-			matt = this.whiteKeyMaterial;
+			matt = this.ourApp.whiteMat;
 		}
 
 		this.ourKeys.get(midiNote).appearance.material = matt;
@@ -195,18 +185,6 @@ export default class Piano extends MusicModule{
 
 		const blackKeyMesh = this.ourApp.assets.createBoxMesh('box', this.halfinch, this.inch, this.inch * 3.5);
 		await blackKeyMesh.created;
-
-		const whiteKeyMaterial: MRE.Material = this.ourApp.assets.createMaterial('cubemat', {
-			color: new MRE.Color4(1, 1, 1)
-		});
-		await whiteKeyMaterial.created;
-
-
-		const blackKeyMaterial: MRE.Material = this.ourApp.assets.createMaterial('cubemat', {
-			color: new MRE.Color4(0, 0, 0)
-		});
-		await blackKeyMaterial.created;
-
 		
 		if(!this.ourGrabber){
 			this.createGrabber(pos,rot);
@@ -237,7 +215,7 @@ export default class Piano extends MusicModule{
 
 		for (let i = this.keyLowest; i < this.keyHighest; i++) {
 			let meshId: MRE.Guid = blackKeyMesh.id;
-			let mattId: MRE.Guid = blackKeyMaterial.id;
+			let mattId: MRE.Guid = this.ourApp.blackMat.id;
 			const note = i % 12;
 			//const octave = Math.floor(i / 12);
 
@@ -245,7 +223,7 @@ export default class Piano extends MusicModule{
 
 			if (this.zOffset[note] === 0) {
 				meshId = whiteKeyMesh.id;
-				mattId = whiteKeyMaterial.id;
+				mattId = this.ourApp.whiteMat.id;
 				collisionMeshID=whiteKeyCollisionMesh.id;
 			}
 

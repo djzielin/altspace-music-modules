@@ -46,18 +46,13 @@ export default class Console {
 		});
 		await this.consoleParent.created();
 
-		const consoleMat = this.ourApp.assets.createMaterial('consolemat', {
-			color: new MRE.Color3(0, 0, 0)
-		});
-		await consoleMat.created;
-
 		const consoleBackground = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
 				parentId: this.consoleParent.id,
 				name: "consoleBackground",
 				appearance: {
 					meshId: this.ourApp.boxMesh.id,
-					materialId: consoleMat.id
+					materialId: this.ourApp.blackMat.id
 				},
 				transform: {
 					local: {

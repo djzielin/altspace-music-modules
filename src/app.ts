@@ -66,6 +66,8 @@ export default class App {
 	public showGrabbersButton: Button = null;
 
 	public boxMesh: MRE.Mesh;
+	public sphereMesh: MRE.Mesh;
+	
 	public redMat: MRE.Material;
 	public greenMat: MRE.Material;
 	public whiteMat: MRE.Material;
@@ -98,6 +100,7 @@ export default class App {
 
 	private createMeshAndMaterial(){
 		this.boxMesh = this.assets.createBoxMesh('boxMesh', 1.0, 1.0, 1.0);
+		this.sphereMesh= this.assets.createSphereMesh('sphereMesh',0.5,10,10);
 
 		this.redMat = this.assets.createMaterial('redmat', {
 			color: new MRE.Color4(1, 0, 0)

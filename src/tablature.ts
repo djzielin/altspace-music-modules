@@ -82,9 +82,6 @@ export default class Staff {
 		"artifact:1520777590866968922"  //B
 	]
 
-	private sphereMesh: MRE.Mesh;
-	private boxMesh: MRE.Mesh;
-
 	private staffGrabber: GrabButton=null;
 	public activeNotes: NoteProperties[]=[]; 
 
@@ -216,19 +213,8 @@ export default class Staff {
 	public async createAsyncItems(pos: MRE.Vector3, rot=new MRE.Quaternion()) {
 		this.ourApp.ourConsole.logMessage("creating staff asyn items");
 
-		this.boxMesh = this.ourApp.assets.createBoxMesh('boxMesh', 1.0, 1.0, 1.0);
-		await this.boxMesh.created;
-
-		this.sphereMesh = this.ourApp.assets.createSphereMesh('sphereMesh',0.5,10,10);
-		await this.sphereMesh.created;
-
 		this.staffGrabber=new GrabButton(this.ourApp);
 		this.staffGrabber.create(pos,rot);
-
-		const consoleMat = this.ourApp.assets.createMaterial('consolemat', {
-			color: new MRE.Color3(1.0,1.0,1.0) //TODO move material over to app
-		});
-		await consoleMat.created;
 
 		this.staffBackground = MRE.Actor.Create(this.ourApp.context, {
 			actor: {

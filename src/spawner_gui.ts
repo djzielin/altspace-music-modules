@@ -26,10 +26,6 @@ export default class SpawnerGui {
 		this.guiGrabber = new GrabButton(this.ourApp);
 		this.guiGrabber.create(pos);
 
-		const consoleMat = this.ourApp.assets.createMaterial('consolemat', {
-			color: new MRE.Color3(0.5, 0.5, 0.5) //TODO move material over to app
-		});
-		await consoleMat.created;
 
 		const backGroundMesh = this.ourApp.assets.createBoxMesh('boxMesh', 1.1, 0.1, 1.5);
 
@@ -40,7 +36,7 @@ export default class SpawnerGui {
 				name: "consoleBackground",
 				appearance: {
 					meshId: backGroundMesh.id,
-					materialId: consoleMat.id
+					materialId: this.ourApp.grayMat.id
 				},
 				transform: {
 					local: {

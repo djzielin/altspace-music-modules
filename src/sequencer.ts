@@ -36,9 +36,6 @@ export default class Sequencer extends MusicModule{
 	public volume=1.0;
 	public noteOffMode=NoteOffMode.nextNote;
 
-	public sphereMesh: MRE.Mesh;
-	public boxMesh: MRE.Mesh;
-	public cylinderMesh: MRE.Mesh;
 	public activeNotes: number[]=[];
 
 	//private ourGrabber: GrabButton=null;
@@ -49,8 +46,6 @@ export default class Sequencer extends MusicModule{
 	private isPlaying=true;
 	public sequencerInterval=400;
 	public noteBlankColors=NoteBlankColors.gray;
-
-	public graySeeThrough: MRE.Material;
 
 	constructor(protected ourApp: App) {
 		super(ourApp);
@@ -113,21 +108,7 @@ export default class Sequencer extends MusicModule{
 	public async createAsyncItems(pos: MRE.Vector3, rot=new MRE.Quaternion()) {
 		this.ourApp.ourConsole.logMessage("creating se02 asyn items");
 
-		this.boxMesh = this.ourApp.assets.createBoxMesh('boxMesh', 1.0, 1.0, 1.0);
-		await this.boxMesh.created;
-
-		this.sphereMesh = this.ourApp.assets.createSphereMesh('sphereMesh',0.5,10,10);
-		await this.sphereMesh.created;
-
-		this.cylinderMesh = this.ourApp.assets.createCylinderMesh('cylinder',1.0,0.5,'y',10);
-		await this.cylinderMesh.created;
-
 		this.createGrabber(pos,rot);
-
-		this.graySeeThrough = this.ourApp.assets.createMaterial('graySeeThrough', {
-			color: new MRE.Color4(0.5,0.5,0.5,0.5),
-			alphaMode: MRE.AlphaMode.Blend
-		});
 
 		const horizCells=16;
 		const vertCells=25;
