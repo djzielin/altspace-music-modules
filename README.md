@@ -5,7 +5,6 @@ Current Modules Include:
  * Staff - Can show midi data. Can also function as a drawing surface. In world touches of the notes on the staff can generate further midi events that can be sonified.
  * Tablature - Similiar to Staff, but displays midi data from the "You Rock Guitar" midi guitar, if sending in one string per channel mode. 
  * Spawner - emits midi events a series of floating cubes. In world touches can trigger the sounding of the note.
- * SE02 - allows remote control of a local analog hardware synth (the roland SE02).
  * Sequencer - step sequencer which output midi events to other modules
  * WavPlayer - plays back samples on receiving of midi events. Used in conjunction with other modules. ie, Piano->WavePlayer
  
