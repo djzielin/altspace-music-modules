@@ -43,13 +43,20 @@ export default class PianoIntervals{
 	private getLength(a: MRE.Vector3, b: MRE.Vector3): number {
 		return (a.subtract(b)).length();
 	}
-
 	
 	public drawInterval(ourInterval: IntervalDisplay, intervalName: string){
 		const notePosition1=this.ourPiano.ourKeyColliderPositions.get(ourInterval.note1).clone();
 		const notePosition2=this.ourPiano.ourKeyColliderPositions.get(ourInterval.note2).clone();
+
 		notePosition1.z+=0.02; //so we dont cover the note name
+		if(this.ourPiano.isAccidental(ourInterval.note1)){
+			notePosition1.z-=0.032;
+		}
+		
 		notePosition2.z+=0.02;
+		if(this.ourPiano.isAccidental(ourInterval.note2)){
+			notePosition2.z-=0.032;
+		}
 		
 		notePosition1.y-=0.01;
 		notePosition2.y-=0.01;
@@ -65,7 +72,7 @@ export default class PianoIntervals{
 		notePosition2b.y=0;
 
 		const halfwayPoint=this.halfWay(notePosition1b,notePosition2b);
-		halfwayPoint.y=this.ourPiano.halfinch+0.06;
+		halfwayPoint.y=this.ourPiano.halfinch+0.03;
 
 		const towardsPoint2=(notePosition2b.subtract(notePosition1b)).normalize();
 
@@ -86,8 +93,9 @@ export default class PianoIntervals{
 						position: halfwayPoint,
 						scale: new MRE.Vector3(this.ourPiano.pianoScale,
 							this.ourPiano.pianoScale,
-							this.ourPiano.pianoScale)
-						//rotation: MRE.Quaternion.FromEulerAngles(90 * Math.PI / 180, 0, 0)
+							this.ourPiano.pianoScale),
+						rotation: MRE.Quaternion.LookAt(notePosition1b,notePosition2b).multiply(
+							MRE.Quaternion.FromEulerAngles(0, -90 * Math.PI / 180, 0)),
 					}
 				},
 				text: {
@@ -290,7 +298,6 @@ export default class PianoIntervals{
 		}
 
 	}
-
 
 	private destroyInterval(singleInterval: IntervalDisplay) {
 		if (singleInterval.line1) {

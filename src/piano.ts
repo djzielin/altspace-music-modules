@@ -380,6 +380,16 @@ export default class Piano extends MusicModule{
 			}
 		}
 	}	
+	
+	public isAccidental(n: number): boolean {
+		const pitchClass=n %12;
+
+		if(pitchClass===1 || pitchClass===3 || pitchClass===6 || pitchClass===8 || pitchClass===10){
+			return true;
+		}
+
+		return false;
+	}
 
 	public keyPressed(note: number, vel: number) {
 		//this.ourApp.ourConsole.logMessage("piano received note ON message! note: " + note);
@@ -430,7 +440,7 @@ export default class Piano extends MusicModule{
 				} else {
 					noteName = this.solfegeFlatNames[noteNum];
 				}
-				noteHeight=noteHeight*0.5;
+				noteHeight = noteHeight * 0.5;
 			}
 
 
@@ -439,10 +449,12 @@ export default class Piano extends MusicModule{
 			notePosition.y += this.halfinch;
 			notePosition.y += 0.001;
 
-			if (noteName.includes("#") || noteName.includes("b")) {
+			if (this.isAccidental(note)) {
 				notePosition.x += 0.008;
+				notePosition.z -= 0.032;
 			} else {
 				notePosition.x += 0.016;
+				notePosition.z -= 0.0;
 			}
 
 			//this.ourApp.ourConsole.logMessage("Creating note name: " + noteName + " at pos: " + notePosition);
