@@ -26,9 +26,11 @@ export default class Button {
 
 	public show(){
 		this.ourHolder.appearance.enabled=true;
+		this.buttonActor.collider.enabled=true;	
 	}
 	public hide(){
 		this.ourHolder.appearance.enabled=false;
+		this.buttonActor.collider.enabled=false;
 	}
 
 	public setVisible(b: boolean){

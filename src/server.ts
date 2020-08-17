@@ -23,8 +23,8 @@ dotenv.config();
 const server = new MRE.WebHost({
 	//baseUrl: 'http://altspace-theremin.ngrok.io',
 	//baseUrl: 'http://altspace-music-modules.azurewebsites.net',
-
-	baseUrl: 'http://45.55.43.77',
+	//baseUrl: 'http://45.55.43.77',
+	baseUrl: 'http://199.19.73.131:3901',
 	port: process.env.PORT,
 	baseDir: resolvePath(__dirname, '../public')
 });
