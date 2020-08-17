@@ -4,5 +4,5 @@
 	"author": "djzielin",
 	"license": "MIT",
 	"repositoryUrl": "https://github.com/djzielin/altspace-spawner",
-	"optionalPermissions": ["user-interaction"]
+	"optionalPermissions": ["user-interaction","user-tracking"]
 }

@@ -8,16 +8,16 @@ import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 import App from './app';
 //import WavPlayer from './wavplayer';
 import GrabButton from './grabbutton';
-import StaffSharp from './staffsharp';
-import StaffFlat from './staffflat';
+//import StaffSharp from './staffsharp';
+//import StaffFlat from './staffflat';
 import Button from './button';
 import MusicModule from './music_module';
 
 interface NoteProperties{
 	timeStamp: number;
 	actor: MRE.Actor;
-	sharp: StaffSharp;
-	flat: StaffFlat;
+	sharp: MRE.Actor;
+	flat: MRE.Actor;
 	bonusLine: MRE.Actor;
 	bonusLine2: MRE.Actor;
 	pos: MRE.Vector3;
@@ -89,7 +89,12 @@ export default class Staff extends MusicModule {
 		"artifact:1537524667848328043", //A
 		"artifact:1537524667848328043",
 		"artifact:1537524680699675501"  //B
-	]
+	];
+
+	private accidentalModels: string[] = [
+		"artifact:1540938891551309885", //sharp
+		"artifact:1540938899939917891",	//flat
+	];
 
 	private staffMidi: number[]=[36,38,40,41,43,45,47,48,50,52,53,55,57,59,
 		60,62,64,65,67,69,71,72,74,76,77,79,81,83,84];
@@ -517,6 +522,27 @@ export default class Staff extends MusicModule {
 		this.createNoteAndAccidental(note,vel,isAccidental,this.doSharps,xPos,this.computedStaffScale);
 	}
 
+	public createAccidental(i: number, pos: MRE.Vector3, scale: number): MRE.Actor {
+		
+		this.ourApp.ourConsole.logMessage("STAFF: creating accidental");
+		const accidentalActor = MRE.Actor.CreateFromLibrary(this.ourApp.context, {
+			resourceId: this.accidentalModels[i],
+			actor: {
+				name: 'accidentalModel',
+				parentId: this.ourGrabber.getGUID(),
+				transform: {
+					local: {
+						position: pos,
+						scale: new MRE.Vector3(scale,scale,scale)
+					}
+				}
+			}
+		});
+
+		return accidentalActor;
+	}
+
+
 	public createNoteAndAccidental(note: number, vel: number, isAccidental: boolean, isSharp: boolean, 
 		xPos: number, scale: number) {
 		let adjustedNote=note;
@@ -557,19 +583,16 @@ export default class Staff extends MusicModule {
 
 		if (isAccidental) {
 			if (isSharp) {
-				const ourSharp = new StaffSharp(this.ourApp, this);
 				const sharpPos = spawnPos.clone();
-				sharpPos.x -= scale * 1.0;
+				sharpPos.x -= scale * 1.25;
 				sharpPos.y += scale * 0.1;
-				ourSharp.create(sharpPos, this.ourGrabber.getGUID(), scale, this.noteMaterials[noteNum].id);
-				ourNote.sharp = ourSharp;
+				ourNote.sharp=this. createAccidental(0,sharpPos,scale)
 			} else {
-				const ourFlat = new StaffFlat(this.ourApp, this);
 				const flatPos = spawnPos.clone();
 				flatPos.x -= scale * 0.85;
 				flatPos.y += scale * 0.1;
-				ourFlat.create(flatPos, this.ourGrabber.getGUID(), scale, this.noteMaterials[noteNum].id);
-				ourNote.flat = ourFlat;
+				flatPos.z += scale *0.2;
+				ourNote.flat=this. createAccidental(1,flatPos,scale)
 			}
 		}
 
@@ -691,7 +714,7 @@ export default class Staff extends MusicModule {
 					transform: {
 						local: {
 							position: pos2,
-							scale: new MRE.Vector3(scale*2.0, 
+							scale: new MRE.Vector3(scale*1.5, 
 								this.computedStaffScale*0.118, 
 								this.computedStaffScale*0.177)
 						}
@@ -724,7 +747,7 @@ export default class Staff extends MusicModule {
 					transform: {
 						local: {
 							position: pos2,
-							scale: new MRE.Vector3(scale*2.0, 
+							scale: new MRE.Vector3(scale*1.5, 
 								this.computedStaffScale*0.118, 
 								this.computedStaffScale*0.177)
 						}
@@ -736,8 +759,8 @@ export default class Staff extends MusicModule {
 		const ourNote={
 			timeStamp: Date.now(),
 			actor: noteActor,
-			sharp: null as StaffSharp,
-			flat: null as StaffFlat,
+			sharp: null as MRE.Actor,
+			flat: null as MRE.Actor,
 			bonusLine: bonusLineActor,
 			bonusLine2: bonusLineActor2,
 			pos: pos,

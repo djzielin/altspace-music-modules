@@ -134,6 +134,10 @@ export default class Button {
 					}
 					this.ourCallback(this.ourValue);
 				}
+				else{
+					this.ourApp.ourConsole.logMessage("user: " + user.name + " not authorized to click button!");
+
+				}
 			});
 	}
 

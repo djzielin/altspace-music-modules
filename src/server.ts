@@ -21,8 +21,9 @@ dotenv.config();
 
 // Start listening for connections, and serve static files
 const server = new MRE.WebHost({
-	//baseUrl: 'http://altspace-theremin.azurewebsites.net',
 	//baseUrl: 'http://altspace-theremin.ngrok.io',
+	//baseUrl: 'http://altspace-music-modules.azurewebsites.net',
+
 	baseUrl: 'http://45.55.43.77',
 	port: process.env.PORT,
 	baseDir: resolvePath(__dirname, '../public')

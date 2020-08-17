@@ -38,7 +38,7 @@ export default class Users {
 			return true;
 		}
 
-		return true;
+		return false;
 	}
 
 	public isAuthorizedString(user: string): boolean {
@@ -48,7 +48,7 @@ export default class Users {
 		}
 
 		//this.ourConsole.logMessage("user is NOT moderator based on GUID");
-		return true;
+		return false;
 	}
 
 

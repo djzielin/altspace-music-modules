@@ -318,6 +318,8 @@ export default class Piano extends MusicModule{
 
 					this.ourApp.ourConsole.logMessage("PIANO: user clicked on piano note: " + i);
 					this.keyPressed(i,100);
+				}else{
+					this.ourApp.ourConsole.logMessage("PIANO: user not authorized to click: " + i);
 				}
 			});
 
