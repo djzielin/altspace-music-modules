@@ -7,6 +7,7 @@ import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 import App from './app';
 import GrabButton from './grabbutton';
 import Sequencer from './sequencer';
+import { COPYFILE_FICLONE_FORCE } from 'constants';
 
 enum AuthType {
 	Moderators = 0,
@@ -22,7 +23,8 @@ enum NoteOffMode {
 
 enum NoteBlankColors {
 	gray = 0,
-	piano = 1
+	piano = 1,
+	splitbyFour=2
 }
 
 export default class SequencerColumn {
@@ -46,7 +48,7 @@ export default class SequencerColumn {
 
 	private accidentals = [false, true, false, true, false, false, true, false, true, false, true, false];
 	
-	constructor(protected ourApp: App, private ourSequencer: Sequencer) {
+	constructor(protected ourApp: App, private ourSequencer: Sequencer, private columnNum: number) {
 	
 	}
 
@@ -71,19 +73,19 @@ export default class SequencerColumn {
 					name: "SEQ_button",
 					appearance: {
 						meshId: this.ourApp.boxMesh.id,
-						materialId: this.ourApp.grayMat.id
+						materialId: this.getBlankMaterialID(i)
 					},
 					collider: { geometry: { shape: MRE.ColliderType.Auto } },
 					transform: {
 						local: {
-							position: incAmount.multiplyByFloats(i, i, i),
+							position: incAmount.multiplyByFloats(i, 0, i),
 							scale: new MRE.Vector3(0.1, 0.1, 0.1)
 						}
 					}
 				}
 			});
 
-			await singleButton.created();
+			singleButton.created();
 			this.ourCells.push(singleButton);
 			this.activeCells.push(false);
 
@@ -135,6 +137,14 @@ export default class SequencerColumn {
 				return this.ourApp.grayMat.id;
 			} else{
 				return this.ourApp.lightgrayMat.id;
+			}
+		}
+		if(this.ourSequencer.noteBlankColors===NoteBlankColors.splitbyFour){
+			const index=Math.floor(this.columnNum/4) % 2
+			if(index===0){
+				return this.ourApp.darkgrayMat.id;
+			} else{
+				return this.ourApp.grayRedMat.id;
 			}
 		}
 	}

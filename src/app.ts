@@ -76,6 +76,8 @@ export default class App {
 	public whiteMat: MRE.Material;
 	public blackMat: MRE.Material;
 	public grayMat: MRE.Material;
+	public darkgrayMat: MRE.Material;
+	public grayRedMat: MRE.Material;
 	public lightgrayMat: MRE.Material;
 
 	public handMesh: MRE.Mesh = null;
@@ -123,8 +125,14 @@ export default class App {
 		this.grayMat = this.assets.createMaterial('grayMat', {
 			color: new MRE.Color4(0.5, 0.5, 0.5)
 		});
+		this.grayRedMat = this.assets.createMaterial('grayMat', {
+			color: new MRE.Color4(0.5, 0.25, 0.25)
+		});
 		this.lightgrayMat = this.assets.createMaterial('lightgrayMat', {
 			color: new MRE.Color4(0.75, 0.75, 0.75)
+		});
+		this.darkgrayMat = this.assets.createMaterial('lightgrayMat', {
+			color: new MRE.Color4(0.25, 0.25, 0.25)
 		});
 
 		const filename = `${this.baseUrl}/` + "hand_grey.png";
@@ -401,7 +409,7 @@ export default class App {
 			MRE.Quaternion.FromEulerAngles(-45 * Math.PI / 180, 0, 0));
 
 		this.ourSequencerGui = new SequencerGui(this, this.ourSequencer);
-		await this.ourSequencerGui.createAsync(new MRE.Vector3(xPos, 0.1, -2), "Sequencer")
+		await this.ourSequencerGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Sequencer")
 		this.allGUIs.push(this.ourSequencerGui);
 
 		xPos =1.5;
@@ -420,15 +428,31 @@ export default class App {
 		receivePatchPiano.gui = this.ourPianoGui;
 		receivePatchPiano.button = this.ourPianoGui.receiveButton;
 
-		this.ourPatcher.applyPatch(sendPatchSequencer,receivePatchPiano);
+		this.ourPatcher.applyPatch(sendPatchSequencer,receivePatchPiano);		
 
 		this.ourHeartBeat= new HeartBeat(this);
-		await this.ourHeartBeat.createAsyncItems(new MRE.Vector3(0, 3.0, 0.0),
-			MRE.Quaternion.FromEulerAngles(-45 * Math.PI / 180, 0, 0));
+		/*await this.ourHeartBeat.createAsyncItems(new MRE.Vector3(0, 3.0, 0.0),
+			MRE.Quaternion.FromEulerAngles(-45 * Math.PI / 180, 0, 0));*/
 
 		this.ourHeartBeatGui = new HeartBeatGui(this, this.ourHeartBeat);
-		await this.ourHeartBeatGui.createAsync(new MRE.Vector3(xPos, 0.1, -3), "Heart Beat")
+		await this.ourHeartBeatGui.createAsync(new MRE.Vector3(xPos, 0.1, -1.75), "Heart Beat")
 		this.allGUIs.push(this.ourHeartBeatGui);
+
+		const sendHeartBeat = new PatchPoint();
+		sendHeartBeat.module = this.ourHeartBeat;
+		sendHeartBeat.messageType = "heartbeat";
+		sendHeartBeat.isSender = true;
+		sendHeartBeat.gui = this.ourHeartBeatGui;
+		sendHeartBeat.button = this.ourHeartBeatGui.sendButton;
+
+		const receiveSequencerHeartBeat = new PatchPoint();
+		receiveSequencerHeartBeat.module = this.ourSequencer;
+		receiveSequencerHeartBeat.messageType = "heartbeat";
+		receiveSequencerHeartBeat.isSender = false;
+		receiveSequencerHeartBeat.gui = this.ourSequencerGui;
+		receiveSequencerHeartBeat.button = this.ourSequencerGui.receiveButton;
+
+		this.ourPatcher.applyPatch(sendHeartBeat,receiveSequencerHeartBeat);
 	}
 
 	private stopped() {

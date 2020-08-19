@@ -27,7 +27,7 @@ export default class HeartBeatGui extends GuiPanel{
 		this.ourHeartBeat.setBPM(n);
 	}
 
-	public setNumBeats(n: number): void {
+	/*public setNumBeats(n: number): void {
 		let beats=n;
 
 		if(beats<1){
@@ -36,10 +36,16 @@ export default class HeartBeatGui extends GuiPanel{
 		}
 
 		this.ourHeartBeat.numBeats=beats;
-	}
+	}*/
 
 	public setPlaying(b: boolean): void {
-		this.ourHeartBeat.isPlaying=b;
+		//this.ourHeartBeat.isPlaying=b; //do this is we want to pause/unpause
+
+		if(b){
+			this.ourHeartBeat.start();
+		} else{
+			this.ourHeartBeat.stop();
+		}
 	}
 
 	public recvHeartPatch(b: boolean){
@@ -69,11 +75,11 @@ export default class HeartBeatGui extends GuiPanel{
 			this.ourHeartBeat.bpm, 5.0, this.setBPM.bind(this));
 		zPos -= 0.15;
 
-		this.numBeatsPlusMinus = new PlusMinus(this.ourApp);
+		/*this.numBeatsPlusMinus = new PlusMinus(this.ourApp);
 		await this.numBeatsPlusMinus.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
 			this.guiBackground.id, "BPM",
 			this.ourHeartBeat.numBeats, 1.0, this.setNumBeats.bind(this));
-		zPos -= 0.15;		
+		zPos -= 0.15;	*/	
 
 		this.sendButton = new Button(this.ourApp);
 		await this.sendButton.createAsync(new MRE.Vector3(0, 0.025, zPos),

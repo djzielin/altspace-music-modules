@@ -15,6 +15,7 @@ export default class SequencerGui extends GuiPanel{
 	private resetButton: Button=null;
 	private sharpsButton: Button=null;
 	public sendButton: Button=null;
+	public receiveButton: Button=null;
 	public volSelector: PlusMinus= null;
 
 	constructor(protected ourApp: App, private ourSequencer: Sequencer) {
@@ -55,6 +56,10 @@ export default class SequencerGui extends GuiPanel{
 		this.ourSequencer.noteOffMode=n;
 	}
 
+	public setCellsPerBeat(n: number): void {
+		this.ourSequencer.cellsPerBeat=n;
+	}
+
 	public setNoteBlankColors(n: number): void {
 		this.ourSequencer.noteBlankColors=n;
 		this.ourSequencer.updateBlankColor();
@@ -62,6 +67,9 @@ export default class SequencerGui extends GuiPanel{
 
 	public sendMidiPatcher(b: boolean){
 		this.ourApp.ourPatcher.patcherClickEvent(this.ourSequencer,"midi",true,this,this.sendButton);
+	}
+	public receiveMidiPatcher(b: boolean){
+		this.ourApp.ourPatcher.patcherClickEvent(this.ourSequencer,"heartbeat",false,this,this.receiveButton);
 	}
 	
 	public grabRelease(){
@@ -93,18 +101,23 @@ export default class SequencerGui extends GuiPanel{
 			this.ourPiano.keyLowest, 1, this.setLowestKey.bind(this));
 		zPos -= 0.15;
 */
-		const noteBlankColors: string[] = ["Blank Gray", "Blank Piano"];
+		const noteBlankColors: string[] = ["Blank Gray", "Blank Piano", "Div by 4"];
 		const noteBlankSelector = new ButtonMulti(this.ourApp);
 		await noteBlankSelector.createAsync(new MRE.Vector3(0, 0.025, zPos),
 			this.guiBackground.id, noteBlankColors,
 			this.ourSequencer.noteBlankColors, this.setNoteBlankColors.bind(this));
 		zPos -= 0.15;
 
-
 		this.volSelector = new PlusMinus(this.ourApp);
 		await this.volSelector.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
 			this.guiBackground.id, "vol",
 			this.ourSequencer.volume, 0.05, this.setVolume.bind(this));
+		zPos -= 0.15;
+
+		const cellsPerBeatButton = new PlusMinus(this.ourApp);
+		await cellsPerBeatButton.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
+			this.guiBackground.id, "CPB",
+			this.ourSequencer.cellsPerBeat, 1.0, this.setCellsPerBeat.bind(this));
 		zPos -= 0.15;
 
 		const noteOffLabels: string[] = ["Note Off", "Cell Off", "Any Note Off"];
@@ -118,6 +131,12 @@ export default class SequencerGui extends GuiPanel{
 		await this.sendButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
 			this.guiBackground.id, "SEND MIDI", "SEND MIDI",
 			true, this.sendMidiPatcher.bind(this));
+		zPos -= 0.15;
+
+		this.receiveButton = new Button(this.ourApp);
+		await this.receiveButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
+			this.guiBackground.id, "RECV HBEAT", "RECV HBEAT",
+			true, this.receiveMidiPatcher.bind(this));
 		zPos -= 0.15;
 
 		this.guiGrabber.setGrabReleaseCallback(this.grabRelease.bind(this));

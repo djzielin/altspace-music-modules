@@ -23,7 +23,8 @@ enum NoteOffMode {
 
 enum NoteBlankColors {
 	gray = 0,
-	piano = 1
+	piano = 1,
+	splitbyFour=2
 }
 
 export default class Sequencer extends MusicModule{
@@ -51,32 +52,44 @@ export default class Sequencer extends MusicModule{
 		super(ourApp);
 	}
 
-	public setPlaying(b: boolean){
+	/*public setPlaying(b: boolean){
 		if(this.isPlaying){
 			this.isPlaying=false;
 		} else{
 			this.isPlaying=true;
 		}
-	}
+	}*/
 
 	public receiveData(data: number[], messageType: string){
 		if(messageType==="heartbeat"){
-			const beat=data[0];
+			const beatType=data[0];
 			const interval=data[1];
 
-			const subInterval = interval / this.cellsPerBeat;
-			this.currentColumn = beat * this.cellsPerBeat;
+			if(beatType===-1){ //reset event
+				this.turnOffActiveNotes();
+				this.resetPrevious();
+				this.currentColumn=0;
+				this.isPlaying=false;
+				//TODO technically should clear out waiting setTimeouts
+			}
 
-			this.ourApp.ourConsole.logMessage("sequencer doing beat: " + beat + ".0");
-			this.playColumn(this.currentColumn);
-			this.currentColumn++;
+			if(beatType===1){
+				this.isPlaying=true;
+				const subInterval = interval / this.cellsPerBeat;
 
-			for (let i = 1; i < this.cellsPerBeat; i++) {
-				setTimeout(() => {
-					this.ourApp.ourConsole.logMessage("sequencer doing beat: " + beat + "."+i);
-					this.playColumn(this.currentColumn);
-					this.currentColumn++;
-				}, subInterval * i);
+				this.ourApp.ourConsole.logMessage("sequencer doing beat: " +
+					Math.floor(this.currentColumn / this.cellsPerBeat) + ".0");
+				this.playColumn();
+
+				for (let i = 1; i < this.cellsPerBeat; i++) {
+					setTimeout(() => {
+						if (this.isPlaying) {
+							this.ourApp.ourConsole.logMessage("sequencer doing beat: " +
+								Math.floor(this.currentColumn / this.cellsPerBeat) + "." + i);
+							this.playColumn();
+						}
+					}, subInterval * i);
+				}
 			}
 		}
 	}
@@ -86,16 +99,20 @@ export default class Sequencer extends MusicModule{
 		this.columnIndex=this.ourColumns.length-1; //start at end of sequencer
 	}*/
 
-	public playColumn(i: number){
-		const prevCell=(i-1+this.ourColumns.length)% this.ourColumns.length;
+	private resetPrevious(){
+		const prevCell=(this.currentColumn-1+this.ourColumns.length)% this.ourColumns.length;
 		this.ourColumns[prevCell].resetHeight();
+	}
 
-		this.ourColumns[i].bumpHeight();
+	private playColumn(){
+		this.resetPrevious();
+		this.ourColumns[this.currentColumn].bumpHeight();
+		this.currentColumn=(this.currentColumn+1)%this.ourColumns.length;
 	}
 
 	public updateBlankColor(){
-		for(let x=0;x<16;x++){
-			const oneColumn=this.ourColumns[x];
+		for(let i=0;i<this.ourColumns.length;i++){
+			const oneColumn=this.ourColumns[i];
 			oneColumn.updateBlankColor();			
 		}
 	}
@@ -126,7 +143,7 @@ export default class Sequencer extends MusicModule{
 		this.createGrabber(pos,rot);
 
 		const horizCells=16;
-		const vertCells=25;
+		const vertCells=12;
 
 		const horizInc=new MRE.Vector3(0.15,0,0);
 		const vertInc=new MRE.Vector3(0,0,-0.15)
@@ -134,8 +151,8 @@ export default class Sequencer extends MusicModule{
 
 		
 		for(let x=0;x<16;x++){
-			const oneColumn=new SequencerColumn(this.ourApp,this);
-			await oneColumn.createAsyncItems(vertCells,
+			const oneColumn=new SequencerColumn(this.ourApp,this,x);
+			await oneColumn.createAsyncItems(vertCells, 
 				startPos.add(horizInc.multiplyByFloats(x,x,x)),
 				vertInc,
 				this.ourGrabber.getGUID());
