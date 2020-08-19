@@ -32,5 +32,4 @@ export default class PatchPoint{
 
 		return true;
 	}
-
 }

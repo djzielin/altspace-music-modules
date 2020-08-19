@@ -35,16 +35,16 @@ export default class Sequencer extends MusicModule{
 	public showBackground=true;
 	public volume=1.0;
 	public noteOffMode=NoteOffMode.nextNote;
+	public cellsPerBeat=4;
+
 
 	public activeNotes: number[]=[];
 
 	//private ourGrabber: GrabButton=null;
 	public seBackground: MRE.Actor=null;
-	private ourTimer: NodeJS.Timeout=null;
 	private ourColumns: SequencerColumn[]=[];
-	private columnIndex=0;
+	private currentColumn=0;
 	private isPlaying=true;
-	public sequencerInterval=400;
 	public noteBlankColors=NoteBlankColors.gray;
 
 	constructor(protected ourApp: App) {
@@ -59,23 +59,38 @@ export default class Sequencer extends MusicModule{
 		}
 	}
 
-	public setRewind(b: boolean){
-		this.ourColumns[this.columnIndex].resetHeight();
-		this.columnIndex=this.ourColumns.length-1; //start at end of sequencer
+	public receiveData(data: number[], messageType: string){
+		if(messageType==="heartbeat"){
+			const beat=data[0];
+			const interval=data[1];
+
+			const subInterval = interval / this.cellsPerBeat;
+			this.currentColumn = beat * this.cellsPerBeat;
+
+			this.ourApp.ourConsole.logMessage("sequencer doing beat: " + beat + ".0");
+			this.playColumn(this.currentColumn);
+			this.currentColumn++;
+
+			for (let i = 1; i < this.cellsPerBeat; i++) {
+				setTimeout(() => {
+					this.ourApp.ourConsole.logMessage("sequencer doing beat: " + beat + "."+i);
+					this.playColumn(this.currentColumn);
+					this.currentColumn++;
+				}, subInterval * i);
+			}
+		}
 	}
 
-	public restartSequencer(){
-		if(this.ourTimer){ //clear out the old one (if it exists)
-			clearInterval(this.ourTimer);
-		}
+	/*public setRewind(b: boolean){
+		this.ourColumns[this.columnIndex].resetHeight();
+		this.columnIndex=this.ourColumns.length-1; //start at end of sequencer
+	}*/
 
-		this.ourTimer=setInterval(() => { 
-			if(this.isPlaying){
-				this.ourColumns[this.columnIndex].resetHeight();
-				this.columnIndex=(this.columnIndex+1) % this.ourColumns.length;
-				this.ourColumns[this.columnIndex].bumpHeight();
-			}
-		}, this.sequencerInterval);
+	public playColumn(i: number){
+		const prevCell=(i-1+this.ourColumns.length)% this.ourColumns.length;
+		this.ourColumns[prevCell].resetHeight();
+
+		this.ourColumns[i].bumpHeight();
 	}
 
 	public updateBlankColor(){
@@ -106,7 +121,7 @@ export default class Sequencer extends MusicModule{
 	}
 	
 	public async createAsyncItems(pos: MRE.Vector3, rot=new MRE.Quaternion()) {
-		this.ourApp.ourConsole.logMessage("creating se02 asyn items");
+		this.ourApp.ourConsole.logMessage("creating sequencer asyn items");
 
 		this.createGrabber(pos,rot);
 
@@ -127,9 +142,7 @@ export default class Sequencer extends MusicModule{
 			this.ourColumns.push(oneColumn);
 		}
 
-		this.ourApp.ourConsole.logMessage("completed all sequencer object creation");
-
-		let zPos=-0.5;
+		/*let zPos=-0.5;
 		const playButton = new Button(this.ourApp);
 		await playButton.createAsync(new MRE.Vector3(0.0, 0.0, zPos),
 			this.ourGrabber.getGUID(), "Playing", "Stopped",
@@ -140,9 +153,9 @@ export default class Sequencer extends MusicModule{
 		await resetButton.createAsync(new MRE.Vector3(0.0, 0.0, zPos),
 			this.ourGrabber.getGUID(), "Rewind", "Rewind",
 			false, this.setRewind.bind(this));
-		resetButton.doVisualUpdates=false;
+		resetButton.doVisualUpdates=false;*/
 
-		this.restartSequencer();
+		this.ourApp.ourConsole.logMessage("completed all sequencer object creation");
 	}
 	
 	public isAuthorized(user: MRE.User): boolean{

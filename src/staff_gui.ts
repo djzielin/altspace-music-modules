@@ -149,9 +149,7 @@ export default class StaffGui extends GuiPanel {
 		await this.sendButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
 			this.guiBackground.id, "SEND MIDI", "SEND MIDI",
 			true, this.sendMidiPatcher.bind(this));
-		zPos -= 0.15;
-
-		
+		zPos -= 0.15;		
 
 		this.guiGrabber.setGrabReleaseCallback(this.grabRelease.bind(this));
 

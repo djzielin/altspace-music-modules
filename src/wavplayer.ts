@@ -103,31 +103,33 @@ export default class WavPlayer extends MusicModule{
 		}
 	}
 
-	public receiveData(data: number[]) {
-		if (data.length < 2) {
-			return;
-		}
+	public receiveData(data: number[], messageType: string) {
+		if (messageType === "midi") {
+			if (data.length < 2) {
+				return;
+			}
 
-		const note=data[0];
-		const vel=data[1];
-		const channel=data[2];
+			const note = data[0];
+			const vel = data[1];
+			//const channel = data[2];
 
-		let x=0;
-		let y=0;
-		let z=0;
-		
-		if (vel === 0) {
-			this.stopSound(note);
-			return;
+			let x = 0;
+			let y = 0;
+			let z = 0;
+
+			if (vel === 0) {
+				this.stopSound(note);
+				return;
+			}
+
+			if (data.length >= 6) {
+				x = data[3];
+				y = data[4];
+				z = data[5];
+			}
+
+			this.playSound(note, vel, new MRE.Vector3(x, y, z));
 		}
-		
-		if (data.length>=6) {
-			x=data[2];
-			y=data[3];
-			z=data[4];
-		}
-		
-		this.playSound(note, vel, new MRE.Vector3(x,y,z));
 	}
 
 	private playSound(note: number, vel: number, pos: MRE.Vector3) {

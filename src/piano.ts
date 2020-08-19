@@ -44,6 +44,7 @@ export default class Piano extends MusicModule{
 
 	public activeNotes: Set<number> = new Set();
 	private ourKeys: Map<number,MRE.Actor>=new Map(); 
+	private ourKeyCollisionActors: Map<number,MRE.Actor>=new Map(); 
 	private ourNoteNames: Map<number,MRE.Actor>=new Map();
 	public ourKeyColliderPositions: Map<number,MRE.Vector3>=new Map(); 
 
@@ -236,6 +237,7 @@ export default class Piano extends MusicModule{
 
 			const keyPosCollision = keyPos.clone();
 			keyPosCollision.z=this.zOffsetCollision[note]; //different zPos
+			this.ourKeyColliderPositions.set(i,keyPosCollision);
 
 			const keyActor = MRE.Actor.Create(this.ourApp.context, {
 				actor: {
@@ -251,8 +253,8 @@ export default class Piano extends MusicModule{
 					},
 				}
 			});
-
 			await keyActor.created();
+			this.ourKeys.set(i,keyActor);
 
 			const keyCollisionActor = MRE.Actor.Create(this.ourApp.context, {
 				actor: {
@@ -275,72 +277,80 @@ export default class Piano extends MusicModule{
 					}
 				}
 			});
-
-			this.ourKeyColliderPositions.set(i,keyPosCollision);
-
-			keyCollisionActor.collider.onTrigger("trigger-enter", (otherActor: MRE.Actor) => {
-				this.ourApp.ourConsole.logMessage("PIANO: trigger enter on piano note!");
-
-				if (otherActor.name.includes('SpawnerUserHand')) { //bubble touches hand
-					const guid = otherActor.name.substr(16);
-					//this.ourApp.ourConsole.logMessage("  full user name is: " + otherActor.name);
-					//this.ourApp.ourConsole.logMessage("  guid is: " + guid);
-
-					if (this.ourInteractionAuth === AuthType.All || this.ourApp.ourUsers.isAuthorizedString(guid)) {
-						this.keyPressed(i,100);						
-					}
-
-				} else {
-					//this.ourApp.ourConsole.logMessage("sphere collided with: " + otherActor.name);
-				}
-			});
-
-			keyCollisionActor.collider.onTrigger("trigger-exit", (otherActor: MRE.Actor) => {
-				this.ourApp.ourConsole.logMessage("PIANO: trigger enter on piano note!");
-
-				if (otherActor.name.includes('SpawnerUserHand')) { //bubble touches hand
-					const guid = otherActor.name.substr(16);
-					//this.ourApp.ourConsole.logMessage("  full user name is: " + otherActor.name);
-					//this.ourApp.ourConsole.logMessage("  guid is: " + guid);
-
-					if (this.ourInteractionAuth === AuthType.All || this.ourApp.ourUsers.isAuthorizedString(guid)) {
-						this.keyReleased(i);
-					}
-
-				} else {
-					//this.ourApp.ourConsole.logMessage("sphere collided with: " + otherActor.name);
-				}
-			});
-
-			const buttonBehavior = keyCollisionActor.setBehavior(MRE.ButtonBehavior);
-			buttonBehavior.onButton("pressed", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
-				if (this.isAuthorized(user)) { 
-
-					this.ourApp.ourConsole.logMessage("PIANO: user clicked on piano note: " + i);
-					this.keyPressed(i,100);
-				}else{
-					this.ourApp.ourConsole.logMessage("PIANO: user not authorized to click: " + i);
-				}
-			});
-
-			//TODO: only do release if user had triggered note
-			buttonBehavior.onButton("released", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
-				if (this.isAuthorized(user)) {
-					this.keyReleased(i);
-				}
-			});
-
-			//TODO: only do release if user had triggered note
-			buttonBehavior.onHover("exit", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
-				if (this.isAuthorized(user)) {
-					this.keyReleased(i);
-				}
-			});
-
 			await keyCollisionActor.created();
+			this.ourKeyCollisionActors.set(i,keyCollisionActor);
 
-			this.ourKeys.set(i,keyActor);
+			this.setupInteractions(i);
 		}
+	}
+
+	public setupAllInteractions(){
+		for (let i = this.keyLowest; i < this.keyHighest; i++) {
+			this.setupInteractions(i);
+		}
+	}
+
+	private setupInteractions(i: number){
+		const keyCollisionActor=this.ourKeyCollisionActors.get(i);
+
+		keyCollisionActor.collider.onTrigger("trigger-enter", (otherActor: MRE.Actor) => {
+			this.ourApp.ourConsole.logMessage("PIANO: trigger enter on piano note!");
+
+			if (otherActor.name.includes('SpawnerUserHand')) { //bubble touches hand
+				const guid = otherActor.name.substr(16);
+				//this.ourApp.ourConsole.logMessage("  full user name is: " + otherActor.name);
+				//this.ourApp.ourConsole.logMessage("  guid is: " + guid);
+
+				if (this.ourInteractionAuth === AuthType.All || this.ourApp.ourUsers.isAuthorizedString(guid)) {
+					this.keyPressed(i,100);						
+				}
+
+			} else {
+				//this.ourApp.ourConsole.logMessage("sphere collided with: " + otherActor.name);
+			}
+		});
+
+		keyCollisionActor.collider.onTrigger("trigger-exit", (otherActor: MRE.Actor) => {
+			this.ourApp.ourConsole.logMessage("PIANO: trigger enter on piano note!");
+
+			if (otherActor.name.includes('SpawnerUserHand')) { //bubble touches hand
+				const guid = otherActor.name.substr(16);
+				//this.ourApp.ourConsole.logMessage("  full user name is: " + otherActor.name);
+				//this.ourApp.ourConsole.logMessage("  guid is: " + guid);
+
+				if (this.ourInteractionAuth === AuthType.All || this.ourApp.ourUsers.isAuthorizedString(guid)) {
+					this.keyReleased(i);
+				}
+
+			} else {
+				//this.ourApp.ourConsole.logMessage("sphere collided with: " + otherActor.name);
+			}
+		});
+
+		const buttonBehavior = keyCollisionActor.setBehavior(MRE.ButtonBehavior);
+		buttonBehavior.onButton("pressed", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
+			if (this.isAuthorized(user)) { 
+
+				this.ourApp.ourConsole.logMessage("PIANO: user clicked on piano note: " + i);
+				this.keyPressed(i,100);
+			}else{
+				this.ourApp.ourConsole.logMessage("PIANO: user not authorized to click: " + i);
+			}
+		});
+
+		//TODO: only do release if user had triggered note
+		buttonBehavior.onButton("released", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
+			if (this.isAuthorized(user)) {
+				this.keyReleased(i);
+			}
+		});
+
+		//TODO: only do release if user had triggered note
+		buttonBehavior.onHover("exit", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
+			if (this.isAuthorized(user)) {
+				this.keyReleased(i);
+			}
+		});
 	}
 
 	public getSharpsMode(){ //TODO sharp mode should really be pulled out into a global setting
@@ -351,16 +361,18 @@ export default class Piano extends MusicModule{
 		return doSharpsComputed;
 	}
 
-	public receiveData(data: number[]) {
-		if (data.length > 1) {
-			if (data[1] > 0) {
-				this.keyPressed(data[0], data[1]);
-			} else {
-				this.keyReleased(data[0]);
+	public receiveData(data: number[], messageType: string) {
+		if (messageType === "midi") {
+			if (data.length > 1) {
+				if (data[1] > 0) {
+					this.keyPressed(data[0], data[1]);
+				} else {
+					this.keyReleased(data[0]);
+				}
 			}
 		}
-	}	
-	
+	}
+
 	public isAccidental(n: number): boolean {
 		const pitchClass=n %12;
 

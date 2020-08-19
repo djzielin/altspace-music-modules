@@ -18,7 +18,7 @@ export default class WavPlayerGui extends GuiPanel{
 		super(ourApp);
 	}
 
-	public polyphonyLimit=10; // TODO: allow these to be set in in-world GUI
+	public polyphonyLimit=10;
 	public volume=0.75;
 	public cullTime=5000;
 	public doPedal=true;

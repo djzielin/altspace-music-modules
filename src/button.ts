@@ -3,7 +3,6 @@
  */
 
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
-//import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 import App from './app';
 
 interface BCallback {
@@ -135,10 +134,8 @@ export default class Button {
 						this.updateDisplayValue();
 					}
 					this.ourCallback(this.ourValue);
-				}
-				else{
+				} else{
 					this.ourApp.ourConsole.logMessage("user: " + user.name + " not authorized to click button!");
-
 				}
 			});
 	}

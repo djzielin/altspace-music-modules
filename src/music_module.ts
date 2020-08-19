@@ -68,7 +68,7 @@ export default class MusicModule {
 		this.ourGrabber.create(pos,quat);
 	}	
 
-	public receiveData(data: number[]){ //right now just sending midi messages around
+	public receiveData(data: number[], messageType: string){ 
 
 	}
 
@@ -90,7 +90,7 @@ export default class MusicModule {
 	public sendData(data: number[], messageType: string){
 		for(const singlePatch of this.sendDestinations){
 			if(singlePatch.messageType===messageType){
-				singlePatch.module.receiveData(data);
+				singlePatch.module.receiveData(data, messageType);
 			}
 		}
 	}

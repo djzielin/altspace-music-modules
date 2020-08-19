@@ -25,10 +25,6 @@ export default class SequencerGui extends GuiPanel{
 		this.ourSequencer.ourInteractionAuth = (b === true) ? 1 : 0;
 	}
 
-	public setIntervalTime(n: number): void {
-		this.ourSequencer.sequencerInterval=n*1000.0;
-		this.ourSequencer.restartSequencer();
-	}
 	
 	/*public setScale(n: number): void {
 		this.ourPiano.setScale(n);
@@ -117,12 +113,6 @@ export default class SequencerGui extends GuiPanel{
 			this.guiBackground.id, noteOffLabels,
 			this.ourSequencer.noteOffMode, this.setNoteOffMode.bind(this));
 		zPos -= 0.15;
-
-		const seqPlusMinus = new PlusMinus(this.ourApp);
-		await seqPlusMinus.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
-			this.guiBackground.id, "time",
-			this.ourSequencer.sequencerInterval * 0.001, 0.1, this.setIntervalTime.bind(this));
-		zPos -= 0.15;		
 
 		this.sendButton = new Button(this.ourApp);
 		await this.sendButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
