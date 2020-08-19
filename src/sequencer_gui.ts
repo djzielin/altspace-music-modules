@@ -37,6 +37,7 @@ export default class SequencerGui extends GuiPanel{
 		this.ourPiano.keyHighest = n;
 	}
 	*/
+
 	public setVolume(n: number): void {
 		if(n<0){
 			this.ourSequencer.volume = 0;
@@ -65,14 +66,14 @@ export default class SequencerGui extends GuiPanel{
 		this.ourSequencer.updateBlankColor();
 	}
 
-	public sendMidiPatcher(b: boolean){
-		this.ourApp.ourPatcher.patcherClickEvent(this.ourSequencer,"midi",true,this,this.sendButton);
+	public sendMidiPatcher(b: boolean) {
+		this.ourApp.ourPatcher.patcherClickEvent(this.ourSequencer, "midi", true, this, this.sendButton);
 	}
-	public receiveMidiPatcher(b: boolean){
-		this.ourApp.ourPatcher.patcherClickEvent(this.ourSequencer,"heartbeat",false,this,this.receiveButton);
+	public receiveMidiPatcher(b: boolean) {
+		this.ourApp.ourPatcher.patcherClickEvent(this.ourSequencer, "heartbeat", false, this, this.receiveButton);
 	}
-	
-	public grabRelease(){
+
+	public grabRelease() {
 		this.ourApp.ourPatcher.updatePatchLines(this);
 	}
 
@@ -88,7 +89,7 @@ export default class SequencerGui extends GuiPanel{
 			this.guiBackground.id, "All Users", "Auth Only",
 			this.ourSequencer.ourInteractionAuth === 1, this.setAuthAllUsers.bind(this));
 		zPos -= 0.15;
-
+		
 		/*const scaleSelector = new PlusMinus(this.ourApp);
 		await scaleSelector.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
 			this.guiBackground.id, "scale",

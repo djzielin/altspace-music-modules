@@ -30,39 +30,17 @@ import HeartBeatGui from './heartbeat_gui';
 
 export default class App {
 	public assets: MRE.AssetContainer;
-
 	public ourPatcher: Patcher = null;
-	public ourPiano: Piano = null;
-	public ourPianoGui: PianoGui = null;
 
-	public ourStaff: Staff = null;
-	public ourStaffGui: StaffGui = null;
-
-	public ourTablature: Tablature=null;
-
-	public ourHeartBeat: HeartBeat=null;
-	public ourHeartBeatGui: HeartBeatGui=null;
-
-	public ourWavPlayer: WavPlayer = null;
-	public ourWavPlayerGui: WavPlayerGui = null;
-
-	public ourSequencer: Sequencer = null;
-	public ourSequencerGui: SequencerGui = null;
-
-	public showGUIs=true;
-	public showGrabbers=true;
+	public showGUIs = true;
+	public showGrabbers = true;
 
 	public allGUIs: GuiPanel[] = [];
-	public allModules: MusicModule[]=[];
+	public allModules: MusicModule[] = [];
 
-	//public ourPiano2: Piano = null;
-	//public ourStaff2: Staff=null;
+	public ourPiano: Piano = null;
+	public ourStaff: Staff = null;
 
-	public ourSpawner: any = null;
-	public ourSpawner2: any = null;
-
-
-	public ourWavPlayer2: WavPlayer = null;
 	public ourConsole: Console = null;
 	public menuGrabber: GrabButton = null;
 	public showGUIsButton: Button = null;
@@ -148,28 +126,13 @@ export default class App {
 		this.handMesh = this.assets.createBoxMesh('boxMesh', 0.25, 0.1, 0.25);
 	}
 
-	//TODO: move this to midiReceive module
+	//TODO: move this to midiReceive module and use patching system to connect
 	private PianoReceiveCallback(note: number, vel: number, channel: number): void {
 		this.ourConsole.logMessage(`App received - note: ${note} vel: ${vel}`);
 
 		if (vel > 0) {
-			//if(this.ourWavPlayer){
-			//	this.ourWavPlayer.playSound(note,127,new MRE.Vector3(0,0,0), 20.0);
-			//}
 			if (this.ourPiano) {
 				this.ourPiano.keyPressed(note, vel);
-			}
-			if (this.ourSpawner) {
-				this.ourSpawner.spawnBubble(note, vel);
-			}
-			if (this.ourSpawner2) {
-				this.ourSpawner2.spawnBubble(note, vel);
-			}
-			//if (this.ourStaff) {
-			//	this.ourStaff.receiveNote(note, vel);
-			//}
-			if(this.ourTablature){
-				this.ourTablature.receiveNote(note,vel,channel);
 			}
 		} else {
 			//this.ourPiano.stopSound(note);
@@ -277,8 +240,8 @@ export default class App {
 			this.showGrabbers, this.showAllGrabbers.bind(this));
 		buttonZPos -= 0.2;
 
-		//await this.showPianoStaff();
-		await this.showSequencerPiano();
+		await this.showPianoStaff();
+		//await this.showSequencerPiano();
 
 		this.ourConsole.logMessage("Waiting for all patch lines to be created");
 
@@ -296,60 +259,57 @@ export default class App {
 	private async showPianoStaff(){
 		let xPos = 1.5;
 
-		this.ourConsole.logMessage("Creating Wav Player");
-		this.ourWavPlayer = new WavPlayer(this);
-		await this.ourWavPlayer.loadAllSounds("piano");
-		this.allModules.push(this.ourWavPlayer);
+		const ourWavPlayer = new WavPlayer(this);
+		await ourWavPlayer.loadAllSounds("piano",36,84);
+		this.allModules.push(ourWavPlayer);
 
-		this.ourWavPlayerGui = new WavPlayerGui(this, this.ourWavPlayer);
-		await this.ourWavPlayerGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Piano WavPlayer")		
-		this.allGUIs.push(this.ourWavPlayerGui);
+		const ourWavPlayerGui = new WavPlayerGui(this, ourWavPlayer);
+		await ourWavPlayerGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Piano WavPlayer")		
+		this.allGUIs.push(ourWavPlayerGui);
 		xPos -= 1.75;
 
-		this.ourConsole.logMessage("creating piano keys");
 		this.ourPiano = new Piano(this);
 		await this.ourPiano.createAllKeys(new MRE.Vector3(2, 1, 0),
 			MRE.Quaternion.FromEulerAngles(-30 * Math.PI / 180, 0, 0));	
 		this.allModules.push(this.ourPiano);
 
-		this.ourConsole.logMessage("Loading staff items");
 		this.ourStaff = new Staff(this);
 		await this.ourStaff.createAsyncItems(new MRE.Vector3(2, 2, 0.5),
 			MRE.Quaternion.FromEulerAngles(-90 * Math.PI / 180, 0, 0));		
 		this.allModules.push(this.ourStaff);	
 
-		this.ourStaffGui = new StaffGui(this, this.ourStaff);
-		await this.ourStaffGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Staff")
-		this.allGUIs.push(this.ourStaffGui);
+		const ourStaffGui = new StaffGui(this, this.ourStaff);
+		await ourStaffGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Staff")
+		this.allGUIs.push(ourStaffGui);
 		xPos -= 1.75;
 
-		this.ourPianoGui = new PianoGui(this, this.ourPiano);
-		await this.ourPianoGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Piano")
-		this.allGUIs.push(this.ourPianoGui);
-		this.ourPianoGui.removeSharpsButton();
+		const ourPianoGui = new PianoGui(this, this.ourPiano);
+		await ourPianoGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Piano")
+		this.allGUIs.push(ourPianoGui);
+		ourPianoGui.removeSharpsButton(); //TODO: should have global sharp/flat button
 
 		const sendPatchPiano = new PatchPoint();
 		sendPatchPiano.module = this.ourPiano;
 		sendPatchPiano.messageType = "midi";
 		sendPatchPiano.isSender = true;
-		sendPatchPiano.gui = this.ourPianoGui;
-		sendPatchPiano.button = this.ourPianoGui.sendButton;
+		sendPatchPiano.gui = ourPianoGui;
+		sendPatchPiano.button = ourPianoGui.sendButton;
 
 		const receivePatchStaff = new PatchPoint();
 		receivePatchStaff.module = this.ourStaff;
 		receivePatchStaff.messageType = "midi";
 		receivePatchStaff.isSender = false;
-		receivePatchStaff.gui = this.ourStaffGui;
-		receivePatchStaff.button = this.ourStaffGui.receiveButton;
+		receivePatchStaff.gui = ourStaffGui;
+		receivePatchStaff.button = ourStaffGui.receiveButton;
 
 		this.ourPatcher.applyPatch(sendPatchPiano, receivePatchStaff);
 
 		const receiveWavPlayer = new PatchPoint();
-		receiveWavPlayer.module = this.ourWavPlayer;
+		receiveWavPlayer.module = ourWavPlayer;
 		receiveWavPlayer.messageType = "midi";
 		receiveWavPlayer.isSender = false;
-		receiveWavPlayer.gui = this.ourWavPlayerGui;
-		receiveWavPlayer.button = this.ourWavPlayerGui.receiveButton;
+		receiveWavPlayer.gui = ourWavPlayerGui;
+		receiveWavPlayer.button = ourWavPlayerGui.receiveButton;
 
 		this.ourPatcher.applyPatch(sendPatchPiano, receiveWavPlayer);
 
@@ -357,8 +317,8 @@ export default class App {
 		sendPatchStaff.module = this.ourStaff;
 		sendPatchStaff.messageType = "midi";
 		sendPatchStaff.isSender = true;
-		sendPatchStaff.gui = this.ourStaffGui;
-		sendPatchStaff.button = this.ourStaffGui.sendButton;
+		sendPatchStaff.gui = ourStaffGui;
+		sendPatchStaff.button = ourStaffGui.sendButton;
 
 		this.ourPatcher.applyPatch(sendPatchStaff, receiveWavPlayer);
 	}
@@ -366,93 +326,138 @@ export default class App {
 	private async showSequencerPiano(){
 		let xPos = 1.5;
 
-		this.ourConsole.logMessage("Creating Wav Player");
-		this.ourWavPlayer = new WavPlayer(this);
-		await this.ourWavPlayer.loadAllSounds("piano");
-		this.allModules.push(this.ourWavPlayer);
+		const ourWavPlayer = new WavPlayer(this);
+		await ourWavPlayer.loadAllSounds("piano",36,84);
+		this.allModules.push(ourWavPlayer);
 
-		this.ourWavPlayerGui = new WavPlayerGui(this, this.ourWavPlayer);
-		await this.ourWavPlayerGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Piano WavPlayer")		
-		this.allGUIs.push(this.ourWavPlayerGui);
+		const ourWavPlayerGui = new WavPlayerGui(this, ourWavPlayer);
+		await ourWavPlayerGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Piano WavPlayer")		
+		this.allGUIs.push(ourWavPlayerGui);
 		xPos -= 1.75;
 
-		this.ourConsole.logMessage("creating piano keys");
 		this.ourPiano = new Piano(this);
 		await this.ourPiano.createAllKeys(new MRE.Vector3(2, 1, 0),
 			MRE.Quaternion.FromEulerAngles(-30 * Math.PI / 180, 0, 0));	
 		this.allModules.push(this.ourPiano);
 
-		this.ourPianoGui = new PianoGui(this, this.ourPiano);
-		await this.ourPianoGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Piano")
-		this.allGUIs.push(this.ourPianoGui);
-		this.ourPianoGui.removeSharpsButton();
+		const ourPianoGui = new PianoGui(this, this.ourPiano);
+		await ourPianoGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Piano")
+		this.allGUIs.push(ourPianoGui);
+		xPos -= 1.75;		
+
+		const ourSequencer = new Sequencer(this);
+		await ourSequencer.createAsyncItems(new MRE.Vector3(-1.5, 2.0, 0.0),
+			MRE.Quaternion.FromEulerAngles(-45 * Math.PI / 180, 0, 0),12);
+		this.allModules.push(ourSequencer);
+
+		const ourSequencerGui = new SequencerGui(this, ourSequencer);
+		await ourSequencerGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Piano Sequencer")
+		this.allGUIs.push(ourSequencerGui);
+		xPos =1.5;			
+
+		const ourHeartBeat= new HeartBeat(this);
+		this.allModules.push(ourHeartBeat);
+
+		const ourHeartBeatGui = new HeartBeatGui(this, ourHeartBeat);
+		await ourHeartBeatGui.createAsync(new MRE.Vector3(xPos, 0.1, -1.75), "Heart Beat")
+		this.allGUIs.push(ourHeartBeatGui);
 		xPos -= 1.75;
+
+		const ourWavPlayer2 = new WavPlayer(this);
+		await ourWavPlayer2.loadAllSounds("drums/grd-music",48,54);
+		this.allModules.push(ourWavPlayer2);
+
+		const ourWavPlayerGui2 = new WavPlayerGui(this, ourWavPlayer2);
+		await ourWavPlayerGui2.createAsync(new MRE.Vector3(xPos, 0.1, -1.75), "Drums WavPlayer")		
+		this.allGUIs.push(ourWavPlayerGui2);
+		xPos -= 1.75;
+
+		const ourSequencer2 = new Sequencer(this);
+		await ourSequencer2.createAsyncItems(new MRE.Vector3(1.5, 2.0, 0.0),
+			MRE.Quaternion.FromEulerAngles(-45 * Math.PI / 180, 0, 0),7);
+		this.allModules.push(ourSequencer2);
+
+		const ourSequencerGui2 = new SequencerGui(this, ourSequencer2);
+		await ourSequencerGui2.createAsync(new MRE.Vector3(xPos, 0.1, -1.75), "Drum Sequencer")
+		this.allGUIs.push(ourSequencerGui2);
+		xPos -= 1.75;
+
+		/////// MIDI
 
 		const sendPatchPiano = new PatchPoint();
 		sendPatchPiano.module = this.ourPiano;
 		sendPatchPiano.messageType = "midi";
 		sendPatchPiano.isSender = true;
-		sendPatchPiano.gui = this.ourPianoGui;
-		sendPatchPiano.button = this.ourPianoGui.sendButton;
+		sendPatchPiano.gui = ourPianoGui;
+		sendPatchPiano.button = ourPianoGui.sendButton;
 		
 		const receiveWavPlayer = new PatchPoint();
-		receiveWavPlayer.module = this.ourWavPlayer;
+		receiveWavPlayer.module = ourWavPlayer;
 		receiveWavPlayer.messageType = "midi";
 		receiveWavPlayer.isSender = false;
-		receiveWavPlayer.gui = this.ourWavPlayerGui;
-		receiveWavPlayer.button = this.ourWavPlayerGui.receiveButton;
+		receiveWavPlayer.gui = ourWavPlayerGui;
+		receiveWavPlayer.button = ourWavPlayerGui.receiveButton;
 
 		this.ourPatcher.applyPatch(sendPatchPiano, receiveWavPlayer);		
 
-		this.ourSequencer = new Sequencer(this);
-		await this.ourSequencer.createAsyncItems(new MRE.Vector3(-2, 2.0, 0.0),
-			MRE.Quaternion.FromEulerAngles(-45 * Math.PI / 180, 0, 0));
-
-		this.ourSequencerGui = new SequencerGui(this, this.ourSequencer);
-		await this.ourSequencerGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Sequencer")
-		this.allGUIs.push(this.ourSequencerGui);
-
-		xPos =1.5;
-
 		const sendPatchSequencer = new PatchPoint();
-		sendPatchSequencer.module = this.ourSequencer;
+		sendPatchSequencer.module = ourSequencer;
 		sendPatchSequencer.messageType = "midi";
 		sendPatchSequencer.isSender = true;
-		sendPatchSequencer.gui = this.ourSequencerGui;
-		sendPatchSequencer.button = this.ourSequencerGui.sendButton;
+		sendPatchSequencer.gui = ourSequencerGui;
+		sendPatchSequencer.button = ourSequencerGui.sendButton;
 
 		const receivePatchPiano = new PatchPoint();
 		receivePatchPiano.module = this.ourPiano;
 		receivePatchPiano.messageType = "midi";
 		receivePatchPiano.isSender = false;
-		receivePatchPiano.gui = this.ourPianoGui;
-		receivePatchPiano.button = this.ourPianoGui.receiveButton;
+		receivePatchPiano.gui = ourPianoGui;
+		receivePatchPiano.button = ourPianoGui.receiveButton;
 
-		this.ourPatcher.applyPatch(sendPatchSequencer,receivePatchPiano);		
+		this.ourPatcher.applyPatch(sendPatchSequencer,receivePatchPiano);	
 
-		this.ourHeartBeat= new HeartBeat(this);
-		/*await this.ourHeartBeat.createAsyncItems(new MRE.Vector3(0, 3.0, 0.0),
-			MRE.Quaternion.FromEulerAngles(-45 * Math.PI / 180, 0, 0));*/
+		const sendPatchSequencer2 = new PatchPoint();
+		sendPatchSequencer2.module = ourSequencer2;
+		sendPatchSequencer2.messageType = "midi";
+		sendPatchSequencer2.isSender = true;
+		sendPatchSequencer2.gui = ourSequencerGui2;
+		sendPatchSequencer2.button = ourSequencerGui2.sendButton;
+		
+		const receiveWavPlayer2 = new PatchPoint();
+		receiveWavPlayer2.module = ourWavPlayer2;
+		receiveWavPlayer2.messageType = "midi";
+		receiveWavPlayer2.isSender = false;
+		receiveWavPlayer2.gui = ourWavPlayerGui2;
+		receiveWavPlayer2.button = ourWavPlayerGui2.receiveButton;
 
-		this.ourHeartBeatGui = new HeartBeatGui(this, this.ourHeartBeat);
-		await this.ourHeartBeatGui.createAsync(new MRE.Vector3(xPos, 0.1, -1.75), "Heart Beat")
-		this.allGUIs.push(this.ourHeartBeatGui);
+		this.ourPatcher.applyPatch(sendPatchSequencer2, receiveWavPlayer2);	
 
+		///// HEART BEATS
+		
 		const sendHeartBeat = new PatchPoint();
-		sendHeartBeat.module = this.ourHeartBeat;
+		sendHeartBeat.module = ourHeartBeat;
 		sendHeartBeat.messageType = "heartbeat";
 		sendHeartBeat.isSender = true;
-		sendHeartBeat.gui = this.ourHeartBeatGui;
-		sendHeartBeat.button = this.ourHeartBeatGui.sendButton;
+		sendHeartBeat.gui = ourHeartBeatGui;
+		sendHeartBeat.button = ourHeartBeatGui.sendButton;
 
 		const receiveSequencerHeartBeat = new PatchPoint();
-		receiveSequencerHeartBeat.module = this.ourSequencer;
+		receiveSequencerHeartBeat.module = ourSequencer;
 		receiveSequencerHeartBeat.messageType = "heartbeat";
 		receiveSequencerHeartBeat.isSender = false;
-		receiveSequencerHeartBeat.gui = this.ourSequencerGui;
-		receiveSequencerHeartBeat.button = this.ourSequencerGui.receiveButton;
+		receiveSequencerHeartBeat.gui = ourSequencerGui;
+		receiveSequencerHeartBeat.button = ourSequencerGui.receiveButton;
+
+
+		const receiveSequencerHeartBeat2 = new PatchPoint();
+		receiveSequencerHeartBeat2.module = ourSequencer2;
+		receiveSequencerHeartBeat2.messageType = "heartbeat";
+		receiveSequencerHeartBeat2.isSender = false;
+		receiveSequencerHeartBeat2.gui = ourSequencerGui2;
+		receiveSequencerHeartBeat2.button = ourSequencerGui2.receiveButton;
 
 		this.ourPatcher.applyPatch(sendHeartBeat,receiveSequencerHeartBeat);
+		this.ourPatcher.applyPatch(sendHeartBeat,receiveSequencerHeartBeat2);
 	}
 
 	private stopped() {

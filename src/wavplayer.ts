@@ -63,12 +63,12 @@ export default class WavPlayer extends MusicModule{
 		}, 1000);
 	}
 
-	public async loadAllSounds(subdir: string) {
+	public async loadAllSounds(subdir: string, minMidi: number, maxMidi: number) {
 		//for (let i = 0; i < 128; i++) {
-		for (let i = 36; i < 85; i++) {
+		for (let i = minMidi; i <= maxMidi; i++) {
 			const filename = `${subdir}/${i}.ogg`;
 			const URL = `${this.ourApp.baseUrl}/` + filename;
-			const diskLocation=`${this.ourApp.baseDir}/` + filename;
+			const diskLocation = `${this.ourApp.baseDir}/` + filename;
 
 			try {
 				if (fs.existsSync(diskLocation)) {

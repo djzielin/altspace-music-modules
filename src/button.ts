@@ -140,10 +140,13 @@ export default class Button {
 			});
 	}
 
-	public setValue(val: boolean){
+	public setValue(val: boolean, doCallback=true){
 		this.ourValue=val;
 		this.updateDisplayValue();	
-		this.ourCallback(this.ourValue);	
+
+		if(doCallback){
+			this.ourCallback(this.ourValue);
+		}	
 	}
 
 	public getHolderPos(): MRE.Vector3 {

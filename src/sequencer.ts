@@ -77,15 +77,15 @@ export default class Sequencer extends MusicModule{
 				this.isPlaying=true;
 				const subInterval = interval / this.cellsPerBeat;
 
-				this.ourApp.ourConsole.logMessage("sequencer doing beat: " +
-					Math.floor(this.currentColumn / this.cellsPerBeat) + ".0");
+				//this.ourApp.ourConsole.logMessage("sequencer doing beat: " +
+				//	Math.floor(this.currentColumn / this.cellsPerBeat) + ".0");
 				this.playColumn();
 
 				for (let i = 1; i < this.cellsPerBeat; i++) {
 					setTimeout(() => {
 						if (this.isPlaying) {
-							this.ourApp.ourConsole.logMessage("sequencer doing beat: " +
-								Math.floor(this.currentColumn / this.cellsPerBeat) + "." + i);
+							//this.ourApp.ourConsole.logMessage("sequencer doing beat: " +
+							//	Math.floor(this.currentColumn / this.cellsPerBeat) + "." + i);
 							this.playColumn();
 						}
 					}, subInterval * i);
@@ -137,13 +137,12 @@ export default class Sequencer extends MusicModule{
 		//this.ourSequencer.ourApp.ourMidiSender.send(`[144,${note},${vel}]`)
 	}
 	
-	public async createAsyncItems(pos: MRE.Vector3, rot=new MRE.Quaternion()) {
+	public async createAsyncItems(pos: MRE.Vector3, rot=new MRE.Quaternion(), vertCells: number) {
 		this.ourApp.ourConsole.logMessage("creating sequencer asyn items");
 
 		this.createGrabber(pos,rot);
 
 		const horizCells=16;
-		const vertCells=12;
 
 		const horizInc=new MRE.Vector3(0.15,0,0);
 		const vertInc=new MRE.Vector3(0,0,-0.15)
