@@ -271,6 +271,8 @@ export default class App {
 
 		this.ourPiano = new Piano(this);
 		this.ourPiano.setScale(1.0);
+		this.ourPiano.intervalMode=0;
+		this.ourPiano.noteNameMode=0;
 		await this.ourPiano.createAllGeos(new MRE.Vector3(0, 0, 0));	
 		this.allModules.push(this.ourPiano);
 
