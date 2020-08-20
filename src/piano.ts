@@ -40,6 +40,13 @@ enum NoteNameMode {
 	note2: number;
 }
 
+interface ActiveAnimation{
+	animation: MRE.Animation;
+	time: number;
+	startPos: MRE.Vector3;
+	endPos: MRE.Vector3;
+}
+
 export default class Piano extends MusicModule{
 	public ourInteractionAuth=AuthType.All;
 	public authorizedUser: MRE.User;
@@ -49,6 +56,7 @@ export default class Piano extends MusicModule{
 	private ourKeyCollisionActors: Map<number,MRE.Actor>=new Map(); 
 	private ourNoteNames: Map<number,MRE.Actor>=new Map();
 	public ourKeyColliderPositions: Map<number,MRE.Vector3>=new Map(); 
+	public activeAnimations: Map<number,ActiveAnimation>=new Map();
 
 	public keyboardParent: MRE.Actor;
 	public breathAnimData: MRE.AnimationData;
@@ -448,57 +456,76 @@ export default class Piano extends MusicModule{
 
 		const buttonBehavior = keyCollisionActor.setBehavior(MRE.ButtonBehavior);
 		buttonBehavior.onButton("pressed", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
-			if (this.isAuthorized(user)) { 
+			if (this.isAuthorized(user)) {
 				this.ourApp.ourConsole.logMessage("PIANO: user clicked on piano note: " + i);
 
 				if (this.doGeo) {
-					if (this.canBePicked.get(i)) {
-						this.canBePicked.set(i, false);		
-						this.ourApp.ourConsole.logMessage("PIANO:   available. so activating! " + i);				
+					let oldPos = this.keyLocations.get(i);
 
-						this.keyPressed(i, 100)
-						const pos = this.keyLocations.get(i);
-						const newPos = this.generateRandomPos(this.keyPositioners.get(i).transform.local.scale.x);
+					if (this.activeAnimations.has(i)) {
+						const ourAnim = this.activeAnimations.get(i);
+						ourAnim.animation.stop();
+						const completedTime = ourAnim.animation.normalizedTime;
+						oldPos = MRE.Vector3.Lerp(ourAnim.startPos, ourAnim.endPos, completedTime / ourAnim.time);
 
-						const dist = MRE.Vector3.Distance(pos, newPos);
-						const speed = Math.random() * 1.0 + 0.25;
-						const time = dist / speed;
-						this.ourApp.ourConsole.logMessage("PIANO:   time for travel: " + time
-							+ " for note: " + i);
+						ourAnim.animation.delete();
+						this.activeAnimations.delete(i);
+					}
 
-						const travelAnimData = this.ourApp.assets.createAnimationData("Travel" + i, {
-							tracks: [{
-								target: MRE.ActorPath("target").transform.local.position,
-								keyframes: [
-									{ time: 0.0, value: { x: pos.x, y: pos.y, z: pos.z } },
-									{ time: time, value: { x: newPos.x, y: newPos.y, z: newPos.z } }
-								]
-							}]
+					this.ourApp.ourConsole.logMessage("PIANO:   available. so activating! " + i);
+
+					this.keyPressed(i, 100)
+
+					const newPos = this.generateRandomPos(this.keyPositioners.get(i).transform.local.scale.x);
+
+					const dist = MRE.Vector3.Distance(oldPos, newPos);
+					const speed = Math.random() * 1.0 + 0.25;
+					const time = dist / speed;
+					this.ourApp.ourConsole.logMessage("PIANO:   time for travel: " + time
+						+ " for note: " + i);
+
+					const travelAnimData = this.ourApp.assets.createAnimationData("Travel" + i, {
+						tracks: [{
+							target: MRE.ActorPath("target").transform.local.position,
+							keyframes: [
+								{ time: 0.0, value: { x: oldPos.x, y: oldPos.y, z: oldPos.z } },
+								{ time: time, value: { x: newPos.x, y: newPos.y, z: newPos.z } }
+							]
+						}]
+					});
+
+					this.keyLocations.set(i, newPos);
+
+					travelAnimData.bind(
+						{ target: this.keyPositioners.get(i) },
+						{ speed: 1, isPlaying: true, wrapMode: MRE.AnimationWrapMode.Once }).then((ourAnim) => {
+							const ourAnimation = {
+								animation: ourAnim,
+								time: time,
+								startPos: oldPos,
+								endPos: newPos
+							}
+							this.activeAnimations.set(i, ourAnimation);
+							ourAnim.finished().then(() => {
+								this.activeAnimations.delete(i);
+							});
 						});
 
-						this.keyLocations.set(i, newPos);
+					/*(() => {
+						const index=this.ourApp.assets.animationData.indexOf(travelAnimData);
+						if(index>-1){
+							this.ourApp.assets.animationData.splice(index, 1);
+						}
+						this.canBePicked.set(i, true);
+						this.ourApp.ourConsole.logMessage("PIANO:   note: " + i +
+							" has finished travel, now available");
 
-						travelAnimData.bind(
-							{ target: this.keyPositioners.get(i) },
-							{ speed: 1, isPlaying: true, wrapMode: MRE.AnimationWrapMode.Once });
+					}, (time +0.5) * 1000.0);*/
 
-						setTimeout(() => {
-							const index=this.ourApp.assets.animationData.indexOf(travelAnimData);
-							if(index>-1){
-								this.ourApp.assets.animationData.splice(index, 1);
-							}
-							this.canBePicked.set(i, true);
-							this.ourApp.ourConsole.logMessage("PIANO:   note: " + i +
-								" has finished travel, now available");
-
-						}, (time +0.5) * 1000.0);
-					} else{
-						this.ourApp.ourConsole.logMessage("PIANO:   not available yet. " + i);				
-					}
 				} else {
 					this.keyPressed(i, 100);
 				}
-			}else{
+			} else {
 				this.ourApp.ourConsole.logMessage("PIANO: user not authorized to click: " + i);
 			}
 		});
