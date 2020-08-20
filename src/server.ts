@@ -40,6 +40,7 @@ server.adapter.onConnection(context => {
 	//const session=(server.adapter as MRE.MultipeerAdapter).sessions[sessionId];
 	
 	MRE.log.info("app", "about the create new App in server.ts");
+	MRE.log.info("app","arguements passed in: " + process.argv)
 	return new App(context, server.baseUrl, server.baseDir, ourReceiver, ourSender);
 });
 

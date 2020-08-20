@@ -216,7 +216,7 @@ export default class App {
 
 	private async loadAsyncItems() {
 		this.ourConsole.logMessage("creating console");
-		await this.ourConsole.createAsyncItems(new MRE.Vector3(-0.7, 0, 0.9),this.menuGrabber.getGUID());
+		await this.ourConsole.createAsyncItems(new MRE.Vector3(-2.5, 0, 0.0),this.menuGrabber.getGUID());
 
 		let buttonZPos=0.5;
 

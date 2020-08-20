@@ -23,6 +23,7 @@ export default class Console {
 	public setConsoleOn(b: boolean): void {
 		this.consoleOn=b;
 		this.consoleParent.appearance.enabled = this.consoleOn;
+		this.renderText();
 	}
 
 	public async createAsyncItems(pos: MRE.Vector3, ourParent: MRE.Guid) {
@@ -94,20 +95,26 @@ export default class Console {
 	public logMessage(message: string) {
 		MRE.log.info("app", message);
 
+		this.consoleText.push(message);
+		this.consoleText.shift();
+
 		if (this.consoleOn) {
-
-			this.consoleText.push(message);
-			this.consoleText.shift();
-
-			if (this.consoleTextActor) {
-				let combinedText = "";
-
-				for (const s of this.consoleText) {
-					combinedText += s.substr(0, 80);
-					combinedText += "\n";
-				}
-				this.consoleTextActor.text.contents = combinedText;
-			}
+			this.renderText();
 		}
+	}
+
+	private renderText() {
+		if (!this.consoleTextActor) {
+			return;
+		}
+		
+		let combinedText = "";
+
+		for (const s of this.consoleText) {
+			combinedText += s.substr(0, 80);
+			combinedText += "\n";
+		}
+
+		this.consoleTextActor.text.contents = combinedText;
 	}
 }
