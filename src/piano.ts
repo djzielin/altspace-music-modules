@@ -9,6 +9,7 @@ import App from './app';
 import GrabButton from './grabbutton';
 import MusicModule from './music_module';
 import PianoIntervals from './piano_intervals';
+import GeoArtifacts from './geo_artifacts';
 
 enum AuthType {
 	Moderators = 0,
@@ -59,6 +60,8 @@ export default class Piano extends MusicModule{
 	public intervalMode: IntervalMode=IntervalMode.western;
 	public noteNameMode: NoteNameMode=NoteNameMode.letter;
 
+	public artifacts: GeoArtifacts;
+
 	private inch = 0.0254;
 	public halfinch = this.inch * 0.5;
 	private xOffset =
@@ -99,14 +102,17 @@ export default class Piano extends MusicModule{
 
 	constructor(protected ourApp: App) {
 		super(ourApp);		
-
+		this.artifacts=new GeoArtifacts();
 		this.ourIntervals=new PianoIntervals(ourApp,this);
 	}
 
 	public setScale(scale: number){
 		this.pianoScale=scale;
-		this.keyboardParent.transform.local.scale=new MRE.Vector3(this.pianoScale, this.pianoScale, this.pianoScale);
-		this.updateKeyboardCenter();
+		if(this.keyboardParent){
+			this.keyboardParent.transform.local.scale=
+				new MRE.Vector3(this.pianoScale, this.pianoScale, this.pianoScale);
+			this.updateKeyboardCenter();
+		}
 	}
 
 	public updateKeyboardCenter(){
@@ -279,6 +285,75 @@ export default class Piano extends MusicModule{
 			});
 			await keyCollisionActor.created();
 			this.ourKeyCollisionActors.set(i,keyCollisionActor);
+
+			this.setupInteractions(i);
+		}
+	}
+
+	public async createAllGeos(pos: MRE.Vector3,rot=new MRE.Quaternion()) {
+		if(!this.ourGrabber){
+			this.createGrabber(pos,rot);
+		}else{
+			this.ourGrabber.setPos(pos);
+			this.ourGrabber.setRot(rot);
+		}
+		
+		this.keyboardParent = MRE.Actor.Create(this.ourApp.context, {
+			actor: {
+				name: 'keyboard_parent',
+				parentId: this.ourGrabber.getGUID(),
+				transform: {
+					local: {
+						position: new MRE.Vector3(0, 0, 0),
+						scale: new MRE.Vector3(this.pianoScale, this.pianoScale, this.pianoScale)
+					}
+				}
+			}
+		});
+	
+		this.ourApp.ourConsole.
+			logMessage(`PIANO: creating new geo keyboard with range ${this.keyLowest} to ${this.keyHighest}`);
+		//this.ourApp.ourConsole.logMessage(`octaves: ${totalOctaves}`);
+		
+		for (let i = this.keyLowest; i < this.keyHighest; i++) {	
+			const particleScale=Math.random()*0.75+0.25;
+			const particleIndex=Math.floor(Math.random()*49);
+			const keyPos = new MRE.Vector3(Math.random()*20-10,Math.random()*2+0.5*particleScale,Math.random()*20-10);
+
+			this.keyLocations.set(i,keyPos); 
+
+			const keyPosCollision = keyPos.clone();
+			this.ourKeyColliderPositions.set(i,keyPosCollision);
+
+
+			const spawnRot =
+				MRE.Quaternion.FromEulerAngles(Math.random() * 360, Math.random() * 360, Math.random() * 360);
+
+			const keyActor = MRE.Actor.CreateFromLibrary(this.ourApp.context, {
+				resourceId: this.artifacts.artifacts[particleIndex],
+				actor: {
+					name: 'PianoKey' + i,
+					parentId: this.keyboardParent.id,
+					transform: {
+						local: {
+							position: keyPos,
+							scale: { x: particleScale, y: particleScale, z: particleScale },
+							rotation: spawnRot
+						}
+					},
+					collider: {
+						geometry: {
+							shape: MRE.ColliderType.Sphere							
+						},
+						isTrigger: true
+					}
+				}
+			});
+
+			await keyActor.created();
+	
+			this.ourKeys.set(i,keyActor);
+			this.ourKeyCollisionActors.set(i,keyActor);
 
 			this.setupInteractions(i);
 		}

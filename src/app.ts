@@ -240,8 +240,9 @@ export default class App {
 			this.showGrabbers, this.showAllGrabbers.bind(this));
 		buttonZPos -= 0.2;
 
-		await this.showPianoStaff();
+		//await this.showPianoStaff();
 		//await this.showSequencerPiano();
+		await this.showGeoPiano();
 
 		this.ourConsole.logMessage("Waiting for all patch lines to be created");
 
@@ -254,6 +255,45 @@ export default class App {
 
 		this.ourConsole.logMessage("Finished creation of all asyn items");
 
+	}
+
+	private async showGeoPiano(){
+		let xPos = 1.5;
+
+		const ourWavPlayer = new WavPlayer(this);
+		await ourWavPlayer.loadAllSounds("piano",36,84);
+		this.allModules.push(ourWavPlayer);
+
+		const ourWavPlayerGui = new WavPlayerGui(this, ourWavPlayer);
+		await ourWavPlayerGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Piano WavPlayer")		
+		this.allGUIs.push(ourWavPlayerGui);
+		xPos -= 1.75;
+
+		this.ourPiano = new Piano(this);
+		this.ourPiano.setScale(1.0);
+		await this.ourPiano.createAllGeos(new MRE.Vector3(0, 0, 0));	
+		this.allModules.push(this.ourPiano);
+
+		const ourPianoGui = new PianoGui(this, this.ourPiano);
+		await ourPianoGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Piano")
+		this.allGUIs.push(ourPianoGui);
+		ourPianoGui.removeSharpsButton(); //TODO: should have global sharp/flat button
+
+		const sendPatchPiano = new PatchPoint();
+		sendPatchPiano.module = this.ourPiano;
+		sendPatchPiano.messageType = "midi";
+		sendPatchPiano.isSender = true;
+		sendPatchPiano.gui = ourPianoGui;
+		sendPatchPiano.button = ourPianoGui.sendButton;
+
+		const receiveWavPlayer = new PatchPoint();
+		receiveWavPlayer.module = ourWavPlayer;
+		receiveWavPlayer.messageType = "midi";
+		receiveWavPlayer.isSender = false;
+		receiveWavPlayer.gui = ourWavPlayerGui;
+		receiveWavPlayer.button = ourWavPlayerGui.receiveButton;
+
+		this.ourPatcher.applyPatch(sendPatchPiano, receiveWavPlayer);
 	}
 
 	private async showPianoStaff(){
