@@ -54,5 +54,5 @@ export default class GeoArtifacts {
 		"artifact:1543141063487652285",
 		"artifact:1543140924538749287",
 		"artifact:1543140796864135339",
-		];
+	];
 }

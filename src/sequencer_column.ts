@@ -7,7 +7,6 @@ import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 import App from './app';
 import GrabButton from './grabbutton';
 import Sequencer from './sequencer';
-import { COPYFILE_FICLONE_FORCE } from 'constants';
 
 enum AuthType {
 	Moderators = 0,

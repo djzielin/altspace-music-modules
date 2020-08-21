@@ -4,8 +4,8 @@
 
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 import App from './app';
-import GrabButton from './grabbutton';
-import Button from './button';
+//import GrabButton from './grabbutton';
+//import Button from './button';
 import SequencerColumn from './sequencer_column';
 import MusicModule from './music_module';
 
@@ -137,7 +137,7 @@ export default class Sequencer extends MusicModule{
 		//this.ourSequencer.ourApp.ourMidiSender.send(`[144,${note},${vel}]`)
 	}
 	
-	public async createAsyncItems(pos: MRE.Vector3, rot=new MRE.Quaternion(), vertCells: number) {
+	public async createAsyncItems(vertCells: number, pos: MRE.Vector3, rot=new MRE.Quaternion()) {
 		this.ourApp.ourConsole.logMessage("creating sequencer asyn items");
 
 		this.createGrabber(pos,rot);

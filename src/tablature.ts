@@ -462,7 +462,7 @@ export default class Staff {
 						//this.ourWavPlayer.playSound(note, vel, spawnPos);
 					}
 					this.spawnParticleEffect(spawnPos, scale, noteNum);
-					this.ourApp.ourSender.send(`["/NoteOn",${ourNote.note}]`);
+					//this.ourApp.ourSender.send(`["/NoteOn",${ourNote.note}]`);
 				}
 			} else {
 				//this.ourApp.ourConsole.logMessage("sphere collided with: " + otherActor.name);

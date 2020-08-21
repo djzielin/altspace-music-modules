@@ -6,11 +6,10 @@
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 
 import App from './app';
-import GrabButton from './grabbutton';
+//import GrabButton from './grabbutton';
 import MusicModule from './music_module';
 import PianoIntervals from './piano_intervals';
 import GeoArtifacts from './geo_artifacts';
-import { posix } from 'path';
 
 enum AuthType {
 	Moderators = 0,
@@ -31,7 +30,7 @@ enum NoteNameMode {
 	solfege = 2
 }
 
-  interface IntervalDisplay{
+interface IntervalDisplay {
 	line1: MRE.Actor;
 	line2: MRE.Actor;
 	line3: MRE.Actor;
@@ -40,39 +39,39 @@ enum NoteNameMode {
 	note2: number;
 }
 
-interface ActiveAnimation{
+interface ActiveAnimation {
 	animation: MRE.Animation;
 	time: number;
 	startPos: MRE.Vector3;
 	endPos: MRE.Vector3;
 }
 
-export default class Piano extends MusicModule{
-	public ourInteractionAuth=AuthType.All;
+export default class Piano extends MusicModule {
+	public ourInteractionAuth = AuthType.All;
 	public authorizedUser: MRE.User;
 
 	public activeNotes: Set<number> = new Set();
-	private ourKeys: Map<number,MRE.Actor>=new Map(); 
-	private ourKeyCollisionActors: Map<number,MRE.Actor>=new Map(); 
-	private ourNoteNames: Map<number,MRE.Actor>=new Map();
-	public ourKeyColliderPositions: Map<number,MRE.Vector3>=new Map(); 
-	public activeAnimations: Map<number,ActiveAnimation>=new Map();
+	private ourKeys: Map<number, MRE.Actor> = new Map();
+	private ourKeyCollisionActors: Map<number, MRE.Actor> = new Map();
+	private ourNoteNames: Map<number, MRE.Actor> = new Map();
+	public ourKeyColliderPositions: Map<number, MRE.Vector3> = new Map();
+	public activeAnimations: Map<number, ActiveAnimation> = new Map();
 
 	public keyboardParent: MRE.Actor;
 	public breathAnimData: MRE.AnimationData;
 
-	public keyLowest=36;
-	public keyHighest=85;
-	public pianoScale=5.0;
-	public audioRange=50.0;
-	public doSharps=true;
-	public doGeo=false;
+	public keyLowest = 36;
+	public keyHighest = 85;
+	public pianoScale = 5.0;
+	public audioRange = 50.0;
+	public doSharps = true;
+	public doGeo = false;
 
-	public intervalMode: IntervalMode=IntervalMode.western;
-	public noteNameMode: NoteNameMode=NoteNameMode.letter;
+	public intervalMode: IntervalMode = IntervalMode.western;
+	public noteNameMode: NoteNameMode = NoteNameMode.letter;
 
 	public artifacts: GeoArtifacts;
-	public keyPositioners: Map<number, MRE.Actor>=new Map();
+	public keyPositioners: Map<number, MRE.Actor> = new Map();
 
 	private inch = 0.0254;
 	public halfinch = this.inch * 0.5;
@@ -92,7 +91,7 @@ export default class Piano extends MusicModule{
 	private yOffset =
 		[0, this.halfinch, 0, this.halfinch, 0, 0, this.halfinch, 0, this.halfinch, 0, this.halfinch, 0];
 	private zOffset =
-		[0, this.inch - 0.001, 0, this.inch - 0.001, 0, 0, this.inch - 0.001, 0, this.inch - 0.001, 0, 
+		[0, this.inch - 0.001, 0, this.inch - 0.001, 0, 0, this.inch - 0.001, 0, this.inch - 0.001, 0,
 			this.inch - 0.001, 0];
 	private zOffsetCollision =
 		[-this.inch * 1.75, this.inch, -this.inch * 1.75, this.inch, -this.inch * 1.75,
@@ -105,35 +104,35 @@ export default class Piano extends MusicModule{
 	private noteNamesSharps =
 		["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
-	private solfegeSharpNames=["Do","Di","Re","Ri","Mi","Fa","Fi","Sol","Si","La","Li","Ti"];
-	private solfegeFlatNames=["Do","Ra","Re","Me","Mi","Fa","Se","Sol","Le","La","Te","Ti"];
+	private solfegeSharpNames = ["Do", "Di", "Re", "Ri", "Mi", "Fa", "Fi", "Sol", "Si", "La", "Li", "Ti"];
+	private solfegeFlatNames = ["Do", "Ra", "Re", "Me", "Mi", "Fa", "Se", "Sol", "Le", "La", "Te", "Ti"];
 
-	private keyLocations: Map<number,MRE.Vector3>=new Map();
-	private canBePicked: Map<number, boolean>=new Map();
+	private keyLocations: Map<number, MRE.Vector3> = new Map();
+	private canBePicked: Map<number, boolean> = new Map();
 
 	private ourIntervals: PianoIntervals = null;
 
 	constructor(protected ourApp: App) {
-		super(ourApp);		
-		this.artifacts=new GeoArtifacts();
-		this.ourIntervals=new PianoIntervals(ourApp,this);
+		super(ourApp);
+		this.artifacts = new GeoArtifacts();
+		this.ourIntervals = new PianoIntervals(ourApp, this);
 	}
 
-	public setScale(scale: number){
-		this.pianoScale=scale;
-		if(this.keyboardParent){
-			this.keyboardParent.transform.local.scale=
+	public setScale(scale: number) {
+		this.pianoScale = scale;
+		if (this.keyboardParent) {
+			this.keyboardParent.transform.local.scale =
 				new MRE.Vector3(this.pianoScale, this.pianoScale, this.pianoScale);
 			this.updateKeyboardCenter();
 		}
 	}
 
-	public updateKeyboardCenter(){
-		const highPos=this.computeKeyPositionX(this.keyHighest)*this.pianoScale;
+	public updateKeyboardCenter() {
+		const highPos = this.computeKeyPositionX(this.keyHighest) * this.pianoScale;
 
-		const offset=-highPos-0.5;
+		const offset = -highPos - 0.5;
 
-		this.keyboardParent.transform.local.position.x=offset;
+		this.keyboardParent.transform.local.position.x = offset;
 	}
 
 	public setProperKeyColor(midiNote: number) {
@@ -159,15 +158,15 @@ export default class Piano extends MusicModule{
 		}
 	}
 
-	private isAuthorized(user: MRE.User): boolean{
-		if(this.ourInteractionAuth===AuthType.All){
+	private isAuthorized(user: MRE.User): boolean {
+		if (this.ourInteractionAuth === AuthType.All) {
 			return true;
 		}
-		if(this.ourInteractionAuth===AuthType.Moderators){
+		if (this.ourInteractionAuth === AuthType.Moderators) {
 			return this.ourApp.ourUsers.isAuthorized(user);
 		}
-		if(this.ourInteractionAuth===AuthType.SpecificUser){
-			if(user===this.authorizedUser){
+		if (this.ourInteractionAuth === AuthType.SpecificUser) {
+			if (user === this.authorizedUser) {
 				return true;
 			}
 		}
@@ -175,8 +174,8 @@ export default class Piano extends MusicModule{
 		return false;
 	}
 
-	public destroyKeys(){
-		for(const keyActor of this.ourKeys.values()){
+	public destroyKeys() {
+		for (const keyActor of this.ourKeys.values()) {
 			keyActor.destroy();
 		}
 		this.ourKeys.clear();
@@ -186,33 +185,33 @@ export default class Piano extends MusicModule{
 		//this.ourGrabber.destroy();
 	}
 
-	private computeKeyPositionX(i: number): number{
-		const totalOctaves=Math.ceil((this.keyHighest-this.keyLowest)/12.0);
-		const baseOctave=Math.floor(this.keyLowest / 12);
+	private computeKeyPositionX(i: number): number {
+		const totalOctaves = Math.ceil((this.keyHighest - this.keyLowest) / 12.0);
+		const baseOctave = Math.floor(this.keyLowest / 12);
 		const octave = Math.floor(i / 12);
-		const relativeOctave=octave-baseOctave;
+		const relativeOctave = octave - baseOctave;
 		const note = i % 12;
 
 		return -this.octaveSize * totalOctaves + relativeOctave * this.octaveSize + this.xOffset[note];
 	}
 
-	public async createAllKeys(pos: MRE.Vector3,rot=new MRE.Quaternion()) {
+	public async createAllKeys(pos: MRE.Vector3, rot = new MRE.Quaternion()) {
 		const whiteKeyMesh = this.ourApp.assets.createBoxMesh('box', this.inch * 0.9, this.inch, this.inch * 5.5);
 		await whiteKeyMesh.created;
-		const whiteKeyCollisionMesh = this.ourApp.assets.createBoxMesh('box', this.inch * 0.9, 
+		const whiteKeyCollisionMesh = this.ourApp.assets.createBoxMesh('box', this.inch * 0.9,
 			this.inch, this.inch * 2.0);
 		await whiteKeyCollisionMesh.created;
 
 		const blackKeyMesh = this.ourApp.assets.createBoxMesh('box', this.halfinch, this.inch, this.inch * 3.5);
 		await blackKeyMesh.created;
-		
-		if(!this.ourGrabber){
-			this.createGrabber(pos,rot);
-		}else{
+
+		if (!this.ourGrabber) {
+			this.createGrabber(pos, rot);
+		} else {
 			this.ourGrabber.setPos(pos);
 			this.ourGrabber.setRot(rot);
 		}
-		
+
 		this.keyboardParent = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
 				name: 'keyboard_parent',
@@ -231,7 +230,7 @@ export default class Piano extends MusicModule{
 		this.ourApp.ourConsole.
 			logMessage(`PIANO: creating new keyboard with range ${this.keyLowest} to ${this.keyHighest}`);
 		//this.ourApp.ourConsole.logMessage(`octaves: ${totalOctaves}`);
-		
+
 
 		for (let i = this.keyLowest; i < this.keyHighest; i++) {
 			let meshId: MRE.Guid = blackKeyMesh.id;
@@ -244,19 +243,19 @@ export default class Piano extends MusicModule{
 			if (this.zOffset[note] === 0) {
 				meshId = whiteKeyMesh.id;
 				mattId = this.ourApp.whiteMat.id;
-				collisionMeshID=whiteKeyCollisionMesh.id;
+				collisionMeshID = whiteKeyCollisionMesh.id;
 			}
 
 			const keyPos = new MRE.Vector3(
-				this.computeKeyPositionX(i), 
+				this.computeKeyPositionX(i),
 				this.yOffset[note],
 				this.zOffset[note]);
 
-			this.keyLocations.set(i,keyPos); 
+			this.keyLocations.set(i, keyPos);
 
 			const keyPosCollision = keyPos.clone();
-			keyPosCollision.z=this.zOffsetCollision[note]; //different zPos
-			this.ourKeyColliderPositions.set(i,keyPosCollision);
+			keyPosCollision.z = this.zOffsetCollision[note]; //different zPos
+			this.ourKeyColliderPositions.set(i, keyPosCollision);
 
 			const keyActor = MRE.Actor.Create(this.ourApp.context, {
 				actor: {
@@ -268,12 +267,12 @@ export default class Piano extends MusicModule{
 					appearance:
 					{
 						meshId: meshId,
-						materialId: mattId 
+						materialId: mattId
 					},
 				}
 			});
 			await keyActor.created();
-			this.ourKeys.set(i,keyActor);
+			this.ourKeys.set(i, keyActor);
 
 			const keyCollisionActor = MRE.Actor.Create(this.ourApp.context, {
 				actor: {
@@ -297,41 +296,43 @@ export default class Piano extends MusicModule{
 				}
 			});
 			await keyCollisionActor.created();
-			this.ourKeyCollisionActors.set(i,keyCollisionActor);
+			this.ourKeyCollisionActors.set(i, keyCollisionActor);
 
 			this.setupInteractions(i);
 		}
 	}
 
-	private setupBreathAnimation(){
-		this.breathAnimData = this.ourApp.assets.createAnimationData("Breath", { tracks: [{
-			target: MRE.ActorPath("target").transform.local.scale,
-			keyframes:  [
-				{ time: 0.0, value: { x: 1.0, y: 1.0, z: 1.0 }},
-				{ time: 0.5, value: { x: 1.0, y: 1.0, z: 1.0 }},
-				{ time: 3.0, value: { x: 1.1, y: 1.1, z: 1.1 }},
-				{ time: 3.5, value: { x: 1.1, y: 1.1, z: 1.1 }},
-				{ time: 6.0, value: { x: 1.0, y: 1.0, z: 1.0 }}
-			]
-		}]});
+	private setupBreathAnimation() {
+		this.breathAnimData = this.ourApp.assets.createAnimationData("Breath", {
+			tracks: [{
+				target: MRE.ActorPath("target").transform.local.scale,
+				keyframes: [
+					{ time: 0.0, value: { x: 1.0, y: 1.0, z: 1.0 } },
+					{ time: 0.5, value: { x: 1.0, y: 1.0, z: 1.0 } },
+					{ time: 3.0, value: { x: 1.1, y: 1.1, z: 1.1 } },
+					{ time: 3.5, value: { x: 1.1, y: 1.1, z: 1.1 } },
+					{ time: 6.0, value: { x: 1.0, y: 1.0, z: 1.0 } }
+				]
+			}]
+		});
 	}
 
-	private generateRandomPos(scale: number): MRE.Vector3{
-		return new MRE.Vector3(Math.random()*20-10,Math.random()*2+0.5*scale,Math.random()*20-10);
+	private generateRandomPos(scale: number): MRE.Vector3 {
+		return new MRE.Vector3(Math.random() * 20 - 10, Math.random() * 2 + 0.5 * scale, Math.random() * 20 - 10);
 	}
 
-	public async createAllGeos(pos: MRE.Vector3,rot=new MRE.Quaternion()) {
-		this.doGeo=true;
+	public async createAllGeos(pos: MRE.Vector3, rot = new MRE.Quaternion()) {
+		this.doGeo = true;
 
-		if(!this.ourGrabber){
-			this.createGrabber(pos,rot);
-		}else{
+		if (!this.ourGrabber) {
+			this.createGrabber(pos, rot);
+		} else {
 			this.ourGrabber.setPos(pos);
 			this.ourGrabber.setRot(rot);
 		}
 
 		this.setupBreathAnimation();
-		
+
 		this.keyboardParent = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
 				name: 'keyboard_parent',
@@ -344,20 +345,20 @@ export default class Piano extends MusicModule{
 				}
 			}
 		});
-	
+
 		this.ourApp.ourConsole.
 			logMessage(`PIANO: creating new geo keyboard with range ${this.keyLowest} to ${this.keyHighest}`);
 		//this.ourApp.ourConsole.logMessage(`octaves: ${totalOctaves}`);
-		
-		for (let i = this.keyLowest; i < this.keyHighest; i++) {	
-			const particleScale=Math.random()*0.75+0.25;
-			const particleIndex=Math.floor(Math.random()*49);
+
+		for (let i = this.keyLowest; i < this.keyHighest; i++) {
+			const particleScale = Math.random() * 0.75 + 0.25;
+			const particleIndex = Math.floor(Math.random() * 49);
 			const keyPos = this.generateRandomPos(particleScale);
 
-			this.keyLocations.set(i,keyPos); 
+			this.keyLocations.set(i, keyPos);
 
 			const keyPosCollision = keyPos.clone();
-			this.ourKeyColliderPositions.set(i,keyPosCollision);
+			this.ourKeyColliderPositions.set(i, keyPosCollision);
 
 
 			const spawnRot =
@@ -376,7 +377,7 @@ export default class Piano extends MusicModule{
 					}
 				}
 			});
-			this.keyPositioners.set(i,keyPositioner);
+			this.keyPositioners.set(i, keyPositioner);
 
 			const keyActor = MRE.Actor.CreateFromLibrary(this.ourApp.context, {
 				resourceId: this.artifacts.artifacts[particleIndex],
@@ -390,7 +391,7 @@ export default class Piano extends MusicModule{
 					},
 					collider: {
 						geometry: {
-							shape: MRE.ColliderType.Sphere							
+							shape: MRE.ColliderType.Sphere
 						},
 						isTrigger: true
 					}
@@ -401,24 +402,24 @@ export default class Piano extends MusicModule{
 
 			this.breathAnimData.bind(
 				{ target: keyActor },
-				{ speed: (1 / particleScale)*0.5, isPlaying: true, wrapMode: MRE.AnimationWrapMode.Loop });
+				{ speed: (1 / particleScale) * 0.5, isPlaying: true, wrapMode: MRE.AnimationWrapMode.Loop });
 
 			this.ourKeys.set(i, keyActor);
 			this.ourKeyCollisionActors.set(i, keyActor);
-			this.canBePicked.set(i,true);
+			this.canBePicked.set(i, true);
 
 			this.setupInteractions(i);
 		}
 	}
 
-	public setupAllInteractions(){
+	public setupAllInteractions() {
 		for (let i = this.keyLowest; i < this.keyHighest; i++) {
 			this.setupInteractions(i);
 		}
 	}
 
-	private setupInteractions(i: number){
-		const keyCollisionActor=this.ourKeyCollisionActors.get(i);
+	private setupInteractions(i: number) {
+		const keyCollisionActor = this.ourKeyCollisionActors.get(i);
 
 		keyCollisionActor.collider.onTrigger("trigger-enter", (otherActor: MRE.Actor) => {
 			this.ourApp.ourConsole.logMessage("PIANO: trigger enter on piano note!");
@@ -429,7 +430,7 @@ export default class Piano extends MusicModule{
 				//this.ourApp.ourConsole.logMessage("  guid is: " + guid);
 
 				if (this.ourInteractionAuth === AuthType.All || this.ourApp.ourUsers.isAuthorizedString(guid)) {
-					this.keyPressed(i,100);						
+					this.keyPressed(i, 100);
 				}
 
 			} else {
@@ -499,17 +500,17 @@ export default class Piano extends MusicModule{
 					travelAnimData.bind(
 						{ target: this.keyPositioners.get(i) },
 						{ speed: 1, isPlaying: true, wrapMode: MRE.AnimationWrapMode.Once }).then((ourAnim) => {
-							const ourAnimation = {
-								animation: ourAnim,
-								time: time,
-								startPos: oldPos,
-								endPos: newPos
-							}
-							this.activeAnimations.set(i, ourAnimation);
-							ourAnim.finished().then(() => {
-								this.activeAnimations.delete(i);
-							});
+						const ourAnimation = {
+							animation: ourAnim,
+							time: time,
+							startPos: oldPos,
+							endPos: newPos
+						}
+						this.activeAnimations.set(i, ourAnimation);
+						ourAnim.finished().then(() => {
+							this.activeAnimations.delete(i);
 						});
+					});
 
 					/*(() => {
 						const index=this.ourApp.assets.animationData.indexOf(travelAnimData);
@@ -545,7 +546,7 @@ export default class Piano extends MusicModule{
 		});
 	}
 
-	public getSharpsMode(){ //TODO sharp mode should really be pulled out into a global setting
+	public getSharpsMode() { //TODO sharp mode should really be pulled out into a global setting
 		let doSharpsComputed = this.doSharps;
 		if (this.ourApp.ourStaff) {
 			doSharpsComputed = this.ourApp.ourStaff.doSharps;
@@ -566,9 +567,9 @@ export default class Piano extends MusicModule{
 	}
 
 	public isAccidental(n: number): boolean {
-		const pitchClass=n %12;
+		const pitchClass = n % 12;
 
-		if(pitchClass===1 || pitchClass===3 || pitchClass===6 || pitchClass===8 || pitchClass===10){
+		if (pitchClass === 1 || pitchClass === 3 || pitchClass === 6 || pitchClass === 8 || pitchClass === 10) {
 			return true;
 		}
 
@@ -578,18 +579,18 @@ export default class Piano extends MusicModule{
 	public keyPressed(note: number, vel: number) {
 		//this.ourApp.ourConsole.logMessage("piano received note ON message! note: " + note);
 
-		if (!this.ourKeys.has(note) || (!this.keyLocations.has(note))){
+		if (!this.ourKeys.has(note) || (!this.keyLocations.has(note))) {
 			return;
 		}
 
 		const doSharpsComputed = this.getSharpsMode();
 
 		const newPos = this.keyLocations.get(note).clone();
-		newPos.y-=0.01;
+		newPos.y -= 0.01;
 
-		if(this.doGeo){
+		if (this.doGeo) {
 			this.keyPositioners.get(note).transform.local.position = newPos;
-		} else{
+		} else {
 			this.ourKeys.get(note).transform.local.position = newPos;
 		}
 
@@ -607,14 +608,14 @@ export default class Piano extends MusicModule{
 		const posInWorld = this.getWorldPosFromMatrix(transformedPoint);
 
 		const message = [note, vel, 0, posInWorld.x, posInWorld.y, posInWorld.z];
-		this.sendData(message,"midi");
+		this.sendData(message, "midi");
 
 		this.setFancyKeyColor(note);
 
 		if (this.noteNameMode > 0) {
 			const noteNum = note % 12;
 			let noteName = "";
-			let noteHeight=0.005;
+			let noteHeight = 0.005;
 
 			if (this.noteNameMode === NoteNameMode.letter) {
 				if (doSharpsComputed) {
@@ -654,7 +655,7 @@ export default class Piano extends MusicModule{
 					transform: {
 						local: {
 							position: notePosition,
-							scale: new MRE.Vector3(this.pianoScale,this.pianoScale,this.pianoScale),
+							scale: new MRE.Vector3(this.pianoScale, this.pianoScale, this.pianoScale),
 							rotation: MRE.Quaternion.FromEulerAngles(90 * Math.PI / 180, 0, 0)
 						}
 					},
@@ -667,16 +668,16 @@ export default class Piano extends MusicModule{
 				}
 			});
 
-			if(this.ourNoteNames.has(note)){ //on the off chance was already created and not destroyed
+			if (this.ourNoteNames.has(note)) { //on the off chance was already created and not destroyed
 				this.ourNoteNames.get(note).destroy();
 			}
-			this.ourNoteNames.set(note,noteNameActor);
-		}	
+			this.ourNoteNames.set(note, noteNameActor);
+		}
 
 		if (!this.activeNotes.has(note)) {
 
-			if (this.intervalMode>0) {
-				this.ourIntervals.keyPressed(note);				
+			if (this.intervalMode > 0) {
+				this.ourIntervals.keyPressed(note);
 			}
 			this.activeNotes.add(note);
 			//this.ourApp.ourMidiSender.send(`[144,${note},${vel}]`)
@@ -686,12 +687,12 @@ export default class Piano extends MusicModule{
 	public keyReleased(note: number) {
 		//this.ourApp.ourConsole.logMessage("piano received note OFF message! note: " + note);
 
-		if(!this.ourKeys.has(note)){
+		if (!this.ourKeys.has(note)) {
 			//this.ourApp.ourConsole.logMessage("ERROR: note is outside the range of our piano");
 			return;
-		}		
-		
-		if(!this.activeNotes.has(note)){
+		}
+
+		if (!this.activeNotes.has(note)) {
 			//this.ourApp.ourConsole.logMessage("ERROR: keyReleased called for note that was not pressed");
 			return;
 		}
@@ -703,9 +704,9 @@ export default class Piano extends MusicModule{
 
 		const newPos = this.keyLocations.get(note).clone();
 
-		if(this.doGeo){
+		if (this.doGeo) {
 			this.keyPositioners.get(note).transform.local.position = newPos;
-		} else{
+		} else {
 			this.ourKeys.get(note).transform.local.position = newPos;
 		}
 
@@ -713,12 +714,12 @@ export default class Piano extends MusicModule{
 			const noteName = this.ourNoteNames.get(note);
 			noteName.destroy();
 		}
-		
+
 		//this.ourApp.ourMidiSender.send(`[128,${note},0]`)
 		this.activeNotes.delete(note);
 		this.setProperKeyColor(note);
 
-		if (this.intervalMode>0) {
+		if (this.intervalMode > 0) {
 			this.ourIntervals.keyReleased(note);
 		}
 	}

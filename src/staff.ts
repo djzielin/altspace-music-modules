@@ -7,7 +7,7 @@ import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 //import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 import App from './app';
 //import WavPlayer from './wavplayer';
-import GrabButton from './grabbutton';
+//import GrabButton from './grabbutton';
 //import StaffSharp from './staffsharp';
 //import StaffFlat from './staffflat';
 import Button from './button';
@@ -612,7 +612,7 @@ export default class Staff extends MusicModule {
 					this.sendData(message,"midi");
 
 					this.spawnParticleEffect(spawnPos, scale, noteNum);
-					this.ourApp.ourSender.send(`["/NoteOn",${ourNote.note}]`);
+					//this.ourApp.ourSender.send(`["/NoteOn",${ourNote.note}]`);
 				}
 			} else {
 				//this.ourApp.ourConsole.logMessage("sphere collided with: " + otherActor.name);

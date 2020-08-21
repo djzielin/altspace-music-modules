@@ -356,7 +356,7 @@ export default class Spawner {
 
 				//this.ourWavPlayer.playSound(note,127,collisionPos);
 				this.spawnParticleEffect(collisionPos, noteNum);
-				this.ourApp.ourSender.send(`["/NoteOn",${ourBubble.note}]`);
+				//this.ourApp.ourSender.send(`["/NoteOn",${ourBubble.note}]`);
 				
 				this.removeFromAvailable(ourBubble);
 				ourBubble.actor.destroy();

@@ -8,7 +8,7 @@ import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 import { PianoReceiver, RCallback } from './receiver'
 import Piano from './piano'
 //import Spawner from './spawner'
-import OscSender from './sender';
+//import OscSender from './sender';
 import WavPlayer from './wavplayer';
 import Console from './console';
 import Button from './button';
@@ -18,7 +18,7 @@ import PianoGui from './piano_gui';
 import StaffGui from './staff_gui';
 import WavPlayerGui from './wavplayer_gui';
 import Users from './users';
-import Tablature from './tablature';
+//import Tablature from './tablature';
 import GuiPanel from './gui_panel';
 import MusicModule from './music_module';
 import Sequencer from './sequencer';
@@ -67,7 +67,7 @@ export default class App {
 	private receiverCallback: RCallback;
 
 	constructor(public context: MRE.Context, public baseUrl: string, public baseDir: string,
-		public ourReceiver: PianoReceiver, public ourSender: OscSender) {
+		public ourReceiver: PianoReceiver, public instrumentType: string) {
 		this.ourConsole = new Console(this);
 		this.ourPatcher = new Patcher(this);
 		this.ourUsers=new Users(this);
@@ -240,10 +240,16 @@ export default class App {
 			this.showGrabbers, this.showAllGrabbers.bind(this));
 		buttonZPos -= 0.2;
 
-		//await this.showPianoStaff();
-		//await this.showSequencerPiano();
-		await this.showGeoPiano();
+		if(this.instrumentType==="piano"){
+			await this.showPianoStaff();
+		}
 
+		if(this.instrumentType==="geo"){
+			await this.showGeoPiano();
+		}
+
+		//await this.showSequencerPiano();
+		
 		this.ourConsole.logMessage("Waiting for all patch lines to be created");
 
 		for(const singlePatch of this.ourPatcher.ourPatches){
@@ -388,8 +394,8 @@ export default class App {
 		xPos -= 1.75;		
 
 		const ourSequencer = new Sequencer(this);
-		await ourSequencer.createAsyncItems(new MRE.Vector3(-1.5, 2.0, 0.0),
-			MRE.Quaternion.FromEulerAngles(-45 * Math.PI / 180, 0, 0),12);
+		await ourSequencer.createAsyncItems(12,new MRE.Vector3(-1.5, 2.0, 0.0),
+			MRE.Quaternion.FromEulerAngles(-45 * Math.PI / 180, 0, 0));
 		this.allModules.push(ourSequencer);
 
 		const ourSequencerGui = new SequencerGui(this, ourSequencer);
@@ -415,8 +421,8 @@ export default class App {
 		xPos -= 1.75;
 
 		const ourSequencer2 = new Sequencer(this);
-		await ourSequencer2.createAsyncItems(new MRE.Vector3(1.5, 2.0, 0.0),
-			MRE.Quaternion.FromEulerAngles(-45 * Math.PI / 180, 0, 0),7);
+		await ourSequencer2.createAsyncItems(7, new MRE.Vector3(1.5, 2.0, 0.0),
+			MRE.Quaternion.FromEulerAngles(-45 * Math.PI / 180, 0, 0));
 		this.allModules.push(ourSequencer2);
 
 		const ourSequencerGui2 = new SequencerGui(this, ourSequencer2);
