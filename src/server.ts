@@ -3,7 +3,7 @@
  */
 
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
-//import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
+//import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/src';
 
 import dotenv from 'dotenv';
 import { resolve as resolvePath } from 'path';
@@ -47,8 +47,10 @@ const server = new MRE.WebHost({
 	//baseUrl: 'http://45.55.43.77',
 	baseUrl: 'http://199.19.73.131:'+port.toString(),
 	port: port,
-	baseDir: resolvePath(__dirname, '../public')
+	baseDir: resolvePath(__dirname, '../public'),
+	permissions: [MRE.Permissions.UserInteraction]
 });
+
 
 const ourReceiver: PianoReceiver = new PianoReceiver(midiPort);
 //const ourSender: OscSender = new OscSender();
@@ -57,7 +59,7 @@ const ourReceiver: PianoReceiver = new PianoReceiver(midiPort);
 //const ourSender: OscSender=null;
 // Handle new application sessions
 server.adapter.onConnection(context => {
-	//const sessionId=context.sessionId;
+	//const sessionId=context.sessionId;	
 	//const session=(server.adapter as MRE.MultipeerAdapter).sessions[sessionId];
 	
 	MRE.log.info("app", "about the create new App in server.ts");

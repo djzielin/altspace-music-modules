@@ -30,6 +30,17 @@ export default class Users {
 
 	}
 
+	public showHands() {
+		for (const user of this.allUsers) {
+			if (user.lHand) {
+				user.lHand.appearance.enabled = true;
+			}
+			if (user.rHand) {
+				user.rHand.appearance.enabled = true;
+			}
+		}
+	}
+
 	public isAuthorized(user: MRE.User): boolean {
 		const ourRoles = user.properties["altspacevr-roles"];
 
@@ -132,9 +143,19 @@ export default class Users {
 
 		ourUser.rHand = this.createHand('right-hand', ourUser.userID, new MRE.Vector3(0, 0, 0.1),
 			new MRE.Vector3(0.03, 0.03, 0.14));
-		ourUser.lHand = this.createHand('left-hand', ourUser.userID, new MRE.Vector3(0, 0, 0.1),
-			new MRE.Vector3(0.03, 0.03, 0.14));
+
+		ourUser.rHand.created().then(() => {
+			this.ourApp.ourConsole.logMessage("  right hand created for: " + ourUser.name);
+
+			ourUser.lHand = this.createHand('left-hand', ourUser.userID, new MRE.Vector3(0, 0, 0.1),
+				new MRE.Vector3(0.03, 0.03, 0.14));
+
+			ourUser.lHand.created().then(() => {
+				this.ourApp.ourConsole.logMessage("  left hand created for: " + ourUser.name);
+			});
+		});
 	}
+
 
 	private createHand(aPoint: string, userID: MRE.Guid, handPos: MRE.Vector3, handScale: MRE.Vector3) {
 		const hand = MRE.Actor.Create(this.ourApp.context, {

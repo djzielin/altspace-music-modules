@@ -3,6 +3,7 @@
  */
 
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
+
 //import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 
 import { PianoReceiver, RCallback } from './receiver'
@@ -27,6 +28,7 @@ import PatchPoint from './patch_point';
 import Patcher from './patcher';
 import HeartBeat from './heartbeat';
 import HeartBeatGui from './heartbeat_gui';
+import Ice from './ice';
 
 export default class App {
 	public assets: MRE.AssetContainer;
@@ -40,6 +42,8 @@ export default class App {
 
 	public ourPiano: Piano = null;
 	public ourStaff: Staff = null;
+
+	public ourIce: Ice=null;
 
 	public ourConsole: Console = null;
 	public menuGrabber: GrabButton = null;
@@ -248,6 +252,10 @@ export default class App {
 			await this.showGeoPiano();
 		}
 
+		if(this.instrumentType==="ice"){
+			await this.showIce();
+		}
+
 		//await this.showSequencerPiano();
 		
 		this.ourConsole.logMessage("Waiting for all patch lines to be created");
@@ -261,6 +269,18 @@ export default class App {
 
 		this.ourConsole.logMessage("Finished creation of all asyn items");
 
+	}
+
+	/*private makeAuthoritative() {
+		this.session.setAuthoritativeClient(ourUser.clientId); //can't be user.id! needs to be client.id!
+	}*/
+
+	private async showIce(){
+		this.ourIce=new Ice(this);
+		await this.ourIce.createAsync(new MRE.Vector3(0,1,0));
+		this.allModules.push(this.ourIce);
+
+		this.ourUsers.showHands();
 	}
 
 	private async showGeoPiano(){
@@ -370,6 +390,7 @@ export default class App {
 
 		this.ourPatcher.applyPatch(sendPatchStaff, receiveWavPlayer);
 	}
+
 
 	private async showSequencerPiano(){
 		let xPos = 1.5;

@@ -434,7 +434,7 @@ export default class Piano extends MusicModule {
 				}
 
 			} else {
-				//this.ourApp.ourConsole.logMessage("sphere collided with: " + otherActor.name);
+				this.ourApp.ourConsole.logMessage("key collided with: " + otherActor.name);
 			}
 		});
 
@@ -461,7 +461,7 @@ export default class Piano extends MusicModule {
 				this.ourApp.ourConsole.logMessage("PIANO: user clicked on piano note: " + i);
 
 				if (this.doGeo) {
-					let oldPos = this.keyLocations.get(i);
+					let oldPos = this.keyLocations.get(i).clone();
 
 					if (this.activeAnimations.has(i)) {
 						const ourAnim = this.activeAnimations.get(i);
@@ -469,6 +469,10 @@ export default class Piano extends MusicModule {
 						const completedTime = ourAnim.animation.normalizedTime;
 						oldPos = MRE.Vector3.Lerp(ourAnim.startPos, ourAnim.endPos, completedTime / ourAnim.time);
 
+						const index = this.ourApp.context.animations.indexOf(ourAnim.animation);
+						if (index > -1) {
+							this.ourApp.context.animations.splice(index, 1); //remove from global list
+						}
 						ourAnim.animation.delete();
 						this.activeAnimations.delete(i);
 					}
@@ -508,6 +512,11 @@ export default class Piano extends MusicModule {
 						}
 						this.activeAnimations.set(i, ourAnimation);
 						ourAnim.finished().then(() => {
+							const index=this.ourApp.context.animations.indexOf(ourAnim);
+							if(index>-1){
+								this.ourApp.context.animations.splice(index,1); //remove from global list
+							}
+							ourAnim.delete();
 							this.activeAnimations.delete(i);
 						});
 					});
