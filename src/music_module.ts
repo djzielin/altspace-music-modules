@@ -68,7 +68,7 @@ export default class MusicModule {
 		this.ourGrabber.create(pos,quat);
 	}	
 
-	public receiveData(data: number[], messageType: string){ 
+	public receiveData(data: any[], messageType: string){ 
 
 	}
 
@@ -87,7 +87,7 @@ export default class MusicModule {
 		}
 	}
 
-	public sendData(data: number[], messageType: string){
+	public sendData(data: any[], messageType: string){
 		for(const singlePatch of this.sendDestinations){
 			if(singlePatch.messageType===messageType){
 				singlePatch.module.receiveData(data, messageType);

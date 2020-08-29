@@ -60,10 +60,10 @@ export default class Sequencer extends MusicModule{
 		}
 	}*/
 
-	public receiveData(data: number[], messageType: string){
+	public receiveData(data: any[], messageType: string){
 		if(messageType==="heartbeat"){
-			const beatType=data[0];
-			const interval=data[1];
+			const beatType=data[0] as number;
+			const interval=data[1] as number;
 
 			if(beatType===-1){ //reset event
 				this.turnOffActiveNotes();

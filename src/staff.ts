@@ -474,10 +474,10 @@ export default class Staff extends MusicModule {
 		this.staffRootTime = -1;
 	}
 
-	public receiveData(data: number[], messageType: string) {
+	public receiveData(data: any[], messageType: string) {
 		if (messageType === "midi") {
 			if (data.length > 1) {
-				this.receiveNote(data[0], data[1]);
+				this.receiveNote(data[0] as number, data[1] as number);
 			}
 		}
 	}

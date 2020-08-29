@@ -19,6 +19,7 @@ interface UserProperties {
 	lHand: MRE.Actor;
 	rHand: MRE.Actor;
 	isModerator: boolean;
+	chest: MRE.Actor;
 }
 
 export default class Users {
@@ -28,6 +29,17 @@ export default class Users {
 
 	constructor(private ourApp: App) {
 
+	}
+
+	public getUserChest(userID: MRE.Guid): MRE.Guid {
+		for (const oneUser of this.allUsers) {
+			if (oneUser.userID === userID) {
+				if (oneUser.chest) {
+					return oneUser.chest.id;
+				}
+			}
+		}
+		return MRE.ZeroGuid;
 	}
 
 	public showHands() {
@@ -63,7 +75,7 @@ export default class Users {
 	}
 
 
-	public userJoined(user: MRE.User) {
+	public userJoined(user: MRE.User, createHands: boolean, createChest: boolean) {
 		this.ourApp.ourConsole.logMessage("user joined. name: " + user.name + " id: " + user.id);
 
 		let isModerator = false
@@ -77,6 +89,7 @@ export default class Users {
 
 		const rHand: MRE.Actor = null;
 		const lHand: MRE.Actor = null;
+		const chest: MRE.Actor = null;
 
 		const ourUser = {
 			name: user.name,
@@ -86,7 +99,8 @@ export default class Users {
 			handButton: null as Button,
 			rHand: rHand,
 			lHand: lHand,
-			isModerator: isModerator
+			isModerator: isModerator,
+			chest: chest
 		}
 		this.allUsers.push(ourUser);
 
@@ -94,7 +108,12 @@ export default class Users {
 			this.moderatorUsers.push(user.id.toString());
 		}
 
-		this.addHands(ourUser);
+		if(createHands){
+			this.addHands(ourUser);
+		}
+		if(createChest){
+			this.addChest(ourUser);
+		}
 	}
 
 	public findUserRecord(userID: MRE.Guid): UserProperties {
@@ -129,7 +148,7 @@ export default class Users {
 					}
 				}
 
-				//this.removeHands(ourUser);
+				this.removeHands(ourUser.lHand, ourUser.rHand,ourUser.chest);
 
 				break;
 			}
@@ -154,6 +173,15 @@ export default class Users {
 				this.ourApp.ourConsole.logMessage("  left hand created for: " + ourUser.name);
 			});
 		});
+	}
+
+	private addChest(ourUser: UserProperties) {
+		this.ourApp.ourConsole.logMessage("creating chest for: " + ourUser.name);
+
+		ourUser.chest = this.createHand("right-hand", ourUser.userID, new MRE.Vector3(0, 0.5, 0.0),
+			new MRE.Vector3(0.03,0.03,0.03));
+
+		ourUser.chest.subscribe('transform');
 	}
 
 
@@ -195,4 +223,22 @@ export default class Users {
 
 		return hand;
 	}	
+
+	private removeHands(leftHand: MRE.Actor, rightHand: MRE.Actor, chest: MRE.Actor) {
+		if (leftHand) {
+			//leftHand.rigidBody.enabled=false;
+			//leftHand.collider.enabled=false;
+			//leftHand.detach();
+			leftHand.destroy();
+		}
+		if (rightHand) {
+			//rightHand.rigidBody.enabled=false;
+			//rightHand.collider.enabled=false;
+			//rightHand.detach();
+			rightHand.destroy();
+		}
+		if(chest){
+			chest.destroy();
+		}
+	}
 }

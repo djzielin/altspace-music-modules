@@ -103,36 +103,42 @@ export default class WavPlayer extends MusicModule{
 		}
 	}
 
-	public receiveData(data: number[], messageType: string) {
+	public receiveData(data: any[], messageType: string) {
 		if (messageType === "midi") {
 			if (data.length < 2) {
 				return;
 			}
 
-			const note = data[0];
-			const vel = data[1];
+			const note = data[0] as number;
+			const vel = data[1] as number;
 			//const channel = data[2];
 
 			let x = 0;
 			let y = 0;
 			let z = 0;
 
+			let parentID: MRE.Guid=MRE.ZeroGuid;
 			if (vel === 0) {
 				this.stopSound(note);
 				return;
 			}
 
 			if (data.length >= 6) {
-				x = data[3];
-				y = data[4];
-				z = data[5];
+				x = data[3] as number;
+				y = data[4] as number;
+				z = data[5] as number;
 			}
-
-			this.playSound(note, vel, new MRE.Vector3(x, y, z));
+			if(data.length >=7){
+				const guidString=data[6] as string;
+				parentID=MRE.parseGuid(guidString);
+				this.ourApp.ourConsole.logMessage("WAVPLAYER: received parent Guid");
+			}
+			
+			this.playSound(note, vel, new MRE.Vector3(x, y, z), parentID);
 		}
 	}
 
-	private playSound(note: number, vel: number, pos: MRE.Vector3) {
+	private playSound(note: number, vel: number, pos: MRE.Vector3, parentID: MRE.Guid) {
 		if (!this.ourSounds.has(note)) {
 			this.ourApp.ourConsole.logMessage("cant play midi note: " +
 				note + " as wav set doesnt contain a ogg for it!");
@@ -164,6 +170,7 @@ export default class WavPlayer extends MusicModule{
 		const soundActor = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
 				name: 'sound',
+				parentId: parentID,
 				transform: {
 					app: {
 						position: pos

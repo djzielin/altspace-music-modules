@@ -29,6 +29,8 @@ import Patcher from './patcher';
 import HeartBeat from './heartbeat';
 import HeartBeatGui from './heartbeat_gui';
 import Ice from './ice';
+import Geo from './geo';
+import GeoGui from './geo_gui';
 
 export default class App {
 	public assets: MRE.AssetContainer;
@@ -79,8 +81,13 @@ export default class App {
 		this.assets = new MRE.AssetContainer(context);		
 
 		this.context.onUserLeft(user => this.ourUsers.userLeft(user));
+		
+		const isGeo=(instrumentType==="geo");
+		const createHands=!isGeo;
+		const createChest=isGeo;
+		
 		this.context.onUserJoined(user => {
-			this.ourUsers.userJoined(user)
+			//this.ourUsers.userJoined(user,createHands,createChest);
 		});
 
 		this.context.onStarted(() => this.started());
@@ -287,32 +294,29 @@ export default class App {
 		let xPos = 1.5;
 
 		const ourWavPlayer = new WavPlayer(this);
+		ourWavPlayer.audioRange=10;
 		await ourWavPlayer.loadAllSounds("piano",36,84);
 		this.allModules.push(ourWavPlayer);
 
 		const ourWavPlayerGui = new WavPlayerGui(this, ourWavPlayer);
-		await ourWavPlayerGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Piano WavPlayer")		
+		await ourWavPlayerGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "WavPlayer")		
 		this.allGUIs.push(ourWavPlayerGui);
 		xPos -= 1.75;
 
-		this.ourPiano = new Piano(this);
-		this.ourPiano.setScale(1.0);
-		this.ourPiano.intervalMode=0;
-		this.ourPiano.noteNameMode=0;
-		await this.ourPiano.createAllGeos(new MRE.Vector3(0, 0, 0));	
-		this.allModules.push(this.ourPiano);
+		const ourGeo = new Geo(this);
+		await ourGeo.createAllGeos(new MRE.Vector3(0, 0, 0));	
+		this.allModules.push(ourGeo);
 
-		const ourPianoGui = new PianoGui(this, this.ourPiano);
-		await ourPianoGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Piano")
-		this.allGUIs.push(ourPianoGui);
-		ourPianoGui.removeSharpsButton(); //TODO: should have global sharp/flat button
+		const ourGeoGui = new GeoGui(this, ourGeo);
+		await ourGeoGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Geo")
+		this.allGUIs.push(ourGeoGui);
 
-		const sendPatchPiano = new PatchPoint();
-		sendPatchPiano.module = this.ourPiano;
-		sendPatchPiano.messageType = "midi";
-		sendPatchPiano.isSender = true;
-		sendPatchPiano.gui = ourPianoGui;
-		sendPatchPiano.button = ourPianoGui.sendButton;
+		const sendPathGeo = new PatchPoint();
+		sendPathGeo.module = ourGeo;
+		sendPathGeo.messageType = "midi";
+		sendPathGeo.isSender = true;
+		sendPathGeo.gui = ourGeoGui;
+		sendPathGeo.button = ourGeoGui.sendButton;
 
 		const receiveWavPlayer = new PatchPoint();
 		receiveWavPlayer.module = ourWavPlayer;
@@ -321,7 +325,7 @@ export default class App {
 		receiveWavPlayer.gui = ourWavPlayerGui;
 		receiveWavPlayer.button = ourWavPlayerGui.receiveButton;
 
-		this.ourPatcher.applyPatch(sendPatchPiano, receiveWavPlayer);
+		this.ourPatcher.applyPatch(sendPathGeo, receiveWavPlayer);
 	}
 
 	private async showPianoStaff(){
