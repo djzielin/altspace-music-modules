@@ -165,7 +165,7 @@ export default class Geo extends MusicModule {
 			this.ourApp.ourConsole.
 				logMessage(`GEO: creating geo: ` + i + " index: "
 					+ geoIndex + " artifact: " + this.artifacts.artifacts[geoIndex]);
-			const geoScale = Math.random() * 1.5 + 0.5;
+			const geoScale = Math.random() * 1.0 + 0.5;
 			const geoPos = this.generateRandomPos(geoScale);
 			const midi = Math.floor(Math.random() * 88) + 21;
 
