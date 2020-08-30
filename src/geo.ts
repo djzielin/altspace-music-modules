@@ -32,6 +32,7 @@ interface SingleGeo{
 	geoActor: MRE.Actor;
 	position: MRE.Vector3;
 	breathAnimation: MRE.Animation;
+	growAnimation: MRE.Animation;
 	travelAnimation: TravelAnimation;
 	userClicked: MRE.Guid;
 	insideParticle: MRE.Actor;
@@ -45,6 +46,8 @@ export default class Geo extends MusicModule {
 
 	//public geoParent: MRE.Actor;
 	public breathAnimData: MRE.AnimationData;
+	public growAnimData: MRE.AnimationData;
+
 
 	public audioRange = 50.0;
 	public geoScale = 1.0;
@@ -92,6 +95,18 @@ export default class Geo extends MusicModule {
 		});
 	}
 
+	private setupgrowAnimation() {
+		this.growAnimData = this.ourApp.assets.createAnimationData("Breath", {
+			tracks: [{
+				target: MRE.ActorPath("target").transform.local.position,
+				keyframes: [
+					{ time: 0.0, value: { x: 0, y: -0.5, z: 0 } },
+					{ time: 0.5, value: { x: 0, y: 0.0, z: 0 } }
+				]
+			}]
+		});
+	}
+
 	//TODO: paramaterize this
 	private generateRandomPos(scale: number): MRE.Vector3 {
 		return new MRE.Vector3(Math.random() * 30 - 10, Math.random() * 2 + 0.5 * scale, Math.random() * 30 - 15);
@@ -125,6 +140,8 @@ export default class Geo extends MusicModule {
 		}
 
 		this.setupBreathAnimation();
+		this.setupgrowAnimation();
+
 
 		/*this.geoParent = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
@@ -217,6 +234,7 @@ export default class Geo extends MusicModule {
 				geoActor: geoActor,
 				position: geoPos,
 				breathAnimation: null as MRE.Animation,
+				growAnimation: null as MRE.Animation,
 				travelAnimation: null as TravelAnimation,
 				userClicked: null as MRE.Guid,
 				insideParticle: null as MRE.Actor
@@ -231,6 +249,16 @@ export default class Geo extends MusicModule {
 					wrapMode: MRE.AnimationWrapMode.Loop
 				}).then((anim: MRE.Animation) => {
 				oneGeo.breathAnimation = anim;
+			});
+
+			this.growAnimData.bind(
+				{ target: geoPositioner },
+				{
+					speed: 1,
+					isPlaying: false,
+					wrapMode: MRE.AnimationWrapMode.Once
+				}).then((anim: MRE.Animation) => {
+				oneGeo.growAnimation = anim;
 			});
 
 			this.ourGeos.push(oneGeo);
@@ -300,6 +328,8 @@ export default class Geo extends MusicModule {
 					oneGeo.travelAnimation=null;
 				}
 
+				//oneGeo.growAnimation.play(true);
+				
 				this.ourApp.ourConsole.logMessage("GEO:   available. so activating! " + oneGeo.name);
 				oneGeo.userClicked=user.id;
 
@@ -351,16 +381,16 @@ export default class Geo extends MusicModule {
 				}
 
 
-				if (!oneGeo.insideParticle) {
-					const s=oneGeo.scale*0.25;
-					const insideParticle = this.createActorFromArtifact(this.artifacts.particleEffects[3],
+				/*if (!oneGeo.insideParticle) {
+					const s=0.05;
+					const insideParticle = this.createActorFromArtifact(this.artifacts.particleEffects[1], //3
 						MRE.Vector3.Zero(), 
 						MRE.Quaternion.Identity(),
 						new MRE.Vector3(s, s, s), 
 						oneGeo.geoPositioner.id);
 					this.ourApp.ourConsole.logMessage("GEO:  created insideParticle!");
 					oneGeo.insideParticle = insideParticle;
-				}
+				}*/
 				travelAnimData.bind(
 					{ target: oneGeo.geoPositioner },
 					{ speed: 1, isPlaying: true, wrapMode: MRE.AnimationWrapMode.Once }).then((ourAnim) => {
