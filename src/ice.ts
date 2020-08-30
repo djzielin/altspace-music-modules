@@ -3,7 +3,7 @@
  */
 /* eslint-disable no-warning-comments */
 
-import * as MRE from '@microsoft/mixed-reality-extension-sdk';
+import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 
 import App from './app';
 import MusicModule from './music_module';

@@ -3,7 +3,7 @@
  */
 /* eslint-disable no-warning-comments */
 
-import * as MRE from '@microsoft/mixed-reality-extension-sdk';
+import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 
 import App from './app';
 import MusicModule from './music_module';
@@ -34,6 +34,7 @@ interface SingleGeo{
 	breathAnimation: MRE.Animation;
 	travelAnimation: TravelAnimation;
 	userClicked: MRE.Guid;
+	insideParticle: MRE.Actor;
 }
 
 export default class Geo extends MusicModule {
@@ -91,20 +92,23 @@ export default class Geo extends MusicModule {
 		});
 	}
 
+	//TODO: paramaterize this
 	private generateRandomPos(scale: number): MRE.Vector3 {
-		return new MRE.Vector3(Math.random() * 20 - 10, Math.random() * 2 + 0.5 * scale, Math.random() * 20 - 10);
+		return new MRE.Vector3(Math.random() * 30 - 10, Math.random() * 2 + 0.5 * scale, Math.random() * 30 - 15);
 	}
-
-	private createFromArtifact(resourceId: string, position: MRE.Vector3, parentId: MRE.Guid): MRE.Actor {
+	
+	private createActorFromArtifact(resourceId: string, position: MRE.Vector3, rotation: MRE.Quaternion,
+		scale: MRE.Vector3, parentID: MRE.Guid): MRE.Actor {
 		const artifact = MRE.Actor.CreateFromLibrary(this.ourApp.context, {
 			resourceId: resourceId,
 			actor: {
 				name: 'artifact' + resourceId,
-				parentId: parentId,
+				parentId: parentID,
 				transform: {
 					local: {
-						scale: new MRE.Vector3(1.0, 1.0, 1.0),
-						position: position
+						position: position,
+						rotation: rotation,
+						scale: scale
 					}
 				}
 			}
@@ -139,13 +143,14 @@ export default class Geo extends MusicModule {
 			logMessage(`GEO: creating new geo installation`);
 		//this.ourApp.ourConsole.logMessage(`octaves: ${totalOctaves}`);
 
-		for (let i = 0; i<100; i++) {
+		for (let i = 0; i < 75; i++) { //TODO paramaterize this
 			const geoIndex = Math.floor(Math.random() * 42); //skip the slanted shape
 			this.ourApp.ourConsole.
-				logMessage(`GEO: creating geo: ` + i + " index: " + geoIndex + " artiface: " + this.artifacts.artifacts[geoIndex]);
+				logMessage(`GEO: creating geo: ` + i + " index: "
+					+ geoIndex + " artifact: " + this.artifacts.artifacts[geoIndex]);
 			const geoScale = Math.random() * 1.5 + 0.5;
 			const geoPos = this.generateRandomPos(geoScale);
-			const midi = Math.floor(Math.random() * 48) + 36;
+			const midi = Math.floor(Math.random() * 88) + 21;
 
 			// collider type to use with different shapes
 			/*	0-6  box
@@ -213,7 +218,8 @@ export default class Geo extends MusicModule {
 				position: geoPos,
 				breathAnimation: null as MRE.Animation,
 				travelAnimation: null as TravelAnimation,
-				userClicked: null as MRE.Guid
+				userClicked: null as MRE.Guid,
+				insideParticle: null as MRE.Actor
 			}
 
 
@@ -274,20 +280,8 @@ export default class Geo extends MusicModule {
 		const buttonBehavior = collisionActor.setBehavior(MRE.ButtonBehavior);
 		buttonBehavior.onButton("pressed", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
 			if (this.isAuthorized(user)) {
-				/*this.ourApp.ourConsole.logMessage("GEO: user clicked on: " + oneGeo.name);
+				this.ourApp.ourConsole.logMessage("GEO: user clicked on: " + oneGeo.name);
 
-				const userChestID = this.ourApp.ourUsers.getUserChest(user.id);
-				this.ourApp.ourConsole.logMessage("GEO:  chestID: "+ userChestID);
-
-				const projectileParticle = this.createFromArtifact("artifact:1549832076847481605",
-					MRE.Vector3.Zero(), userChestID);
-				this.ourApp.ourConsole.logMessage("GEO:  created particle!");
-
-				setTimeout(() => {
-					projectileParticle.destroy();
-				}, 2000);
-				*/
-				
 				let oldPos = oneGeo.position.clone();
 
 				if (oneGeo.travelAnimation) {
@@ -328,17 +322,56 @@ export default class Geo extends MusicModule {
 					}]
 				});
 
-				oneGeo.position=newPos;
+				oneGeo.position = newPos;
 
+				
+				const userChest = this.ourApp.ourUsers.getUserChest(user.id);
+				if (userChest) {
+					this.ourApp.ourConsole.logMessage("GEO:  chestID: " + userChest.id);
+
+					const pos1 = userChest.transform.app.position;
+					const pos2 = oldPos;
+					const d = MRE.Vector3.Distance(pos1, pos2);
+					const scale = d / 10;
+
+					this.ourApp.ourConsole.logMessage("GEO:  chest pos: " + pos1);
+
+					const projectileParticle = this.createActorFromArtifact(this.artifacts.particleEffects[0],
+						userChest.transform.app.position.add(new MRE.Vector3(0,0.0,0)),
+						MRE.Quaternion.LookAt(pos1,pos2), 
+						new MRE.Vector3(0.5, 0.5, scale), 
+						MRE.ZeroGuid);
+					this.ourApp.ourConsole.logMessage("GEO:  created particle!");
+
+					setTimeout(() => {
+						projectileParticle.destroy();
+					}, 2000);
+				} else {
+					this.ourApp.ourConsole.logMessage("GEO:   ERROR - no user chest");
+				}
+
+
+				if (!oneGeo.insideParticle) {
+					const s=oneGeo.scale*0.25;
+					const insideParticle = this.createActorFromArtifact(this.artifacts.particleEffects[3],
+						MRE.Vector3.Zero(), 
+						MRE.Quaternion.Identity(),
+						new MRE.Vector3(s, s, s), 
+						oneGeo.geoPositioner.id);
+					this.ourApp.ourConsole.logMessage("GEO:  created insideParticle!");
+					oneGeo.insideParticle = insideParticle;
+				}
 				travelAnimData.bind(
 					{ target: oneGeo.geoPositioner },
 					{ speed: 1, isPlaying: true, wrapMode: MRE.AnimationWrapMode.Once }).then((ourAnim) => {
+					
 					const ourAnimation = {
 						animation: ourAnim,
 						time: time,
 						startPos: oldPos,
 						endPos: newPos
 					}
+
 					oneGeo.travelAnimation = ourAnimation;
 					ourAnim.finished().then(() => {
 						const index = this.ourApp.context.animations.indexOf(ourAnim);
@@ -347,6 +380,11 @@ export default class Geo extends MusicModule {
 						}
 						ourAnim.delete();
 						oneGeo.travelAnimation = null;
+
+						if(oneGeo.insideParticle){
+							oneGeo.insideParticle.destroy();
+							oneGeo.insideParticle=null;
+						}
 					});
 				});
 			} else {

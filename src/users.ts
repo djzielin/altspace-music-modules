@@ -2,11 +2,12 @@
  * Licensed under the MIT License.
  */
 
-import * as MRE from '@microsoft/mixed-reality-extension-sdk';
+import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 //import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 
 import Button from './button';
 import App from './app';
+import { MxRecord } from 'dns';
 
 /**
  * The main class of this app. All the logic goes here.
@@ -31,15 +32,15 @@ export default class Users {
 
 	}
 
-	public getUserChest(userID: MRE.Guid): MRE.Guid {
+	public getUserChest(userID: MRE.Guid): MRE.Actor {
 		for (const oneUser of this.allUsers) {
 			if (oneUser.userID === userID) {
 				if (oneUser.chest) {
-					return oneUser.chest.id;
+					return oneUser.chest;
 				}
 			}
 		}
-		return MRE.ZeroGuid;
+		return null;
 	}
 
 	public showHands() {
@@ -178,10 +179,27 @@ export default class Users {
 	private addChest(ourUser: UserProperties) {
 		this.ourApp.ourConsole.logMessage("creating chest for: " + ourUser.name);
 
-		ourUser.chest = this.createHand("right-hand", ourUser.userID, new MRE.Vector3(0, 0.5, 0.0),
-			new MRE.Vector3(0.03,0.03,0.03));
-
-		ourUser.chest.subscribe('transform');
+		ourUser.chest = MRE.Actor.Create(this.ourApp.context, {
+			actor: {
+				name: 'chest' + ourUser.toString(),
+				transform: {
+					local: {
+						position: new MRE.Vector3(0, -0.25, 0.0),
+						scale: MRE.Vector3.One()
+					}
+				},
+				attachment: {
+					attachPoint: "head",
+					userId: ourUser.userID
+				},
+				appearance:
+				{
+					meshId: this.ourApp.boxMesh.id,
+					enabled: false
+				},
+				subscriptions: ['transform']
+			}
+		});
 	}
 
 

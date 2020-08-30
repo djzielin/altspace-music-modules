@@ -2,9 +2,7 @@
  * Licensed under the MIT License.
  */
 
-import * as MRE from '@microsoft/mixed-reality-extension-sdk';
-
-//import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
+import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 
 import { PianoReceiver, RCallback } from './receiver'
 import Piano from './piano'
@@ -87,7 +85,7 @@ export default class App {
 		const createChest=isGeo;
 		
 		this.context.onUserJoined(user => {
-			//this.ourUsers.userJoined(user,createHands,createChest);
+			this.ourUsers.userJoined(user,createHands,createChest);
 		});
 
 		this.context.onStarted(() => this.started());
@@ -295,7 +293,7 @@ export default class App {
 
 		const ourWavPlayer = new WavPlayer(this);
 		ourWavPlayer.audioRange=10;
-		await ourWavPlayer.loadAllSounds("piano",36,84);
+		await ourWavPlayer.loadAllSounds("geo",36,84);
 		this.allModules.push(ourWavPlayer);
 
 		const ourWavPlayerGui = new WavPlayerGui(this, ourWavPlayer);
