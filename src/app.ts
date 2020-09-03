@@ -42,6 +42,7 @@ export default class App {
 
 	public ourPiano: Piano = null;
 	public ourStaff: Staff = null;
+	public ourGeo: Geo = null;
 
 	public ourIce: Ice=null;
 
@@ -143,10 +144,16 @@ export default class App {
 			if (this.ourPiano) {
 				this.ourPiano.keyPressed(note, vel);
 			}
+			if (this.ourGeo) {
+				this.ourGeo.keyPressed(note, vel);
+			}
 		} else {
 			//this.ourPiano.stopSound(note);
 			if (this.ourPiano) {
 				this.ourPiano.keyReleased(note);
+			}
+			if (this.ourGeo) {
+				this.ourGeo.keyReleased(note);
 			}
 		}
 	}	
@@ -301,16 +308,16 @@ export default class App {
 		this.allGUIs.push(ourWavPlayerGui);
 		xPos -= 1.75;
 
-		const ourGeo = new Geo(this);
-		await ourGeo.createAllGeos(new MRE.Vector3(0, 0, 0));	
-		this.allModules.push(ourGeo);
+		this.ourGeo = new Geo(this);
+		await this.ourGeo.createAllGeos(new MRE.Vector3(0, 0, 0));	
+		this.allModules.push(this.ourGeo);
 
-		const ourGeoGui = new GeoGui(this, ourGeo);
+		const ourGeoGui = new GeoGui(this, this.ourGeo);
 		await ourGeoGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Geo")
 		this.allGUIs.push(ourGeoGui);
 
 		const sendPathGeo = new PatchPoint();
-		sendPathGeo.module = ourGeo;
+		sendPathGeo.module = this.ourGeo;
 		sendPathGeo.messageType = "midi";
 		sendPathGeo.isSender = true;
 		sendPathGeo.gui = ourGeoGui;

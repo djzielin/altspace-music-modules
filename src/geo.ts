@@ -267,6 +267,118 @@ export default class Geo extends MusicModule {
 		}
 	}
 
+	private clickOnGeo(oneGeo: SingleGeo, userID: MRE.Guid){
+		this.ourApp.ourConsole.logMessage("GEO: user clicked on: " + oneGeo.name);
+
+		let oldPos = oneGeo.position.clone();
+
+		if (oneGeo.travelAnimation) {
+			this.ourApp.ourConsole.logMessage("GEO:   stopping current travel animation");
+
+			const ourAnim=oneGeo.travelAnimation;
+			ourAnim.animation.stop();
+			const completedTime = ourAnim.animation.normalizedTime;
+			oldPos = MRE.Vector3.Lerp(ourAnim.startPos, ourAnim.endPos, completedTime / ourAnim.time);
+
+			const index = this.ourApp.context.animations.indexOf(ourAnim.animation);
+			if (index > -1) {
+				this.ourApp.context.animations.splice(index, 1); //remove from global list
+			}
+			ourAnim.animation.delete();
+			oneGeo.travelAnimation=null;
+		}
+
+		//oneGeo.growAnimation.play(true);
+		
+		this.ourApp.ourConsole.logMessage("GEO:   available. so activating! " + oneGeo.name);
+		oneGeo.userClicked=userID;
+
+		this.geoPressed(oneGeo);
+
+		const newPos = this.generateRandomPos(oneGeo.scale);
+
+		const dist = MRE.Vector3.Distance(oldPos, newPos);
+		const speed = Math.random() * 0.5 + 0.5;
+		const time = dist / speed;
+		this.ourApp.ourConsole.logMessage("GEO:   time for travel: " + time);
+
+		const travelAnimData = this.ourApp.assets.createAnimationData("Travel" + oneGeo.name, {
+			tracks: [{
+				target: MRE.ActorPath("target").transform.local.position,
+				keyframes: [
+					{ time: 0.0, value: { x: oldPos.x, y: oldPos.y, z: oldPos.z } },
+					{ time: time, value: { x: newPos.x, y: newPos.y, z: newPos.z } }
+				]
+			}]
+		});
+
+		oneGeo.position = newPos;
+
+		
+		const userChest = this.ourApp.ourUsers.getUserChest(userID);
+		if (userChest) {
+			this.ourApp.ourConsole.logMessage("GEO:  chestID: " + userChest.id);
+
+			const pos1 = userChest.transform.app.position;
+			const pos2 = oldPos;
+			const d = MRE.Vector3.Distance(pos1, pos2);
+			const scale = d / 10;
+
+			this.ourApp.ourConsole.logMessage("GEO:  chest pos: " + pos1);
+
+			const projectileParticle = this.createActorFromArtifact(this.artifacts.particleEffects[0],
+				userChest.transform.app.position.add(new MRE.Vector3(0,0.0,0)),
+				MRE.Quaternion.LookAt(pos1,pos2), 
+				new MRE.Vector3(0.5, 0.5, scale), 
+				MRE.ZeroGuid);
+			this.ourApp.ourConsole.logMessage("GEO:  created particle!");
+
+			setTimeout(() => {
+				projectileParticle.destroy();
+			}, 2000);
+		} else {
+			this.ourApp.ourConsole.logMessage("GEO:   ERROR - no user chest");
+		}
+
+
+		/*if (!oneGeo.insideParticle) {
+			const s=0.05;
+			const insideParticle = this.createActorFromArtifact(this.artifacts.particleEffects[1], //3
+				MRE.Vector3.Zero(), 
+				MRE.Quaternion.Identity(),
+				new MRE.Vector3(s, s, s), 
+				oneGeo.geoPositioner.id);
+			this.ourApp.ourConsole.logMessage("GEO:  created insideParticle!");
+			oneGeo.insideParticle = insideParticle;
+		}*/
+		travelAnimData.bind(
+			{ target: oneGeo.geoPositioner },
+			{ speed: 1, isPlaying: true, wrapMode: MRE.AnimationWrapMode.Once }).then((ourAnim) => {
+			
+			const ourAnimation = {
+				animation: ourAnim,
+				time: time,
+				startPos: oldPos,
+				endPos: newPos
+			}
+
+			oneGeo.travelAnimation = ourAnimation;
+			ourAnim.finished().then(() => {
+				const index = this.ourApp.context.animations.indexOf(ourAnim);
+				if (index > -1) {
+					this.ourApp.context.animations.splice(index, 1); //remove from global list
+				}
+				ourAnim.delete();
+				oneGeo.travelAnimation = null;
+
+				if(oneGeo.insideParticle){
+					oneGeo.insideParticle.destroy();
+					oneGeo.insideParticle=null;
+				}
+			});
+		});
+	}
+
 	private setupInteractions(oneGeo: SingleGeo) {
 		const collisionActor = oneGeo.geoActor;
 
@@ -308,115 +420,7 @@ export default class Geo extends MusicModule {
 		const buttonBehavior = collisionActor.setBehavior(MRE.ButtonBehavior);
 		buttonBehavior.onButton("pressed", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
 			if (this.isAuthorized(user)) {
-				this.ourApp.ourConsole.logMessage("GEO: user clicked on: " + oneGeo.name);
-
-				let oldPos = oneGeo.position.clone();
-
-				if (oneGeo.travelAnimation) {
-					this.ourApp.ourConsole.logMessage("GEO:   stopping current travel animation");
-
-					const ourAnim=oneGeo.travelAnimation;
-					ourAnim.animation.stop();
-					const completedTime = ourAnim.animation.normalizedTime;
-					oldPos = MRE.Vector3.Lerp(ourAnim.startPos, ourAnim.endPos, completedTime / ourAnim.time);
-
-					const index = this.ourApp.context.animations.indexOf(ourAnim.animation);
-					if (index > -1) {
-						this.ourApp.context.animations.splice(index, 1); //remove from global list
-					}
-					ourAnim.animation.delete();
-					oneGeo.travelAnimation=null;
-				}
-
-				//oneGeo.growAnimation.play(true);
-				
-				this.ourApp.ourConsole.logMessage("GEO:   available. so activating! " + oneGeo.name);
-				oneGeo.userClicked=user.id;
-
-				this.geoPressed(oneGeo);
-
-				const newPos = this.generateRandomPos(oneGeo.scale);
-
-				const dist = MRE.Vector3.Distance(oldPos, newPos);
-				const speed = Math.random() * 0.5 + 0.5;
-				const time = dist / speed;
-				this.ourApp.ourConsole.logMessage("GEO:   time for travel: " + time);
-
-				const travelAnimData = this.ourApp.assets.createAnimationData("Travel" + oneGeo.name, {
-					tracks: [{
-						target: MRE.ActorPath("target").transform.local.position,
-						keyframes: [
-							{ time: 0.0, value: { x: oldPos.x, y: oldPos.y, z: oldPos.z } },
-							{ time: time, value: { x: newPos.x, y: newPos.y, z: newPos.z } }
-						]
-					}]
-				});
-
-				oneGeo.position = newPos;
-
-				
-				const userChest = this.ourApp.ourUsers.getUserChest(user.id);
-				if (userChest) {
-					this.ourApp.ourConsole.logMessage("GEO:  chestID: " + userChest.id);
-
-					const pos1 = userChest.transform.app.position;
-					const pos2 = oldPos;
-					const d = MRE.Vector3.Distance(pos1, pos2);
-					const scale = d / 10;
-
-					this.ourApp.ourConsole.logMessage("GEO:  chest pos: " + pos1);
-
-					const projectileParticle = this.createActorFromArtifact(this.artifacts.particleEffects[0],
-						userChest.transform.app.position.add(new MRE.Vector3(0,0.0,0)),
-						MRE.Quaternion.LookAt(pos1,pos2), 
-						new MRE.Vector3(0.5, 0.5, scale), 
-						MRE.ZeroGuid);
-					this.ourApp.ourConsole.logMessage("GEO:  created particle!");
-
-					setTimeout(() => {
-						projectileParticle.destroy();
-					}, 2000);
-				} else {
-					this.ourApp.ourConsole.logMessage("GEO:   ERROR - no user chest");
-				}
-
-
-				/*if (!oneGeo.insideParticle) {
-					const s=0.05;
-					const insideParticle = this.createActorFromArtifact(this.artifacts.particleEffects[1], //3
-						MRE.Vector3.Zero(), 
-						MRE.Quaternion.Identity(),
-						new MRE.Vector3(s, s, s), 
-						oneGeo.geoPositioner.id);
-					this.ourApp.ourConsole.logMessage("GEO:  created insideParticle!");
-					oneGeo.insideParticle = insideParticle;
-				}*/
-				travelAnimData.bind(
-					{ target: oneGeo.geoPositioner },
-					{ speed: 1, isPlaying: true, wrapMode: MRE.AnimationWrapMode.Once }).then((ourAnim) => {
-					
-					const ourAnimation = {
-						animation: ourAnim,
-						time: time,
-						startPos: oldPos,
-						endPos: newPos
-					}
-
-					oneGeo.travelAnimation = ourAnimation;
-					ourAnim.finished().then(() => {
-						const index = this.ourApp.context.animations.indexOf(ourAnim);
-						if (index > -1) {
-							this.ourApp.context.animations.splice(index, 1); //remove from global list
-						}
-						ourAnim.delete();
-						oneGeo.travelAnimation = null;
-
-						if(oneGeo.insideParticle){
-							oneGeo.insideParticle.destroy();
-							oneGeo.insideParticle=null;
-						}
-					});
-				});
+				this.clickOnGeo(oneGeo,user.id);
 			} else {
 				this.ourApp.ourConsole.logMessage("GEO: user not authorized to click: " + oneGeo.name);
 			}
@@ -443,16 +447,38 @@ export default class Geo extends MusicModule {
 		});
 	}
 
-	public receiveData(data: number[], messageType: string) {
+	public receiveData(data: any[], messageType: string) {
 		if (messageType === "midi") {
-			/*if (data.length > 1) {
-				if (data[1] > 0) {
-					this.keyPressed(data[0], data[1]);
-				} else {
-					this.keyReleased(data[0]);
-				}
-			}*/
+			if (data.length > 1) {
+				const note = data[0] as number;
+				const vel = data[1] as number;
+
+				this.keyPressed(note, vel);
+			}
 		}
+	}
+
+	public keyPressed(note: number, vel: number) {
+		let foundGeo: SingleGeo = null;
+
+		for (const geo of this.ourGeos) {
+			if (geo.midiNote === note) {
+				foundGeo = geo;
+				break;
+			}
+		}
+
+		if (foundGeo) {
+			if (vel > 0) {
+				this.clickOnGeo(foundGeo, MRE.ZeroGuid);
+			} else {
+				this.geoReleased(foundGeo);
+			}
+		}
+	}
+
+	public keyReleased(note: number){
+		this.keyPressed(note, 0);
 	}
 
 	public geoPressed(oneGeo: SingleGeo) {	
