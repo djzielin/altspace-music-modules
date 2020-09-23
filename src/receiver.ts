@@ -55,23 +55,23 @@ export class PianoReceiver {
 					channel = messageArray[2];
 				}
 
-				const currentTime = Date.now();
-				const timeDiff = currentTime - this.lastTime;
+				//const currentTime = Date.now();
+				//const timeDiff = currentTime - this.lastTime;
 
-				if (note === this.lastNote && channel === this.lastChannel && timeDiff < 150 && vel >0) {
-					MRE.log.info("app", "rejected! too close: " + timeDiff);
-				}else{
-					for (const singleCallback of this.ourCallbacks) { //broadcast to all listeners
-						if (singleCallback) {
-							singleCallback(note, vel, channel);
-						}
+				//if (note === this.lastNote && channel === this.lastChannel && timeDiff < 150 && vel >0) {
+				//	MRE.log.info("app", "rejected! too close: " + timeDiff);
+				//}else{
+				for (const singleCallback of this.ourCallbacks) { //broadcast to all listeners
+					if (singleCallback) {
+						singleCallback(note, vel, channel);
 					}
 				}
+				//}
 				if (vel > 0) {
 					this.lastNote = note;
 					this.lastVel = vel;
 					this.lastChannel = channel;
-					this.lastTime = currentTime;
+					//this.lastTime = currentTime;
 				}
 			});
 		});

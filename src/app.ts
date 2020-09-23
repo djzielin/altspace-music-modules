@@ -29,6 +29,7 @@ import HeartBeatGui from './heartbeat_gui';
 import Ice from './ice';
 import Geo from './geo';
 import GeoGui from './geo_gui';
+import Spiral from './spiral';
 
 export default class App {
 	public assets: MRE.AssetContainer;
@@ -41,6 +42,7 @@ export default class App {
 	public allModules: MusicModule[] = [];
 
 	public ourPiano: Piano = null;
+	public ourSpiral: Spiral = null;
 	public ourStaff: Staff = null;
 	public ourGeo: Geo = null;
 
@@ -62,6 +64,8 @@ export default class App {
 	public darkgrayMat: MRE.Material;
 	public grayRedMat: MRE.Material;
 	public lightgrayMat: MRE.Material;
+	public transparentBlackMat: MRE.Material;
+	public transparentWhiteMat: MRE.Material;
 
 	public handMesh: MRE.Mesh = null;
 	public handTexture: MRE.Texture = null;
@@ -110,6 +114,14 @@ export default class App {
 		this.whiteMat = this.assets.createMaterial('whiteMat', {
 			color: new MRE.Color4(1, 1, 1)
 		});
+		this.transparentBlackMat = this.assets.createMaterial('transblackMat', {
+			color: new MRE.Color4(0, 0, 0,0.5),
+			alphaMode: MRE.AlphaMode.Blend
+		});
+		this.transparentWhiteMat = this.assets.createMaterial('transwhiteMat', {
+			color: new MRE.Color4(1, 1, 1,0.5),
+			alphaMode: MRE.AlphaMode.Blend
+		});
 		this.grayMat = this.assets.createMaterial('grayMat', {
 			color: new MRE.Color4(0.5, 0.5, 0.5)
 		});
@@ -147,6 +159,9 @@ export default class App {
 			if (this.ourGeo) {
 				this.ourGeo.keyPressed(note, vel);
 			}
+			if (this.ourSpiral) {
+				this.ourSpiral.keyPressed(note, vel);
+			}
 		} else {
 			//this.ourPiano.stopSound(note);
 			if (this.ourPiano) {
@@ -154,6 +169,9 @@ export default class App {
 			}
 			if (this.ourGeo) {
 				this.ourGeo.keyReleased(note);
+			}
+			if (this.ourSpiral) {
+				this.ourSpiral.keyReleased(note);
 			}
 		}
 	}	
@@ -257,7 +275,8 @@ export default class App {
 		buttonZPos -= 0.2;
 
 		if(this.instrumentType==="piano"){
-			await this.showPianoStaff();
+			//await this.showPianoStaff();
+			await this.showSpiralStaff();
 		}
 
 		if(this.instrumentType==="geo"){
@@ -273,7 +292,9 @@ export default class App {
 		this.ourConsole.logMessage("Waiting for all patch lines to be created");
 
 		for(const singlePatch of this.ourPatcher.ourPatches){
-			await singlePatch.line.created();
+			if(singlePatch.line){
+				await singlePatch.line.created();
+			}
 		}
 
 		this.showGUIsButton.setValue(false);
@@ -300,6 +321,8 @@ export default class App {
 
 		const ourWavPlayer = new WavPlayer(this);
 		ourWavPlayer.audioRange=10;
+		ourWavPlayer.cullTime=0; //don't cull sounds based on time playing
+		ourWavPlayer.doPedal=false;
 		await ourWavPlayer.loadAllSounds("geo",36,84);
 		this.allModules.push(ourWavPlayer);
 
@@ -371,6 +394,73 @@ export default class App {
 		sendPatchPiano.isSender = true;
 		sendPatchPiano.gui = ourPianoGui;
 		sendPatchPiano.button = ourPianoGui.sendButton;
+
+		const receivePatchStaff = new PatchPoint();
+		receivePatchStaff.module = this.ourStaff;
+		receivePatchStaff.messageType = "midi";
+		receivePatchStaff.isSender = false;
+		receivePatchStaff.gui = ourStaffGui;
+		receivePatchStaff.button = ourStaffGui.receiveButton;
+
+		this.ourPatcher.applyPatch(sendPatchPiano, receivePatchStaff);
+
+		const receiveWavPlayer = new PatchPoint();
+		receiveWavPlayer.module = ourWavPlayer;
+		receiveWavPlayer.messageType = "midi";
+		receiveWavPlayer.isSender = false;
+		receiveWavPlayer.gui = ourWavPlayerGui;
+		receiveWavPlayer.button = ourWavPlayerGui.receiveButton;
+
+		this.ourPatcher.applyPatch(sendPatchPiano, receiveWavPlayer);
+
+		const sendPatchStaff = new PatchPoint();
+		sendPatchStaff.module = this.ourStaff;
+		sendPatchStaff.messageType = "midi";
+		sendPatchStaff.isSender = true;
+		sendPatchStaff.gui = ourStaffGui;
+		sendPatchStaff.button = ourStaffGui.sendButton;
+
+		this.ourPatcher.applyPatch(sendPatchStaff, receiveWavPlayer);
+	}
+
+	private async showSpiralStaff(){
+		let xPos = 1.5;
+
+		const ourWavPlayer = new WavPlayer(this);
+		await ourWavPlayer.loadAllSounds("piano",36,84);
+		this.allModules.push(ourWavPlayer);
+
+		const ourWavPlayerGui = new WavPlayerGui(this, ourWavPlayer);
+		await ourWavPlayerGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Piano WavPlayer")		
+		this.allGUIs.push(ourWavPlayerGui);
+		xPos -= 1.75;
+
+		this.ourSpiral = new Spiral(this);
+		await this.ourSpiral.createAllKeys(new MRE.Vector3(2, 0, -1));	
+		this.allModules.push(this.ourSpiral);
+
+		this.ourStaff = new Staff(this);
+		await this.ourStaff.createAsyncItems(new MRE.Vector3(2, 2, 0.5),
+			MRE.Quaternion.FromEulerAngles(-90 * Math.PI / 180, 0, 0));		
+		this.allModules.push(this.ourStaff);	
+
+		const ourStaffGui = new StaffGui(this, this.ourStaff);
+		await ourStaffGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Staff")
+		this.allGUIs.push(ourStaffGui);
+		xPos -= 1.75;
+
+		/*const ourPianoGui = new PianoGui(this, this.ourPiano);
+		await ourPianoGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Piano")
+		this.allGUIs.push(ourPianoGui);
+		ourPianoGui.removeSharpsButton(); //TODO: should have global sharp/flat button
+*/
+
+		const sendPatchPiano = new PatchPoint();
+		sendPatchPiano.module = this.ourSpiral;
+		sendPatchPiano.messageType = "midi";
+		sendPatchPiano.isSender = true;
+		//sendPatchPiano.gui = ourPianoGui;
+		//sendPatchPiano.button = ourPianoGui.sendButton;
 
 		const receivePatchStaff = new PatchPoint();
 		receivePatchStaff.module = this.ourStaff;

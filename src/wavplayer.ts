@@ -51,8 +51,10 @@ export default class WavPlayer extends MusicModule{
 
 			for (const ourWave of this.playingWavs) {
 				if (currentTime - ourWave.timeStamp > this.cullTime) {
-					ourWave.actor.destroy();
-					listOfPlayingWavsToDelete.push(ourWave);
+					if (this.cullTime > 0) {
+						ourWave.actor.destroy();
+						listOfPlayingWavsToDelete.push(ourWave);
+					}
 				}
 			}
 
@@ -208,8 +210,9 @@ export default class WavPlayer extends MusicModule{
 
 		const listOfPlayingWavsToDelete: WavProperties[] = [];
 
-		for(const ourWave of this.playingWavs){
+		for(const ourWave of this.playingWavs){			
 			if(ourWave.note===note){
+				this.ourApp.ourConsole.logMessage("stopping note: " + note);
 				ourWave.actor.destroy();
 				listOfPlayingWavsToDelete.push(ourWave);		
 			}

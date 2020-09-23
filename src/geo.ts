@@ -273,6 +273,7 @@ export default class Geo extends MusicModule {
 		let oldPos = oneGeo.position.clone();
 
 		if (oneGeo.travelAnimation) {
+			this.geoReleased(oneGeo);
 			this.ourApp.ourConsole.logMessage("GEO:   stopping current travel animation");
 
 			const ourAnim=oneGeo.travelAnimation;
@@ -364,6 +365,8 @@ export default class Geo extends MusicModule {
 
 			oneGeo.travelAnimation = ourAnimation;
 			ourAnim.finished().then(() => {
+				this.geoReleased(oneGeo); //turn off sound
+
 				const index = this.ourApp.context.animations.indexOf(ourAnim);
 				if (index > -1) {
 					this.ourApp.context.animations.splice(index, 1); //remove from global list
@@ -426,6 +429,7 @@ export default class Geo extends MusicModule {
 			}
 		});
 
+		/*
 		//TODO: only do release if user had triggered note
 		buttonBehavior.onButton("released", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
 			if (this.isAuthorized(user)) {
@@ -445,6 +449,7 @@ export default class Geo extends MusicModule {
 				}
 			}
 		});
+		*/
 	}
 
 	public receiveData(data: any[], messageType: string) {
@@ -471,9 +476,9 @@ export default class Geo extends MusicModule {
 		if (foundGeo) {
 			if (vel > 0) {
 				this.clickOnGeo(foundGeo, MRE.ZeroGuid);
-			} else {
-				this.geoReleased(foundGeo);
-			}
+			} //else {
+			//	this.geoReleased(foundGeo);
+			//}
 		}
 	}
 
@@ -502,6 +507,8 @@ export default class Geo extends MusicModule {
 	}
 
 	public geoReleased(oneGeo: SingleGeo) {		
+		this.ourApp.ourConsole.logMessage("geoReleased note: " + oneGeo.midiNote);
+
 		const message = [oneGeo.midiNote, 0, 0];
 		this.sendData(message, "midi");
 	}

@@ -57,13 +57,6 @@ export default class GeoArtifacts {
 	];
 
 	public particleEffects: string[] = [
-		"artifact:1550362469665342440",
-		"artifact:1550362340153623521",
-		"artifact:1550362272910541279",
-		"artifact:1550362453668266919",
-		"artifact:1550362238039097505",
-		"artifact:1550362384588079434",
-		"artifact:1550362435053945639",
-		"artifact:1550362414476690016"
+		"artifact:1550362469665342440"
 	];
 }
