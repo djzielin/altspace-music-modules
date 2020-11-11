@@ -6,6 +6,7 @@ import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 
 import { PianoReceiver, RCallback } from './receiver'
 import Piano from './piano'
+import MicroPiano from './micro_piano'
 //import Spawner from './spawner'
 //import OscSender from './sender';
 import WavPlayer from './wavplayer';
@@ -42,6 +43,7 @@ export default class App {
 	public allModules: MusicModule[] = [];
 
 	public ourPiano: Piano = null;
+	public ourMicroPiano: MicroPiano = null;
 	public ourSpiral: Spiral = null;
 	public ourStaff: Staff = null;
 	public ourGeo: Geo = null;
@@ -275,7 +277,11 @@ export default class App {
 		buttonZPos -= 0.2;
 
 		if(this.instrumentType==="piano"){
-			//await this.showPianoStaff();
+			await this.showPianoStaff();
+			//await this.showSpiralStaff();
+		}
+
+		if(this.instrumentType==="spiral"){
 			await this.showSpiralStaff();
 		}
 
@@ -368,10 +374,10 @@ export default class App {
 		this.allGUIs.push(ourWavPlayerGui);
 		xPos -= 1.75;
 
-		this.ourPiano = new Piano(this);
-		await this.ourPiano.createAllKeys(new MRE.Vector3(2, 1, 0),
+		this.ourMicroPiano = new MicroPiano(this);
+		await this.ourMicroPiano.createAllKeys(new MRE.Vector3(2, 1, 0),
 			MRE.Quaternion.FromEulerAngles(-30 * Math.PI / 180, 0, 0));	
-		this.allModules.push(this.ourPiano);
+		this.allModules.push(this.ourMicroPiano);
 
 		this.ourStaff = new Staff(this);
 		await this.ourStaff.createAsyncItems(new MRE.Vector3(2, 2, 0.5),
@@ -383,17 +389,18 @@ export default class App {
 		this.allGUIs.push(ourStaffGui);
 		xPos -= 1.75;
 
-		const ourPianoGui = new PianoGui(this, this.ourPiano);
+		/*const ourPianoGui = new PianoGui(this, this.ourPiano);
 		await ourPianoGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Piano")
 		this.allGUIs.push(ourPianoGui);
 		ourPianoGui.removeSharpsButton(); //TODO: should have global sharp/flat button
+		*/
 
 		const sendPatchPiano = new PatchPoint();
-		sendPatchPiano.module = this.ourPiano;
+		sendPatchPiano.module = this.ourMicroPiano;
 		sendPatchPiano.messageType = "midi";
 		sendPatchPiano.isSender = true;
-		sendPatchPiano.gui = ourPianoGui;
-		sendPatchPiano.button = ourPianoGui.sendButton;
+		//sendPatchPiano.gui = ourPianoGui;
+		//sendPatchPiano.button = ourPianoGui.sendButton;
 
 		const receivePatchStaff = new PatchPoint();
 		receivePatchStaff.module = this.ourStaff;

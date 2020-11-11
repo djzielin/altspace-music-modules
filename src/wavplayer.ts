@@ -141,13 +141,18 @@ export default class WavPlayer extends MusicModule{
 	}
 
 	private playSound(note: number, vel: number, pos: MRE.Vector3, parentID: MRE.Guid) {
-		if (!this.ourSounds.has(note)) {
+		const noteInt=Math.trunc(note);
+		const noteFract=note-noteInt;
+		const pitchOffset=noteFract;
+
+		if (!this.ourSounds.has(noteInt)) {
 			this.ourApp.ourConsole.logMessage("cant play midi note: " +
 				note + " as wav set doesnt contain a ogg for it!");
 
-			//TODO: find closest note in set, and use playback speed to adjust
-			if(note<this.lowestNote){				
-				do{
+			/*note<this.lowestNote){				
+				{
+				
+					do{
 					note+=12;
 				} while(!this.ourSounds.has(note));
 
@@ -159,9 +164,11 @@ export default class WavPlayer extends MusicModule{
 				this.ourApp.ourConsole.logMessage("not supporting more complicated interpolation at the moment!");
 				return;
 			}
+			*/
+			return;
 		}
 
-		const ourSound=this.ourSounds.get(note);
+		const ourSound=this.ourSounds.get(noteInt);
 
 		while(this.playingWavs.length>this.polyphonyLimit){
 			this.ourApp.ourConsole.logMessage("culling wav. enforcing polyphony limit of: " + this.polyphonyLimit);
@@ -177,7 +184,7 @@ export default class WavPlayer extends MusicModule{
 					app: {
 						position: pos
 					}
-				},
+				}
 			}
 		});
 
@@ -185,7 +192,7 @@ export default class WavPlayer extends MusicModule{
 
 		const mediaInstance=soundActor.startSound(ourSound.id, {
 			doppler: 0,
-			pitch: 0.0,
+			pitch: pitchOffset,
 			looping: false,
 			paused: false,
 			volume: volume,

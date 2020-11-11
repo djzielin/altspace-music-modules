@@ -477,7 +477,9 @@ export default class Staff extends MusicModule {
 	public receiveData(data: any[], messageType: string) {
 		if (messageType === "midi") {
 			if (data.length > 1) {
-				this.receiveNote(data[0] as number, data[1] as number);
+				const note=Math.trunc(data[0] as number); //dont allow floating point (yet)
+				const vel=Math.trunc(data[1] as number)
+				this.receiveNote(note, vel);
 			}
 		}
 	}
