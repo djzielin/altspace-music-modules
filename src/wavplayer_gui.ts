@@ -9,6 +9,7 @@ import PlusMinus from './plusminus';
 import Button from './button';
 import GuiPanel from './gui_panel';
 import WavPlayer from './wavplayer';
+import ButtonMulti from './button_multi';
 
 export default class WavPlayerGui extends GuiPanel{
 	private resetButton: Button=null;
@@ -20,12 +21,22 @@ export default class WavPlayerGui extends GuiPanel{
 
 	public polyphonyLimit=10;
 	public volume=0.75;
-	public cullTime=5000;
-	public doPedal=true;
+	public cullTime = 5000;
+	public doPedal = true;
 
 	public setPolyphony(n: number): void {
-		this.ourWavPlayer.polyphonyLimit=n;
+		this.ourWavPlayer.polyphonyLimit = n;
 	}
+
+	public setIntonationBase(n: number): void {
+
+		this.ourWavPlayer.intonationBase = n;
+	}
+
+	public setIntonation(n: number): void {
+		this.ourWavPlayer.intonation = n;
+	}
+
 	public setVolume(n: number): void {
 		this.ourWavPlayer.volume=n;
 	}
@@ -84,6 +95,19 @@ export default class WavPlayerGui extends GuiPanel{
 		await audDist.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
 			this.guiBackground.id, "aud m",
 			this.ourWavPlayer.audioRange, 1.0, this.setAudioRange.bind(this));
+		zPos -= 0.15;
+
+		const intonateLabels: string[]=["eq temp","ptolemy 5L","pythag 3L","7limit"];
+		const intonateButton = new ButtonMulti(this.ourApp);
+		await intonateButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
+			this.guiBackground.id, intonateLabels ,
+			this.ourWavPlayer.intonation, this.setIntonation.bind(this));
+		zPos -= 0.15;		
+		
+		const pitchPlusMinus = new PlusMinus(this.ourApp);
+		await pitchPlusMinus.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
+			this.guiBackground.id, "pitch",
+			this.ourWavPlayer.intonationBase, 1.0, this.setIntonationBase.bind(this));
 		zPos -= 0.15;
 
 		this.receiveButton = new Button(this.ourApp);

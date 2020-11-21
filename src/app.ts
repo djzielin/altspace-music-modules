@@ -374,10 +374,15 @@ export default class App {
 		this.allGUIs.push(ourWavPlayerGui);
 		xPos -= 1.75;
 
-		this.ourMicroPiano = new MicroPiano(this);
+		/*this.ourMicroPiano = new MicroPiano(this);
 		await this.ourMicroPiano.createAllKeys(new MRE.Vector3(2, 1, 0),
 			MRE.Quaternion.FromEulerAngles(-30 * Math.PI / 180, 0, 0));	
-		this.allModules.push(this.ourMicroPiano);
+		this.allModules.push(this.ourMicroPiano);*/
+
+		this.ourPiano = new Piano(this);
+		await this.ourPiano.createAllKeys(new MRE.Vector3(2, 1, 0),
+			MRE.Quaternion.FromEulerAngles(-30 * Math.PI / 180, 0, 0));	
+		this.allModules.push(this.ourPiano);
 
 		this.ourStaff = new Staff(this);
 		await this.ourStaff.createAsyncItems(new MRE.Vector3(2, 2, 0.5),
@@ -389,18 +394,19 @@ export default class App {
 		this.allGUIs.push(ourStaffGui);
 		xPos -= 1.75;
 
-		/*const ourPianoGui = new PianoGui(this, this.ourPiano);
+		const ourPianoGui = new PianoGui(this, this.ourPiano);
 		await ourPianoGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Piano")
 		this.allGUIs.push(ourPianoGui);
 		ourPianoGui.removeSharpsButton(); //TODO: should have global sharp/flat button
-		*/
+		
 
 		const sendPatchPiano = new PatchPoint();
-		sendPatchPiano.module = this.ourMicroPiano;
+		//sendPatchPiano.module = this.ourMicroPiano;
+		sendPatchPiano.module = this.ourPiano;
 		sendPatchPiano.messageType = "midi";
 		sendPatchPiano.isSender = true;
-		//sendPatchPiano.gui = ourPianoGui;
-		//sendPatchPiano.button = ourPianoGui.sendButton;
+		sendPatchPiano.gui = ourPianoGui;
+		sendPatchPiano.button = ourPianoGui.sendButton;
 
 		const receivePatchStaff = new PatchPoint();
 		receivePatchStaff.module = this.ourStaff;

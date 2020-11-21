@@ -17,20 +17,76 @@ interface WavProperties{
 	vol: number;
 }
 
-export default class WavPlayer extends MusicModule{
+enum IntonationMode {
+	none = 0,
+	ptolemy = 1,
+	pythagorean = 2,
+	limit7 = 3
+}
+
+export default class WavPlayer extends MusicModule {
 	private ourSounds: Map<number, MRE.Sound> = new Map();
 
-	public playingWavs: WavProperties[]=[]; 
+	public playingWavs: WavProperties[] = [];
 
-	public polyphonyLimit=10; // TODO: allow these to be set in in-world GUI
-	public volume=0.75;
-	public cullTime=5000;
-	public doPedal=true;
+	public polyphonyLimit = 10; // TODO: allow these to be set in in-world GUI
+	public volume = 0.75;
+	public cullTime = 5000;
+	public doPedal = true;
 
-	public audioRange=3;
+	public intonation = IntonationMode.none;
+	public intonationBase = 0;
 
-	private lowestNote=-1;
-	private highestNote=-1;
+
+	public audioRange = 3;
+
+	private lowestNote = -1;
+	private highestNote = -1;
+
+	private intonatePotemly = [
+		0.0000,
+		11.7313,
+		3.9100,
+		15.6413,
+		-13.6863,
+		-1.9550,
+		-9.7763,
+		1.9550,
+		13.6863,
+		-15.6413,
+		17.5963,
+		-11.7313
+	];
+
+	private intonatePhythag = [
+		0.0000,
+		-9.7750,
+		3.9100,
+		-5.8650,
+		7.8200,
+		-1.9550,
+		-11.7300,
+		1.9550,
+		-7.8200,
+		5.8650,
+		-3.9100,
+		9.7750
+	];
+
+	private intonate7Limit = [
+		0.0000,
+		19.4428,
+		31.1741,
+		15.6413,
+		-13.6863,
+		-1.9550,
+		-17.4878,
+		1.9550,
+		13.6863,
+		-15.6413,
+		-31.1741,
+		-11.7313
+	];
 
 	private noteOrder =
 		["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
@@ -143,7 +199,29 @@ export default class WavPlayer extends MusicModule{
 	private playSound(note: number, vel: number, pos: MRE.Vector3, parentID: MRE.Guid) {
 		const noteInt=Math.trunc(note);
 		const noteFract=note-noteInt;
-		const pitchOffset=noteFract;
+		let pitchOffset=noteFract;
+		const noteInOctave=noteInt % 12;
+
+		this.ourApp.ourConsole.logMessage("wav player midi note: " + note);
+		this.ourApp.ourConsole.logMessage("wav player pitch class: " + noteInOctave);
+
+
+		if(this.intonation!==IntonationMode.none){
+
+			let intonationChange = 0.0;
+			const shiftedNote = (noteInOctave - this.intonationBase + 12) % 12;
+
+			if (this.intonation === IntonationMode.ptolemy) {
+				intonationChange=(this.intonatePotemly[shiftedNote]/100.0);
+			}
+			if (this.intonation === IntonationMode.pythagorean) {
+				intonationChange=(this.intonatePhythag[shiftedNote]/100.0);
+			}
+			if (this.intonation === IntonationMode.limit7) {
+				intonationChange=(this.intonate7Limit[shiftedNote]/100.0);
+			}
+			pitchOffset+=intonationChange;
+		}
 
 		if (!this.ourSounds.has(noteInt)) {
 			this.ourApp.ourConsole.logMessage("cant play midi note: " +
