@@ -377,7 +377,9 @@ export default class App {
 		/*this.ourMicroPiano = new MicroPiano(this);
 		await this.ourMicroPiano.createAllKeys(new MRE.Vector3(2, 1, 0),
 			MRE.Quaternion.FromEulerAngles(-30 * Math.PI / 180, 0, 0));	
-		this.allModules.push(this.ourMicroPiano);*/
+		this.allModules.push(this.ourMicroPiano);
+*/
+		
 
 		this.ourPiano = new Piano(this);
 		await this.ourPiano.createAllKeys(new MRE.Vector3(2, 1, 0),

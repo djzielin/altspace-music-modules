@@ -223,27 +223,23 @@ export default class WavPlayer extends MusicModule {
 			pitchOffset+=intonationChange;
 		}
 
-		if (!this.ourSounds.has(noteInt)) {
-			this.ourApp.ourConsole.logMessage("cant play midi note: " +
-				note + " as wav set doesnt contain a ogg for it!");
+		if (!this.ourSounds.has(noteInt)) { //we don't have to exact sample, but we can pitch shift note we do have
+			let closestNote=0;
+			let closestDistance=1000;
 
-			/*note<this.lowestNote){				
-				{
-				
-					do{
-					note+=12;
-				} while(!this.ourSounds.has(note));
-
-			} else if(note>this.lowestNote){
-				do{
-					note-=12;
-				} while(!this.ourSounds.has(note));
-			} else{
-				this.ourApp.ourConsole.logMessage("not supporting more complicated interpolation at the moment!");
+			for(let [key,value] of this.ourSounds){
+				const noteDistance=Math.abs(noteInt-key);
+				if(noteDistance<closestDistance){
+					closestNote=key;
+					closestDistance=noteDistance;
+				}
+			}
+			if(closestDistance===1000){
+				this.ourApp.ourConsole.logMessage("cant play midi note: " +	note);
 				return;
 			}
-			*/
-			return;
+
+			pitchOffset += (closestNote-noteInt);
 		}
 
 		const ourSound=this.ourSounds.get(noteInt);
