@@ -27,7 +27,7 @@ if(process.argv.length>2){
 	MRE.log.info("app", "setting port to: " + port);
 }
 
-if(process.argv.length>4){
+if(process.argv.length>3){
 	instrumentType=process.argv[3];
 	MRE.log.info("app", "setting instrument to: " + instrumentType);
 }
