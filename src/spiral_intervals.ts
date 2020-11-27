@@ -8,12 +8,12 @@ import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 import Spiral from './spiral';
 import App from './app';
 
-enum IntervalMode {
+/*enum IntervalMode {
 	none = 0,
 	western = 1,
 	jazz = 2,
 	numerical = 3
-}
+}*/
 
   interface IntervalDisplay{
 	line1: MRE.Actor;
@@ -45,9 +45,6 @@ export default class PianoIntervals{
 	}
 	
 	public drawInterval(ourInterval: IntervalDisplay, intervalName: string){
-		
-
-
 		const notePosition1=this.ourSpiral.keyLocations.get(ourInterval.note1).clone();
 		const notePosition2=this.ourSpiral.keyLocations.get(ourInterval.note2).clone();
 	
@@ -110,7 +107,7 @@ export default class PianoIntervals{
 		//let noteDistance = note2 - note1;
 		//this.ourApp.ourConsole.logMessage("PIANO: computed note distance: " + noteDistance);
 		
-		let intervalName = "";
+		const intervalName = "";
 
 		/*if (this.ourSpiral.intervalMode === IntervalMode.western) {
 			while (noteDistance > 12) {

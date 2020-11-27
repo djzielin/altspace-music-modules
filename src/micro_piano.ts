@@ -63,117 +63,117 @@ export default class MicroPiano extends MusicModule {
 
 	private inch = 0.0254;
 	public halfinch = this.inch * 0.5;
-	
-	private whiteWidth=1.25*this.inch;
+
+	private whiteWidth = 1.25 * this.inch;
 
 	private xOffset =
-	[0.0,
-		0.25*this.whiteWidth,
-			0.5*this.whiteWidth,
-		0.75*this.whiteWidth,
-	1.0*this.whiteWidth,
-		1.25*this.whiteWidth,
-			1.5*this.whiteWidth,
-		1.75*this.whiteWidth,
-	2.0*this.whiteWidth,
-		2.5*this.whiteWidth,
-	3.0*this.whiteWidth,
-		3.25*this.whiteWidth,
-			3.5*this.whiteWidth,
-		3.75*this.whiteWidth,
-	4.0*this.whiteWidth,
-		4.25*this.whiteWidth,
-			4.5*this.whiteWidth,
-		4.75*this.whiteWidth,
-	5.0*this.whiteWidth,
-		5.25*this.whiteWidth,
-			5.5*this.whiteWidth,
-		5.75*this.whiteWidth,
-	6.0*this.whiteWidth,
-		6.5*this.whiteWidth,
-	];
+		[0.0,
+			0.25 * this.whiteWidth,
+			0.5 * this.whiteWidth,
+			0.75 * this.whiteWidth,
+			1.0 * this.whiteWidth,
+			1.25 * this.whiteWidth,
+			1.5 * this.whiteWidth,
+			1.75 * this.whiteWidth,
+			2.0 * this.whiteWidth,
+			2.5 * this.whiteWidth,
+			3.0 * this.whiteWidth,
+			3.25 * this.whiteWidth,
+			3.5 * this.whiteWidth,
+			3.75 * this.whiteWidth,
+			4.0 * this.whiteWidth,
+			4.25 * this.whiteWidth,
+			4.5 * this.whiteWidth,
+			4.75 * this.whiteWidth,
+			5.0 * this.whiteWidth,
+			5.25 * this.whiteWidth,
+			5.5 * this.whiteWidth,
+			5.75 * this.whiteWidth,
+			6.0 * this.whiteWidth,
+			6.5 * this.whiteWidth,
+		];
 
-private yOffset =
-	[0, 
-		this.halfinch, 
-			this.inch, 
-		this.halfinch, 
-	0, 
-		this.halfinch, 
-			this.inch, 
-		this.halfinch, 
-	0, 
-		this.halfinch, 
-	0, 
-		this.halfinch, 
-			this.inch, 
-		this.halfinch, 
-	0, 
-		this.halfinch, 
+	private yOffset =
+		[0,
+			this.halfinch,
 			this.inch,
-		this.halfinch, 
-	0,
-		this.halfinch, 
+			this.halfinch,
+			0,
+			this.halfinch,
 			this.inch,
-		this.halfinch, 
-	0,
-		this.halfinch 
-];
+			this.halfinch,
+			0,
+			this.halfinch,
+			0,
+			this.halfinch,
+			this.inch,
+			this.halfinch,
+			0,
+			this.halfinch,
+			this.inch,
+			this.halfinch,
+			0,
+			this.halfinch,
+			this.inch,
+			this.halfinch,
+			0,
+			this.halfinch
+		];
 
-private zOffset =
-	[0, 
-		this.inch*0.75 - 0.001, 
-			this.inch*1.0 - 0.001, 
-		this.inch*0.75 - 0.001, 
-	0, 
-		this.inch*0.75 - 0.001, 
-			this.inch*1.0 - 0.001, 
-		this.inch*0.75 - 0.001, 
-	0, 
-		this.inch*0.75 - 0.001, 
-	0, 
-		this.inch*0.75 - 0.001, 
-			this.inch*1.0 - 0.001, 
-		this.inch*0.75 - 0.001, 
-	0, 
-		this.inch*0.75 - 0.001, 
-			this.inch*1.0 - 0.001, 
-		this.inch*0.75 - 0.001, 
-	0, 
-		this.inch*0.75 - 0.001, 
-			this.inch*1.0 - 0.001, 
-		this.inch*0.75 - 0.001, 
-	0,
-		this.inch*0.75 - 0.001
-];
+	private zOffset =
+		[0,
+			this.inch * 0.75 - 0.001,
+			this.inch * 1.0 - 0.001,
+			this.inch * 0.75 - 0.001,
+			0,
+			this.inch * 0.75 - 0.001,
+			this.inch * 1.0 - 0.001,
+			this.inch * 0.75 - 0.001,
+			0,
+			this.inch * 0.75 - 0.001,
+			0,
+			this.inch * 0.75 - 0.001,
+			this.inch * 1.0 - 0.001,
+			this.inch * 0.75 - 0.001,
+			0,
+			this.inch * 0.75 - 0.001,
+			this.inch * 1.0 - 0.001,
+			this.inch * 0.75 - 0.001,
+			0,
+			this.inch * 0.75 - 0.001,
+			this.inch * 1.0 - 0.001,
+			this.inch * 0.75 - 0.001,
+			0,
+			this.inch * 0.75 - 0.001
+		];
 
-private noteColors =
-[
-	0, 
-		1,
+	private noteColors =
+		[
+			0,
+			1,
 			2,
-		1,
-	0, 
-		1,
+			1,
+			0,
+			1,
 			2,
-		1,
-	0, 
-		1,
-	0, 
-		1,
+			1,
+			0,
+			1,
+			0,
+			1,
 			2,
-		1,
-	0, 
-		1,
+			1,
+			0,
+			1,
 			2,
-		1,
-	0, 
-		1,
+			1,
+			0,
+			1,
 			2,
-		1,
-	0,
-		1
-];
+			1,
+			0,
+			1
+		];
 
 
 	/*private zOffsetCollision =
@@ -217,7 +217,7 @@ private noteColors =
 		this.keyboardParent.transform.local.position.x = offset;
 	}
 
-	public getMaterialByNumber(n: number): MRE.Material{
+	public getMaterialByNumber(n: number): MRE.Material {
 		if (n === 0) {
 			return this.ourApp.whiteMat;
 		}
@@ -229,8 +229,8 @@ private noteColors =
 		}
 	}
 
-	private convertMidiToIndex(midiNote: number): number{
-		const noteDoubled=Math.trunc(midiNote*2.0);
+	private convertMidiToIndex(midiNote: number): number {
+		const noteDoubled = Math.trunc(midiNote * 2.0);
 		return noteDoubled % 24;
 	}
 
@@ -242,7 +242,7 @@ private noteColors =
 
 	public setFancyKeyColor(midiNote: number) {
 		//const note = this.convertMidiToIndex(midiNote); //get 24 tone
-		const note12=Math.trunc(midiNote) % 12;
+		const note12 = Math.trunc(midiNote) % 12;
 
 
 		if (this.ourApp.ourStaff) {
@@ -291,13 +291,13 @@ private noteColors =
 	}
 
 	public async createAllKeys(pos: MRE.Vector3, rot = new MRE.Quaternion()) {
-		const whiteKeyMesh = this.ourApp.assets.createBoxMesh('box', this.whiteWidth* 0.9, this.inch, this.inch * 5.5);
+		const whiteKeyMesh = this.ourApp.assets.createBoxMesh('box', this.whiteWidth * 0.9, this.inch, this.inch * 5.5);
 		await whiteKeyMesh.created;
-	
+
 		const blackKeyMesh = this.ourApp.assets.createBoxMesh('box', this.halfinch, this.inch, this.inch * 3.5);
 		await blackKeyMesh.created;
 
-		const grayKeyMesh = this.ourApp.assets.createBoxMesh('box', this.halfinch*0.9, this.inch, this.inch * 4.5);
+		const grayKeyMesh = this.ourApp.assets.createBoxMesh('box', this.halfinch * 0.9, this.inch, this.inch * 4.5);
 		await grayKeyMesh.created;
 
 		if (!this.ourGrabber) {
@@ -327,12 +327,12 @@ private noteColors =
 		//this.ourApp.ourConsole.logMessage(`octaves: ${totalOctaves}`);
 
 
-		for (let i = this.keyLowest; i < this.keyHighest; i+=0.5) {
+		for (let i = this.keyLowest; i < this.keyHighest; i += 0.5) {
 			const noteIndex = this.convertMidiToIndex(i);
 
 			let meshId: MRE.Guid = blackKeyMesh.id;
 			const mattId: MRE.Guid = this.getMaterialByNumber(this.noteColors[noteIndex]).id;
-			
+
 			if (this.noteColors[noteIndex] === 0) {
 				meshId = whiteKeyMesh.id;
 			}
@@ -342,8 +342,6 @@ private noteColors =
 			if (this.noteColors[noteIndex] === 2) {
 				meshId = blackKeyMesh.id;
 			}
-
-
 
 			const keyPos = new MRE.Vector3(
 				this.computeKeyPositionX(i),
@@ -395,11 +393,11 @@ private noteColors =
 				}
 			});
 			await keyCollisionActor.created();
-	
+
 			this.ourKeyCollisionActors.set(i, keyCollisionActor);
 			this.setupInteractions(i);
 		}
-	}	
+	}
 
 	private setupInteractions(i: number) {
 		const keyCollisionActor = this.ourKeyCollisionActors.get(i);
@@ -484,7 +482,7 @@ private noteColors =
 	}
 
 	public isAccidental(midiNote: number): boolean {
-		const pitchClass = this.convertMidiToIndex(midiNote)/2; //TODO get this better for microtonal
+		const pitchClass = this.convertMidiToIndex(midiNote) / 2; //TODO get this better for microtonal
 
 		if (pitchClass === 1 || pitchClass === 3 || pitchClass === 6 || pitchClass === 8 || pitchClass === 10) {
 			return true;
@@ -506,7 +504,7 @@ private noteColors =
 		newPos.y -= 0.01;
 
 		this.ourKeys.get(note).transform.local.position = newPos;
-		
+
 		const mKeyboard = MRE.Matrix.Compose(
 			this.keyboardParent.transform.local.scale,
 			this.keyboardParent.transform.local.rotation,
@@ -616,7 +614,7 @@ private noteColors =
 		const newPos = this.keyLocations.get(note).clone();
 
 		this.ourKeys.get(note).transform.local.position = newPos;
-	
+
 		if (this.ourNoteNames.has(note)) {
 			const noteName = this.ourNoteNames.get(note);
 			noteName.destroy();

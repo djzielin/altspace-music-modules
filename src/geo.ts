@@ -8,7 +8,6 @@ import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 import App from './app';
 import MusicModule from './music_module';
 import GeoArtifacts from './geo_artifacts';
-import { posix } from 'path';
 
 enum AuthType {
 	Moderators = 0,
