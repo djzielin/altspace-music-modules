@@ -2,10 +2,10 @@
  * Licensed under the MIT License.
  */
 
-import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
+import * as MRE from '../../../mixed-reality-extension-sdk/packages/sdk/';
 //import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
-import App from './app';
-import Button from './button';
+import App from '../app';
+import Button from '../button';
 
 export default class Console {
 	private consoleTextActor: MRE.Actor = null;

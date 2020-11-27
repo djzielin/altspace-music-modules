@@ -2,12 +2,11 @@
  * Licensed under the MIT License.
  */
 
-import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
+import * as MRE from '../../../mixed-reality-extension-sdk/packages/sdk/';
 //import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 
-import Button from './button';
-import App from './app';
-import { MxRecord } from 'dns';
+import Button from '../button';
+import App from '../app';
 
 /**
  * The main class of this app. All the logic goes here.

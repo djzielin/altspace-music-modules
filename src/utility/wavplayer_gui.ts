@@ -2,14 +2,14 @@
  * Licensed under the MIT License.
  */
 
-import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
+import * as MRE from '../../../mixed-reality-extension-sdk/packages/sdk/';
 //import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
-import App from './app';
-import PlusMinus from './plusminus';
-import Button from './button';
-import GuiPanel from './gui_panel';
+import App from '../app';
+import PlusMinus from '../plusminus';
+import Button from '../button';
+import GuiPanel from '../gui_panel';
 import WavPlayer from './wavplayer';
-import ButtonMulti from './button_multi';
+import ButtonMulti from '../button_multi';
 
 export default class WavPlayerGui extends GuiPanel{
 	private resetButton: Button=null;

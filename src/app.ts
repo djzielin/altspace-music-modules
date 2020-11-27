@@ -4,27 +4,27 @@
 
 import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 
-import { PianoReceiver, RCallback } from './receiver'
+import { PianoReceiver, RCallback } from './utility/receiver'
 import Piano from './piano'
 import MicroPiano from './micro_piano'
 //import Spawner from './spawner'
 //import OscSender from './sender';
-import WavPlayer from './wavplayer';
-import Console from './console';
+import WavPlayer from './utility/wavplayer';
+import Console from './utility/console';
 import Button from './button';
 import Staff from './staff';
 import GrabButton from './grabbutton';
 import PianoGui from './piano_gui';
 import StaffGui from './staff_gui';
-import WavPlayerGui from './wavplayer_gui';
-import Users from './users';
+import WavPlayerGui from './utility/wavplayer_gui';
+import Users from './utility/users';
 //import Tablature from './tablature';
 import GuiPanel from './gui_panel';
 import MusicModule from './music_module';
 import Sequencer from './sequencer';
 import SequencerGui from './sequencer_gui';
-import PatchPoint from './patch_point';
-import Patcher from './patcher';
+import PatchPoint from './utility/patch_point';
+import Patcher from './utility/patcher';
 import HeartBeat from './heartbeat';
 import HeartBeatGui from './heartbeat_gui';
 import Ice from './ice';

@@ -8,9 +8,7 @@ import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 import dotenv from 'dotenv';
 import { resolve as resolvePath } from 'path';
 import App from './app';
-import {PianoReceiver} from './receiver'
-//import OscSender from './sender';
-//import { argv } from 'process';
+import {PianoReceiver} from './utility/receiver'
 
 /* eslint-disable no-console */
 process.on('uncaughtException', err => console.log('uncaughtException', err));

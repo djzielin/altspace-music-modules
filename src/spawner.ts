@@ -6,7 +6,7 @@ import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 //import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 import App from './app';
 import SpawnerGUI from './spawner_gui';
-import WavPlayer from './wavplayer';
+import WavPlayer from './utility/wavplayer';
 
 interface BubbleProperties{
 	timeStamp: number;

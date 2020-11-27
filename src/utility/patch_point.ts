@@ -2,9 +2,9 @@
  * Licensed under the MIT License.
  */
 
-import MusicModule from './music_module';
-import Button from './button';
-import GuiPanel from './gui_panel';
+import MusicModule from '../music_module';
+import Button from '../button';
+import GuiPanel from '../gui_panel';
 
 export default class PatchPoint{
 	public module: MusicModule;

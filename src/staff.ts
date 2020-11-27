@@ -6,7 +6,7 @@
 import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 //import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 import App from './app';
-//import WavPlayer from './wavplayer';
+//import WavPlayer from './utility/wavplayer';
 //import GrabButton from './grabbutton';
 //import StaffSharp from './staffsharp';
 //import StaffFlat from './staffflat';
