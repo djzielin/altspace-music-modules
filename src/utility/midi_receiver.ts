@@ -6,42 +6,27 @@ import * as MRE from '../../../mixed-reality-extension-sdk/packages/sdk/';
 //import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 
 import WebSocket from 'ws';
+import MusicModule from '../music_module';
+import App from '../app';
 
-export interface RCallback {
-	(note: number, vel: number, channel: number): void;
-}
-
-export class PianoReceiver {
-	public ourCallbacks: RCallback[] = [];
-	private wss: WebSocket.Server
+export default class MidiReceiver extends MusicModule {
+	private wss: WebSocket.Server = null;
 
 	private lastNote=0;
 	private lastVel=0;
 	private lastChannel=0;
 	private lastTime=0;
 
-	public addReceiver(callback: RCallback){
-		MRE.log.info("app", "adding receiver callback");
-		this.ourCallbacks.push(callback);
-		MRE.log.info("app", "size of callback array now: " + this.ourCallbacks.length);
-	}
-
-	public removeReceiver(callback: RCallback){
-		MRE.log.info("app", "attempting to remove receiver callback");
-
-		const index=this.ourCallbacks.indexOf(callback);
-		if(index>-1){
-			this.ourCallbacks.splice(index, 1);
+	public createServer(){
+		if(this.wss){
+			this.wss.close();
 		}
-		MRE.log.info("app", "size of callback array now: " + this.ourCallbacks.length);
-
-	}
-
-	constructor(port: number) {
-		this.wss = new WebSocket.Server({ port: port });
+		
+		this.wss = new WebSocket.Server({ port: this.port });
 
 		this.wss.on('connection', (ws: WebSocket) => {
-			MRE.log.info("app", 'remote midi keyboard has connected!');
+			//is ws.url the correct way to get this?
+			MRE.log.info("app", 'remote midi keyboard has connected from: ' + ws.url); 
 
 			ws.on('message', (message: string) => {
 				//MRE.log.info("app", 'received from client: %s', message);
@@ -53,20 +38,19 @@ export class PianoReceiver {
 
 				if (messageArray.length > 2) {
 					channel = messageArray[2];
-				}
+				}			
 
 				//const currentTime = Date.now();
 				//const timeDiff = currentTime - this.lastTime;
 
 				//if (note === this.lastNote && channel === this.lastChannel && timeDiff < 150 && vel >0) {
 				//	MRE.log.info("app", "rejected! too close: " + timeDiff);
-				//}else{
-				for (const singleCallback of this.ourCallbacks) { //broadcast to all listeners
-					if (singleCallback) {
-						singleCallback(note, vel, channel);
-					}
-				}
+				//}else{				
 				//}
+
+				const sendMessage = [note, vel, channel];
+				this.sendData(sendMessage, "midi")
+
 				if (vel > 0) {
 					this.lastNote = note;
 					this.lastVel = vel;
@@ -75,5 +59,11 @@ export class PianoReceiver {
 				}
 			});
 		});
+	}
+
+	constructor(protected ourApp: App, public port: number) {
+		super(ourApp);
+		
+		this.createServer();
 	}
 }

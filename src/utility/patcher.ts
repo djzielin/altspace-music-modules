@@ -94,7 +94,7 @@ export default class Patcher{
 			}
 		}
 
-		this.ourApp.ourConsole.logMessage("PATCHER:  patch doesn't yet exist. adding!");
+		this.ourApp.ourConsole.logMessage("PATCHER:  patch doesn't yet exist. adding!");		
 		sender.module.sendDestinations.push(receiver);
 
 		if (newPatch.sender.gui && newPatch.receiver.gui) {

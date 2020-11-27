@@ -4,7 +4,8 @@
 
 import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 
-import { PianoReceiver, RCallback } from './utility/receiver'
+import MidiReceiver from './utility/midi_receiver'
+import MidiReceiverGui from './utility/midi_receiver_gui';
 import Piano from './piano'
 import MicroPiano from './micro_piano'
 //import Spawner from './spawner'
@@ -75,22 +76,22 @@ export default class App {
 
 	public ourUsers: Users;
 
-	private receiverCallback: RCallback;
 
-	constructor(public context: MRE.Context, public baseUrl: string, public baseDir: string,
-		public ourReceiver: PianoReceiver, public instrumentType: string) {
+	constructor(public context: MRE.Context, public baseUrl: string,
+		public baseDir: string, public instrumentType: string) {
+			
 		this.ourConsole = new Console(this);
 		this.ourPatcher = new Patcher(this);
-		this.ourUsers=new Users(this);
+		this.ourUsers = new Users(this);
 
-		this.assets = new MRE.AssetContainer(context);		
+		this.assets = new MRE.AssetContainer(context);
 
 		this.context.onUserLeft(user => this.ourUsers.userLeft(user));
-		
-		const isGeo=(instrumentType==="geo");
-		const createHands=!isGeo;
-		const createChest=isGeo;
-		
+
+		const isGeo = (instrumentType === "geo");
+		const createHands = !isGeo;
+		const createChest = isGeo;
+
 		this.context.onUserJoined(user => {
 			this.ourUsers.userJoined(user,createHands,createChest);
 		});
@@ -148,34 +149,6 @@ export default class App {
 		});
 
 		this.handMesh = this.assets.createBoxMesh('boxMesh', 0.25, 0.1, 0.25);
-	}
-
-	//TODO: move this to midiReceive module and use patching system to connect
-	private PianoReceiveCallback(note: number, vel: number, channel: number): void {
-		this.ourConsole.logMessage(`App received - note: ${note} vel: ${vel}`);
-
-		if (vel > 0) {
-			if (this.ourPiano) {
-				this.ourPiano.keyPressed(note, vel);
-			}
-			if (this.ourGeo) {
-				this.ourGeo.keyPressed(note, vel);
-			}
-			if (this.ourSpiral) {
-				this.ourSpiral.keyPressed(note, vel);
-			}
-		} else {
-			//this.ourPiano.stopSound(note);
-			if (this.ourPiano) {
-				this.ourPiano.keyReleased(note);
-			}
-			if (this.ourGeo) {
-				this.ourGeo.keyReleased(note);
-			}
-			if (this.ourSpiral) {
-				this.ourSpiral.keyReleased(note);
-			}
-		}
 	}	
 
 	public degToRad(degrees: number) {
@@ -378,9 +351,8 @@ export default class App {
 		await this.ourMicroPiano.createAllKeys(new MRE.Vector3(2, 1, 0),
 			MRE.Quaternion.FromEulerAngles(-30 * Math.PI / 180, 0, 0));	
 		this.allModules.push(this.ourMicroPiano);
-*/
+		*/
 		
-
 		this.ourPiano = new Piano(this);
 		await this.ourPiano.createAllKeys(new MRE.Vector3(2, 1, 0),
 			MRE.Quaternion.FromEulerAngles(-30 * Math.PI / 180, 0, 0));	
@@ -389,7 +361,10 @@ export default class App {
 		this.ourStaff = new Staff(this);
 		await this.ourStaff.createAsyncItems(new MRE.Vector3(2, 2, 0.5),
 			MRE.Quaternion.FromEulerAngles(-90 * Math.PI / 180, 0, 0));		
-		this.allModules.push(this.ourStaff);	
+		this.allModules.push(this.ourStaff);
+		
+		const ourMidiReceiver = new MidiReceiver(this,3902);
+		this.allModules.push(ourMidiReceiver);
 
 		const ourStaffGui = new StaffGui(this, this.ourStaff);
 		await ourStaffGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Staff")
@@ -400,8 +375,11 @@ export default class App {
 		await ourPianoGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Piano")
 		this.allGUIs.push(ourPianoGui);
 		ourPianoGui.removeSharpsButton(); //TODO: should have global sharp/flat button
-		
 
+		const ourMidiReceiverGui = new MidiReceiverGui(this, ourMidiReceiver);
+		await ourMidiReceiverGui.createAsync(new MRE.Vector3(xPos, 0.1, -2), "Midi Recv")
+		this.allGUIs.push(ourMidiReceiverGui);
+		
 		const sendPatchPiano = new PatchPoint();
 		//sendPatchPiano.module = this.ourMicroPiano;
 		sendPatchPiano.module = this.ourPiano;
@@ -410,14 +388,26 @@ export default class App {
 		sendPatchPiano.gui = ourPianoGui;
 		sendPatchPiano.button = ourPianoGui.sendButton;
 
+		const receivePatchPiano = new PatchPoint();
+		receivePatchPiano.module = this.ourPiano;
+		receivePatchPiano.messageType = "midi";
+		receivePatchPiano.isSender = false;
+		receivePatchPiano.gui = ourPianoGui;
+		receivePatchPiano.button = ourPianoGui.receiveButton;
+
+		const sendMidi = new PatchPoint();
+		sendMidi.module = ourMidiReceiver;
+		sendMidi.messageType = "midi";
+		sendMidi.isSender = true;
+		sendMidi.gui = ourMidiReceiverGui;
+		sendMidi.button = ourMidiReceiverGui.sendButton;
+		
 		const receivePatchStaff = new PatchPoint();
 		receivePatchStaff.module = this.ourStaff;
 		receivePatchStaff.messageType = "midi";
 		receivePatchStaff.isSender = false;
 		receivePatchStaff.gui = ourStaffGui;
 		receivePatchStaff.button = ourStaffGui.receiveButton;
-
-		this.ourPatcher.applyPatch(sendPatchPiano, receivePatchStaff);
 
 		const receiveWavPlayer = new PatchPoint();
 		receiveWavPlayer.module = ourWavPlayer;
@@ -426,8 +416,6 @@ export default class App {
 		receiveWavPlayer.gui = ourWavPlayerGui;
 		receiveWavPlayer.button = ourWavPlayerGui.receiveButton;
 
-		this.ourPatcher.applyPatch(sendPatchPiano, receiveWavPlayer);
-
 		const sendPatchStaff = new PatchPoint();
 		sendPatchStaff.module = this.ourStaff;
 		sendPatchStaff.messageType = "midi";
@@ -435,6 +423,16 @@ export default class App {
 		sendPatchStaff.gui = ourStaffGui;
 		sendPatchStaff.button = ourStaffGui.sendButton;
 
+		this.ourConsole.logMessage("patching midi -> piano");
+		this.ourPatcher.applyPatch(sendMidi, receivePatchPiano);
+
+		this.ourConsole.logMessage("patching piano -> staff");
+		this.ourPatcher.applyPatch(sendPatchPiano, receivePatchStaff);
+
+		this.ourConsole.logMessage("patching piano -> wave player");
+		this.ourPatcher.applyPatch(sendPatchPiano, receiveWavPlayer);
+
+		this.ourConsole.logMessage("patching staff -> wave player");
 		this.ourPatcher.applyPatch(sendPatchStaff, receiveWavPlayer);
 	}
 
@@ -645,7 +643,6 @@ export default class App {
 
 	private stopped() {
 		MRE.log.info("app", "stopped callback has been called");
-		this.ourReceiver.removeReceiver(this.receiverCallback);
 	}
 
 	private started() {
@@ -658,8 +655,6 @@ export default class App {
 
 		this.loadAsyncItems().then(() => {
 			this.ourConsole.logMessage("all async items created/loaded!");
-			this.receiverCallback = this.PianoReceiveCallback.bind(this)
-			this.ourReceiver.addReceiver(this.receiverCallback);
 		});
 	}
 }

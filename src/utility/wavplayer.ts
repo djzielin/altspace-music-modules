@@ -197,7 +197,7 @@ export default class WavPlayer extends MusicModule {
 	}
 
 	private playSound(note: number, vel: number, pos: MRE.Vector3, parentID: MRE.Guid) {
-		const noteInt=Math.trunc(note);
+		let noteInt=Math.trunc(note);
 		const noteFract=note-noteInt;
 		let pitchOffset=noteFract;
 		const noteInOctave=noteInt % 12;
@@ -239,7 +239,8 @@ export default class WavPlayer extends MusicModule {
 				return;
 			}
 
-			pitchOffset += (closestNote-noteInt);
+			pitchOffset += (noteInt-closestNote);
+			noteInt=closestNote;
 		}
 
 		const ourSound=this.ourSounds.get(noteInt);

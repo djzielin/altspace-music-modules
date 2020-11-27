@@ -385,6 +385,9 @@ export default class Piano extends MusicModule {
 		//this.ourApp.ourConsole.logMessage("piano received note ON message! note: " + note);
 
 		if (!this.ourKeys.has(note) || (!this.keyLocations.has(note))) {
+			//allow to midi data to pass through to staff and waveplayer
+			const message = [note, vel, 0]; //TODO: should make effort to calculate position
+			this.sendData(message, "midi");
 			return;
 		}
 
