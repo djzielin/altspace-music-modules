@@ -227,7 +227,7 @@ export default class WavPlayer extends MusicModule {
 			let closestNote=0;
 			let closestDistance=1000;
 
-			for(let [key,value] of this.ourSounds){
+			for(const key of this.ourSounds.keys()){
 				const noteDistance=Math.abs(noteInt-key);
 				if(noteDistance<closestDistance){
 					closestNote=key;
