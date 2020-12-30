@@ -8,7 +8,7 @@ import MidiReceiver from './utility/midi_receiver'
 import MidiReceiverGui from './utility/midi_receiver_gui';
 import Piano from './piano'
 import MicroPiano from './micro_piano'
-//import Spawner from './spawner'
+import Spawner from './spawner'
 //import OscSender from './sender';
 import WavPlayer from './utility/wavplayer';
 import Console from './utility/console';
@@ -17,6 +17,7 @@ import Staff from './staff';
 import GrabButton from './grabbutton';
 import PianoGui from './piano_gui';
 import StaffGui from './staff_gui';
+import SpawnerGui from './spawner_gui';
 import WavPlayerGui from './utility/wavplayer_gui';
 import Users from './utility/users';
 //import Tablature from './tablature';
@@ -265,6 +266,9 @@ export default class App {
 		if(this.instrumentType==="ice"){
 			await this.showIce();
 		}
+		if(this.instrumentType==="spawner"){
+			await this.showSpawner();
+		}
 
 		//await this.showSequencerPiano();
 		
@@ -280,7 +284,6 @@ export default class App {
 		this.showGrabbersButton.setValue(false);
 
 		this.ourConsole.logMessage("Finished creation of all asyn items");
-
 	}
 
 	/*private makeAuthoritative() {
@@ -434,6 +437,72 @@ export default class App {
 
 		this.ourConsole.logMessage("patching staff -> wave player");
 		this.ourPatcher.applyPatch(sendPatchStaff, receiveWavPlayer);
+	}
+
+	private async showSpawner(){
+		let xPos = 1.5;
+
+		/*const ourWavPlayer = new WavPlayer(this);
+		await ourWavPlayer.loadAllSounds("piano",36,84);
+		this.allModules.push(ourWavPlayer);
+
+		const ourWavPlayerGui = new WavPlayerGui(this, ourWavPlayer);
+		await ourWavPlayerGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Piano WavPlayer")		
+		this.allGUIs.push(ourWavPlayerGui);
+		xPos -= 1.75;
+		*/
+				
+		const ourSpawner = new Spawner(this);
+		await ourSpawner.createAsyncItems(new MRE.Vector3(2, 1, 0),
+			MRE.Quaternion.FromEulerAngles(0.0 * Math.PI / 180, 0, 0));	
+		this.allModules.push(ourSpawner);	
+		
+		const ourMidiReceiver = new MidiReceiver(this,3932);
+		this.allModules.push(ourMidiReceiver);	
+
+		const ourSpawnerGui = new SpawnerGui(this, ourSpawner);
+		await ourSpawnerGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Spawner")
+		this.allGUIs.push(ourSpawnerGui);
+
+		xPos -= 1.75;
+		
+		const ourMidiReceiverGui = new MidiReceiverGui(this, ourMidiReceiver);
+		await ourMidiReceiverGui.createAsync(new MRE.Vector3(xPos, 0.1, -2), "Midi Recv")
+		this.allGUIs.push(ourMidiReceiverGui);
+		
+		const sendSpawnerPatch = new PatchPoint();
+		sendSpawnerPatch.module = ourSpawner;
+		sendSpawnerPatch.messageType = "midi";
+		sendSpawnerPatch.isSender = true;
+		sendSpawnerPatch.gui = ourSpawnerGui;
+		sendSpawnerPatch.button = ourSpawnerGui.sendButton;
+
+		const receiveSpawnerPatch = new PatchPoint();
+		receiveSpawnerPatch.module = ourSpawner;
+		receiveSpawnerPatch.messageType = "midi";
+		receiveSpawnerPatch.isSender = false;
+		receiveSpawnerPatch.gui = ourSpawnerGui;
+		receiveSpawnerPatch.button = ourSpawnerGui.receiveButton;
+
+		const sendMidi = new PatchPoint();
+		sendMidi.module = ourMidiReceiver;
+		sendMidi.messageType = "midi";
+		sendMidi.isSender = true;
+		sendMidi.gui = ourMidiReceiverGui;
+		sendMidi.button = ourMidiReceiverGui.sendButton;
+		
+		/*const receiveWavPlayer = new PatchPoint();
+		receiveWavPlayer.module = ourWavPlayer;
+		receiveWavPlayer.messageType = "midi";
+		receiveWavPlayer.isSender = false;
+		receiveWavPlayer.gui = ourWavPlayerGui;
+		receiveWavPlayer.button = ourWavPlayerGui.receiveButton;
+*/
+		this.ourConsole.logMessage("patching midi -> piano");
+		this.ourPatcher.applyPatch(sendMidi, receiveSpawnerPatch);
+
+		//this.ourConsole.logMessage("patching piano -> wave player");
+		//this.ourPatcher.applyPatch(sendSpawnerPatch, receiveWavPlayer);
 	}
 
 	private async showSpiralStaff(){

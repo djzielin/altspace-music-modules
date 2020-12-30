@@ -3,9 +3,9 @@
  */
 
 import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
-//import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
+
 import App from './app';
-import SpawnerGUI from './spawner_gui';
+import MusicModule from './music_module';
 import WavPlayer from './utility/wavplayer';
 
 interface BubbleProperties{
@@ -14,7 +14,7 @@ interface BubbleProperties{
 	note: number;
 }
 
-export default class Spawner {
+export default class Spawner extends MusicModule {
 
 	/**************
   	 https://colorbrewer2.org/#type=qualitative&scheme=Paired&n=12
@@ -63,66 +63,28 @@ export default class Spawner {
 		"artifact:1502544173000032538"
 	]
 
-	private sphereMesh: MRE.Mesh;
-	private boxMesh: MRE.Mesh;
+	private elongatedCubes: string [] = [
+		"artifact:1638815768218960841"
+	]
 
 	public availableBubbles: BubbleProperties[]=[]; 
 
-	private noteMaterials: MRE.Material[] = [];
 	public spawnerWidth=0.5;
 	public spawnerHeight=0.2;
-	private ourSpawner: MRE.Actor;
-	private spawnerActor: MRE.Actor;
-
-	private bubbleLimit=50;
-
+	public bubbleLimit=50;
 	public timeOut=10.0;
 	public bubbleSize=0.05;
 	public bubbleSpeed=0.1;
 	public doParticleEffect=false;
 	public doPosRandom=true;
-	public noFreezeRotation=true;
-	public audioRange=10;
+
+	private noteMaterials: MRE.Material[] = [];
+
+	//public ourSpawner: MRE.Actor;
+	public spawnerActor: MRE.Actor;
+
 	public ourWavPlayer: WavPlayer;
 	
-	public setEmitterWidth(n: number): void {
-		this.spawnerWidth=n;
-		this.spawnerActor.transform.local.scale=new MRE.Vector3(this.spawnerWidth, 0.01, 0.05);
-	}
-	public setEmitterHeight(n: number): void {
-		this.spawnerHeight=n;
-	}
-
-	public setTimeOut(n: number): void {
-		this.timeOut=n;
-	}
-
-	public setBubbleSize(n: number): void {
-		this.bubbleSize=n;
-	}
-
-	public setBubbleSpeed(n: number): void {
-		this.bubbleSpeed=n;
-	}
-
-	public setAudioRange(n: number): void {
-		this.audioRange=n;
-	}
-
-	public setDoParticleEffect(b: boolean): void {
-		this.doParticleEffect=b;
-	}
-
-	public setDoPosRandom(b: boolean): void {
-		this.doPosRandom=b;
-	}
-
-	public setNoFreezeRotation(b: boolean): void {
-		this.noFreezeRotation=b;
-	}
-
-	private ourSpawnerGUI: SpawnerGUI=null;
-
 	private removeFromAvailable(ourBubble: BubbleProperties) {
 		const index = this.availableBubbles.indexOf(ourBubble);
 		if (index > -1) {
@@ -130,7 +92,8 @@ export default class Spawner {
 		}
 	}	
 
-	constructor(private ourApp: App) {
+	constructor(protected ourApp: App) {
+		super(ourApp);
 
 		setInterval(() => { //cull bubbles that have been around too long
 			const currentTime = Date.now();
@@ -158,45 +121,45 @@ export default class Spawner {
 		}, 1000);
 	}
 
-	public async createAsyncItems(pos: MRE.Vector3) {
-		this.boxMesh = this.ourApp.assets.createBoxMesh('boxMesh', 1.0, 1.0, 1.0);
-		await this.boxMesh.created;
+	public async createAsyncItems(pos: MRE.Vector3, rot = new MRE.Quaternion()) {
+		if (!this.ourGrabber) {
+			this.createGrabber(pos, rot);
+		} else {
+			this.ourGrabber.setPos(pos);
+			this.ourGrabber.setRot(rot);
+		}
 
-		this.ourSpawner = MRE.Actor.Create(this.ourApp.context, {
+
+		/*this.ourSpawner = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
+				parentId: this.ourGrabber.getGUID(),
 				name: 'spawner',
 				transform: {
 					app: { position: pos },
-				}
+				},
+				grabbable: true,
+				subscriptions: ['transform']
 			}
 		});
 
 		await this.ourSpawner.created();
 
 		this.ourSpawner.setCollider(MRE.ColliderType.Box, false, {x: this.spawnerWidth, y: 0.01, z: 0.05});
-
-		//adding rigidbody leads to incorrect behavior. perhaps grabbable=true instantiates rigidbody?
-		/*this.ourSpawner.enableRigidBody({
-			enabled: true,
-			isKinematic: true,
-			useGravity: false
-		});*/
-
-		this.ourSpawner.grabbable = true; //so we can move it around
-		this.ourSpawner.subscribe('transform'); //so we can get pos updates
+*/
 
 		this.spawnerActor=MRE.Actor.Create(this.ourApp.context, {
 			actor: {
 				name: 'spawner',
-				parentId: this.ourSpawner.id,
+				parentId: this.ourGrabber.getGUID(),
 				transform: {
 					local: {
+						position: new MRE.Vector3(-this.spawnerWidth, 0,0),
 						scale: new MRE.Vector3(this.spawnerWidth, 0.01, 0.05)
 					}
 				},
 				appearance:
 				{
-					meshId: this.boxMesh.id
+					meshId: this.ourApp.boxMesh.id
 				}
 			}
 		});
@@ -211,26 +174,15 @@ export default class Spawner {
 			this.noteMaterials.push(ourMat);
 		}
 		this.ourApp.ourConsole.logMessage("completed all spawner object creation");
-
-		this.ourSpawnerGUI=new SpawnerGUI(this.ourApp, this);
-		const guiPos=new MRE.Vector3(pos.x-2,0,pos.z);
-		await this.ourSpawnerGUI.createAsync(guiPos);
-
 	}
 
 	private createBubble(pos: MRE.Vector3, rot: MRE.Quaternion, scale: number,
 		vel: MRE.Vector3, mat: MRE.Material): BubbleProperties {
 		
-		let constraints=[MRE.RigidBodyConstraints.None];
-
-		if(!this.noFreezeRotation){
-			constraints=[MRE.RigidBodyConstraints.FreezeRotation];
-		}
-
 		const bubbleActor = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
 				name: 'sphere',
-				parentId: this.ourSpawner.id,
+				parentId: this.ourGrabber.getGUID(),
 				transform: {
 					local: {
 						position: pos,
@@ -239,7 +191,7 @@ export default class Spawner {
 					}
 				},
 				appearance: {
-					meshId: this.boxMesh.id,
+					meshId: this.ourApp.boxMesh.id,
 					materialId: mat.id
 				},
 				collider: {
@@ -251,7 +203,6 @@ export default class Spawner {
 				rigidBody: {
 					useGravity: false,
 					velocity: vel,
-					constraints: constraints
 				},
 				subscriptions: ['transform'],
 			}
@@ -304,6 +255,18 @@ export default class Spawner {
 		return output;
 	}
 
+	public receiveData(data: any[], messageType: string) {
+		if (messageType === "midi") {
+			if (data.length > 1) {
+				if (data[1] > 0) {
+					this.spawnBubble(data[0] as number, data[1] as number);
+				} else {
+					//this.handleRelease(data[0] as number);
+				}
+			}
+		}
+	}
+
 	public spawnBubble(note: number, vel: number) {
 		this.ourApp.ourConsole.logMessage("trying to spawn bubble for: " + note);
 		const octave = Math.floor(note / 12);
@@ -334,7 +297,7 @@ export default class Spawner {
 		const spawnRot =
 			MRE.Quaternion.FromEulerAngles(Math.random() * 360, Math.random() * 360, Math.random() * 360);
 
-		const spawnerRot = this.ourSpawner.transform.app.rotation;
+		const spawnerRot = this.ourGrabber.getRot();
 		const forVec = new MRE.Vector3(0, 0, 1);
 		const spawnForVec = new MRE.Vector3(0, 0, 0);
 		forVec.rotateByQuaternionToRef(spawnerRot, spawnForVec);
