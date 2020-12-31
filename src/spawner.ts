@@ -77,6 +77,7 @@ export default class Spawner extends MusicModule {
 	public bubbleSpeed=0.1;
 	public doParticleEffect=false;
 	public doPosRandom=true;
+	public doElongatedCubes=true;
 
 	private noteMaterials: MRE.Material[] = [];
 
@@ -201,12 +202,14 @@ export default class Spawner extends MusicModule {
 					isTrigger: false
 				},
 				rigidBody: {
+					enabled: true,
 					useGravity: false,
-					velocity: vel,
 				},
 				subscriptions: ['transform'],
 			}
 		});		
+
+		bubbleActor.rigidBody.velocity=vel;
 
 		const ourBubble={
 			timeStamp: Date.now(),
@@ -284,12 +287,12 @@ export default class Spawner extends MusicModule {
 
 		if (this.doPosRandom) {
 			spawnPos = new MRE.Vector3(
-				Math.random() * this.spawnerWidth - this.spawnerWidth * 0.5,
+				-this.spawnerWidth+Math.random() * this.spawnerWidth - this.spawnerWidth * 0.5,
 				(scale * 2.0) + Math.random() * this.spawnerHeight,
 				0.0);
 		} else {
 			spawnPos = new MRE.Vector3(
-				this.spawnerWidth * (noteNum / 11) - this.spawnerWidth * 0.5,
+				-this.spawnerWidth+this.spawnerWidth * (noteNum / 11) - this.spawnerWidth * 0.5,
 				(scale * 2.0) + (octave - 1) / 8 * this.spawnerHeight,
 				0.0);
 		}
@@ -302,10 +305,11 @@ export default class Spawner extends MusicModule {
 		const spawnForVec = new MRE.Vector3(0, 0, 0);
 		forVec.rotateByQuaternionToRef(spawnerRot, spawnForVec);
 		const velocityVec = spawnForVec.multiplyByFloats(-speed, -speed, -speed);
-
+		this.ourApp.ourConsole.logMessage("  bubble velocity vec: " + velocityVec);
 		const ourBubble = this.createBubble(spawnPos, spawnRot, scale, velocityVec, this.noteMaterials[noteNum]);
 		ourBubble.note=note;
 
+		/*
 		ourBubble.actor.collider.onCollision("collision-enter", (data: MRE.CollisionData) => {
 			const otherActor = data.otherActor;
 
@@ -328,5 +332,6 @@ export default class Spawner extends MusicModule {
 				//this.ourApp.ourConsole.logMessage("sphere collided with: " + otherActor.name);
 			}
 		});
+		*/
 	}
 }

@@ -130,7 +130,7 @@ export default class Geo extends MusicModule {
 		return artifact;
 	}
 
-	public async createAllGeos(pos: MRE.Vector3, rot = new MRE.Quaternion()) {
+	public async createAllGeos(pos: MRE.Vector3, rot = new MRE.Quaternion(), lowestMidi: number, highestMidi: number) {
 		if (!this.ourGrabber) {
 			this.createGrabber(pos, rot);
 		} else {
@@ -159,15 +159,17 @@ export default class Geo extends MusicModule {
 			logMessage(`GEO: creating new geo installation`);
 		//this.ourApp.ourConsole.logMessage(`octaves: ${totalOctaves}`);
 
-		for (let i = 0; i < 75; i++) { //TODO paramaterize this
+		for (let i = 0; i < 100; i++) { //TODO paramaterize this
 			const geoIndex = Math.floor(Math.random() * 42); //skip the slanted shape
 			this.ourApp.ourConsole.
 				logMessage(`GEO: creating geo: ` + i + " index: "
 					+ geoIndex + " artifact: " + this.artifacts.artifacts[geoIndex]);
 			const geoScale = Math.random() * 1.0 + 0.5;
 			const geoPos = this.generateRandomPos(geoScale);
-			const midi = Math.floor(Math.random() * 88) + 21;
-
+			
+			//const midi = Math.floor(Math.random() * 88) + 21;
+			const midi=Math.floor(Math.random() * (highestMidi-lowestMidi+1)) + lowestMidi;
+			
 			// collider type to use with different shapes
 			/*	0-6  box
 				7-13 sphere
@@ -326,7 +328,7 @@ export default class Geo extends MusicModule {
 
 			this.ourApp.ourConsole.logMessage("GEO:  chest pos: " + pos1);
 
-			const projectileParticle = this.createActorFromArtifact(this.artifacts.particleEffects[0],
+			const projectileParticle = this.createActorFromArtifact(this.artifacts.particleEffects[1],
 				userChest.transform.app.position.add(new MRE.Vector3(0,0.0,0)),
 				MRE.Quaternion.LookAt(pos1,pos2), 
 				new MRE.Vector3(0.5, 0.5, scale), 

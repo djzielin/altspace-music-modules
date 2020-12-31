@@ -26,7 +26,7 @@ enum IntonationMode {
 
 export default class WavPlayer extends MusicModule {
 	private ourSounds: Map<number, MRE.Sound> = new Map();
-
+	private ourSoundsArray: MRE.Sound[]=[];
 	public playingWavs: WavProperties[] = [];
 
 	public polyphonyLimit = 10; // TODO: allow these to be set in in-world GUI
@@ -40,8 +40,8 @@ export default class WavPlayer extends MusicModule {
 
 	public audioRange = 3;
 
-	private lowestNote = -1;
-	private highestNote = -1;
+	public lowestNote = -1;
+	public highestNote = -1;
 
 	private intonatePotemly = [
 		0.0000,
@@ -157,7 +157,48 @@ export default class WavPlayer extends MusicModule {
 			await newSound.created;
 
 			this.ourSounds.set(i,newSound);
+			//this.ourSoundsArray.push(newSound);
 			this.ourApp.ourConsole.logMessage(" success!");
+
+		}
+	}
+
+	public async loadAllSoundsDirectory(subdir: string, minMidi: number) {
+		const diskLocation = `${this.ourApp.baseDir}/` + `${subdir}/`
+		let i = minMidi;
+
+		const fileObjs = fs.readdirSync(diskLocation);
+
+		for (const file of fileObjs) {
+			if (file.endsWith(".ogg")) {
+				this.ourApp.ourConsole.logMessage("found file in directory: " + file);
+
+				const URL = `${this.ourApp.baseUrl}/` + `${subdir}/` + file;
+
+				const newSound = this.ourApp.assets.createSound("pianoKey" + i, {
+					uri: URL
+				});
+
+				await newSound.created;
+
+				this.ourSounds.set(i, newSound);
+				this.ourApp.ourConsole.logMessage(" success!");
+
+				if(this.lowestNote===-1){
+					this.lowestNote=i;
+				}
+				if(this.highestNote===-1){
+					this.highestNote=i;
+				}
+				if(i<this.lowestNote){
+					this.lowestNote=i;
+				}
+				if(i>this.highestNote){
+					this.highestNote=i;
+				}
+
+				i++;
+			}
 		}
 	}
 

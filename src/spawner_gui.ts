@@ -58,6 +58,11 @@ export default class extends GuiPanel {
 		this.ourSpawner.doPosRandom=b;
 	}
 
+	public setDoElongated(b: boolean): void {
+		this.ourSpawner.doElongatedCubes=b;
+	}
+
+
 	public sendMidiPatcher(b: boolean){
 		this.ourApp.ourPatcher.patcherClickEvent(this.ourSpawner,"midi",true,this,this.sendButton);
 	}
@@ -86,6 +91,12 @@ export default class extends GuiPanel {
 		await button.createAsync(new MRE.Vector3(0, 0.025, zPos),
 			this.guiBackground.id, "Particle On", "ParticleOff",
 			this.ourSpawner.doParticleEffect, this.setDoParticleEffect.bind(this.ourSpawner));
+		zPos -= 0.15;
+
+		const button2 = new Button(this.ourApp);
+		await button2.createAsync(new MRE.Vector3(0, 0.025, zPos),
+			this.guiBackground.id, "elongated", "cubes",
+			this.ourSpawner.doElongatedCubes, this.setDoElongated.bind(this.ourSpawner));
 		zPos -= 0.15;
 
 		this.ourApp.ourConsole.logMessage("creating speed plus/minus");

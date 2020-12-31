@@ -305,7 +305,8 @@ export default class App {
 		ourWavPlayer.audioRange=10;
 		ourWavPlayer.cullTime=0; //don't cull sounds based on time playing
 		ourWavPlayer.doPedal=false;
-		await ourWavPlayer.loadAllSounds("geo",36,84);
+		//await ourWavPlayer.loadAllSounds("GoogleDrive/GeoSound",21,108);
+		await ourWavPlayer.loadAllSoundsDirectory("GoogleDrive/GeoSound",21);
 		this.allModules.push(ourWavPlayer);
 
 		const ourWavPlayerGui = new WavPlayerGui(this, ourWavPlayer);
@@ -314,7 +315,13 @@ export default class App {
 		xPos -= 1.75;
 
 		this.ourGeo = new Geo(this);
-		await this.ourGeo.createAllGeos(new MRE.Vector3(0, 0, 0));	
+
+		//TODO, figure out better way to communicate how many samples available to geo 
+		await this.ourGeo.createAllGeos(new MRE.Vector3(0, 0, 0),
+			MRE.Quaternion.Identity(),
+			ourWavPlayer.lowestNote,
+			ourWavPlayer.highestNote);
+
 		this.allModules.push(this.ourGeo);
 
 		const ourGeoGui = new GeoGui(this, this.ourGeo);
