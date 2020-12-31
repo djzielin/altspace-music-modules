@@ -90,6 +90,7 @@ export default class Console {
 		const button=new Button(this.ourApp);
 		await button.createAsync(new MRE.Vector3(-0.7,0,0.3),this.ourParent,"Console On","Console Off",
 			this.consoleOn, this.setConsoleOn.bind(this));
+		button.setElevatedUserOnlyVisibility();
 	}
 
 	public logMessage(message: string) {

@@ -203,7 +203,7 @@ export default class Geo extends MusicModule {
 						}
 					}
 				}
-			});
+			});			
 
 			const geoActor = MRE.Actor.CreateFromLibrary(this.ourApp.context, {
 				resourceId: this.artifacts.artifacts[geoIndex],

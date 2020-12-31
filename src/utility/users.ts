@@ -25,7 +25,7 @@ interface UserProperties {
 export default class Users {
 
 	public allUsers: UserProperties[] = [];
-	public moderatorUsers: string[] = [];
+	public elevatedUsers: string[] = [];
 
 	constructor(private ourApp: App) {
 
@@ -65,7 +65,7 @@ export default class Users {
 	}
 
 	public isAuthorizedString(user: string): boolean {
-		if (this.moderatorUsers.includes(user)) {
+		if (this.elevatedUsers.includes(user)) {
 			//this.ourConsole.logMessage("user is moderator based on GUID");
 			return true;
 		}
@@ -74,6 +74,9 @@ export default class Users {
 		return false;
 	}
 
+	public getElevatedUsersGroupMask(): MRE.GroupMask{
+		return new MRE.GroupMask(this.ourApp.context, ['presenters']);
+	}
 
 	public userJoined(user: MRE.User, createHands: boolean, createChest: boolean) {
 		this.ourApp.ourConsole.logMessage("user joined. name: " + user.name + " id: " + user.id);
@@ -105,7 +108,8 @@ export default class Users {
 		this.allUsers.push(ourUser);
 
 		if (isModerator) {
-			this.moderatorUsers.push(user.id.toString());
+			this.elevatedUsers.push(user.id.toString());
+			user.groups.add('presenters');
 		}
 
 		if(createHands){
@@ -141,9 +145,9 @@ export default class Users {
 				if (ourUser.isModerator) {
 					const userString = user.id.toString();
 
-					const index = this.moderatorUsers.indexOf(userString);
+					const index = this.elevatedUsers.indexOf(userString);
 					if (index !== -1) {
-						this.moderatorUsers.splice(index, 1);
+						this.elevatedUsers.splice(index, 1);
 						this.ourApp.ourConsole.logMessage("removed user from moderator string list");
 					}
 				}
@@ -246,16 +250,16 @@ export default class Users {
 			//leftHand.rigidBody.enabled=false;
 			//leftHand.collider.enabled=false;
 			//leftHand.detach();
-			leftHand.destroy();
+			//leftHand.destroy(); //causes errors!
 		}
 		if (rightHand) {
 			//rightHand.rigidBody.enabled=false;
 			//rightHand.collider.enabled=false;
 			//rightHand.detach();
-			rightHand.destroy();
+			//rightHand.destroy(); //causes errors!
 		}
 		if(chest){
-			chest.destroy();
+			//chest.destroy();
 		}
 	}
 }

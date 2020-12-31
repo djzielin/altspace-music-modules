@@ -32,6 +32,12 @@ export default class Button {
 		this.buttonActor.collider.enabled=false;
 	}
 
+	public setElevatedUserOnlyVisibility(){
+		this.ourHolder.appearance.enabled=this.ourApp.ourUsers.getElevatedUsersGroupMask();		
+		this.buttonActor.appearance.enabled=this.ourApp.ourUsers.getElevatedUsersGroupMask();		
+		this.buttonText.appearance.enabled=this.ourApp.ourUsers.getElevatedUsersGroupMask();		
+	}
+
 	public setVisible(b: boolean){
 		this.ourHolder.appearance.enabled=b;
 	}
