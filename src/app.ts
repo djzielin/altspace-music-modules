@@ -33,6 +33,7 @@ import Ice from './ice';
 import Geo from './geo';
 import GeoGui from './geo_gui';
 import Spiral from './spiral';
+import Se02 from './se02';
 import ButtonMulti from './button_multi';
 
 export default class App {
@@ -349,6 +350,48 @@ export default class App {
 		receiveWavPlayer.button = ourWavPlayerGui.receiveButton;
 
 		this.ourPatcher.applyPatch(sendPathGeo, receiveWavPlayer);
+	}
+
+	private async showSE02(){
+		this.ourPiano = new Piano(this);
+		await this.ourPiano.createAllKeys(new MRE.Vector3(2, 1, 0),
+			MRE.Quaternion.FromEulerAngles(-30 * Math.PI / 180, 0, 0));	
+		this.allModules.push(this.ourPiano);
+
+		const ourMidiReceiver = new MidiReceiver(this,3902);
+		this.allModules.push(ourMidiReceiver);
+
+		const ourSequencer = new Sequencer(this);
+		await ourSequencer.createAsyncItems(12,new MRE.Vector3(-1.5, 2.0, 0.0),
+			MRE.Quaternion.FromEulerAngles(-45 * Math.PI / 180, 0, 0));
+		this.allModules.push(ourSequencer);		
+
+		const ourHeartBeat= new HeartBeat(this);
+		this.allModules.push(ourHeartBeat);
+
+		const ourSE = new Se02(this);
+		await ourSE.createAsyncItems(new MRE.Vector3(2, 1.75, 0.5),
+			MRE.Quaternion.FromEulerAngles(-90 * Math.PI / 180, 0, 0));
+
+		let xPos=1.5;
+
+		const ourPianoGui = new PianoGui(this, this.ourPiano);
+		await ourPianoGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Piano")
+		this.allGUIs.push(ourPianoGui);
+		ourPianoGui.removeSharpsButton(); //TODO: should have global sharp/flat button
+		xPos -= 1.75;	
+
+		const ourSequencerGui = new SequencerGui(this, ourSequencer);
+		await ourSequencerGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Piano Sequencer")
+		this.allGUIs.push(ourSequencerGui);
+		xPos -= 1.75;	
+
+
+		const ourHeartBeatGui = new HeartBeatGui(this, ourHeartBeat);
+		await ourHeartBeatGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Heart Beat")
+		this.allGUIs.push(ourHeartBeatGui);
+		xPos -= 1.75;	
+
 	}
 
 	private async showPianoStaff(){

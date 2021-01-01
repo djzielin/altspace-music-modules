@@ -14,6 +14,12 @@ interface BubbleProperties{
 	note: number;
 }
 
+enum AuthType {
+	Moderators = 0,
+	All = 1,
+	SpecificUser = 2
+}
+
 export default class Spawner extends MusicModule {
 
 	/**************
@@ -78,6 +84,8 @@ export default class Spawner extends MusicModule {
 	public doParticleEffect=false;
 	public doPosRandom=true;
 	public doElongatedCubes=true;
+	public ourInteractionAuth = AuthType.All;
+	public authorizedUser: MRE.User;
 
 	private noteMaterials: MRE.Material[] = [];
 
@@ -120,6 +128,22 @@ export default class Spawner extends MusicModule {
 				`${this.availableBubbles.length} playable `+
 				`(${listOfAvailableBubblesToDelete.length} culled)`);*/
 		}, 1000);
+	}
+
+	private isAuthorized(user: MRE.User): boolean {
+		if (this.ourInteractionAuth === AuthType.All) {
+			return true;
+		}
+		if (this.ourInteractionAuth === AuthType.Moderators) {
+			return this.ourApp.ourUsers.isAuthorized(user);
+		}
+		if (this.ourInteractionAuth === AuthType.SpecificUser) {
+			if (user === this.authorizedUser) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	public async createAsyncItems(pos: MRE.Vector3, rot = new MRE.Quaternion()) {
