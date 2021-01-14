@@ -21,6 +21,7 @@ export default class extends GuiPanel {
 
 	constructor(protected ourApp: App, private ourSpawner: Spawner) {
 		super(ourApp);
+		this.ourModule=ourSpawner;
 	}
 
 	public setEmitterWidth(n: number): void {

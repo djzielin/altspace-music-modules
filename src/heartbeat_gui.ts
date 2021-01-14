@@ -16,6 +16,7 @@ export default class HeartBeatGui extends GuiPanel{
 
 	constructor(protected ourApp: App, private ourHeartBeat: HeartBeat) {
 		super(ourApp);
+		this.ourModule=ourHeartBeat;
 	}
 
 	public polyphonyLimit=10; // TODO: allow these to be set in in-world GUI

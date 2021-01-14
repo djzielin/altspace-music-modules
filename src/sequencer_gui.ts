@@ -20,6 +20,7 @@ export default class SequencerGui extends GuiPanel{
 
 	constructor(protected ourApp: App, private ourSequencer: Sequencer) {
 		super(ourApp);
+		this.ourModule=ourSequencer;
 	}
 
 	public setAuthAllUsers(b: boolean): void {

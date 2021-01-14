@@ -2,7 +2,6 @@
  * Licensed under the MIT License.
  */
 
-import { EEXIST } from 'constants';
 import * as MRE from '../../../mixed-reality-extension-sdk/packages/sdk/';
 
 import App from '../app';

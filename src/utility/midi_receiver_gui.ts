@@ -17,6 +17,7 @@ export default class MidiReceiverGui extends GuiPanel{
 
 	constructor(protected ourApp: App, private ourMidiReceiver: MidiReceiver) {
 		super(ourApp);
+		this.ourModule=ourMidiReceiver;
 	}	
 
 	public sendMidiPatcher(b: boolean){

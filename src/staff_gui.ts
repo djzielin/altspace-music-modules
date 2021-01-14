@@ -16,6 +16,7 @@ export default class StaffGui extends GuiPanel {
 
 	constructor(protected ourApp: App, private ourStaff: Staff) {
 		super(ourApp);
+		this.ourModule=ourStaff;
 	}	
 
 	public setAuthAllUsers(b: boolean): void {

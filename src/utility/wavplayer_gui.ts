@@ -17,6 +17,7 @@ export default class WavPlayerGui extends GuiPanel{
 
 	constructor(protected ourApp: App, private ourWavPlayer: WavPlayer) {
 		super(ourApp);
+		this.ourModule=ourWavPlayer;
 	}
 
 	public polyphonyLimit=10;
