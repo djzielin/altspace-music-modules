@@ -4,7 +4,7 @@
 
 import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 import App from './app';
-import GrabButton from './grabbutton';
+import GrabButton from './gui/grabbutton';
 import PatchPoint from './utility/patch_point';
 
 export default class MusicModule {

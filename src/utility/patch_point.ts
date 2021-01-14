@@ -3,8 +3,8 @@
  */
 
 import MusicModule from '../music_module';
-import Button from '../button';
-import GuiPanel from '../gui_panel';
+import Button from '../gui/button';
+import GuiPanel from '../gui/gui_panel';
 
 export default class PatchPoint{
 	public module: MusicModule;

@@ -10,7 +10,7 @@ import App from './app';
 //import GrabButton from './grabbutton';
 //import StaffSharp from './staffsharp';
 //import StaffFlat from './staffflat';
-import Button from './button';
+import Button from './gui/button';
 import MusicModule from './music_module';
 
 interface NoteProperties{

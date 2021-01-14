@@ -5,7 +5,7 @@
 import * as MRE from '../../../mixed-reality-extension-sdk/packages/sdk/';
 //import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 
-import Button from '../button';
+import Button from '../gui/button';
 import App from '../app';
 
 /**

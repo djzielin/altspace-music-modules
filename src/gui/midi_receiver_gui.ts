@@ -3,15 +3,15 @@
  */
 
 import * as MRE from '../../../mixed-reality-extension-sdk/packages/sdk/';
-//import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
+
 import App from '../app';
-import PlusMinus from '../plusminus';
-import Button from '../button';
-import GuiPanel from '../gui_panel';
-import MidiReceiver from './midi_receiver';
+import MidiReceiver from '../utility/midi_receiver';
+
+import PlusMinus from './plusminus';
+import Button from './button';
+import GuiPanel from './gui_panel';
 
 export default class MidiReceiverGui extends GuiPanel{
-
 	public sendButton: Button=null;
 	public receiveButton: Button=null;
 

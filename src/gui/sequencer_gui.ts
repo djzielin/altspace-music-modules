@@ -2,14 +2,15 @@
  * Licensed under the MIT License.
  */
 
-import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
-//import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
-import App from './app';
+import * as MRE from '../../../mixed-reality-extension-sdk/packages/sdk/';
+
+import App from '../app';
+import Sequencer from '../utility/sequencer';
+
 import PlusMinus from './plusminus';
 import Button from './button';
 import GuiPanel from './gui_panel';
 import ButtonMulti from './button_multi';
-import Sequencer from './sequencer';
 
 export default class SequencerGui extends GuiPanel{
 	private resetButton: Button=null;

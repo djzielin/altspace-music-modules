@@ -4,37 +4,37 @@
 
 import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 
-import MidiReceiver from './utility/midi_receiver'
-import MidiReceiverGui from './utility/midi_receiver_gui';
+import MusicModule from './music_module';
 import Piano from './piano'
 import MicroPiano from './micro_piano'
 import Spawner from './spawner'
-//import OscSender from './sender';
-import WavPlayer from './utility/wavplayer';
-import Console from './utility/console';
-import Button from './button';
 import Staff from './staff';
-import GrabButton from './grabbutton';
-import PianoGui from './piano_gui';
-import StaffGui from './staff_gui';
-import SpawnerGui from './spawner_gui';
-import WavPlayerGui from './utility/wavplayer_gui';
-import Users from './utility/users';
-//import Tablature from './tablature';
-import GuiPanel from './gui_panel';
-import MusicModule from './music_module';
-import Sequencer from './sequencer';
-import SequencerGui from './sequencer_gui';
-import PatchPoint from './utility/patch_point';
-import Patcher from './utility/patcher';
-import HeartBeat from './heartbeat';
-import HeartBeatGui from './heartbeat_gui';
-import Ice from './ice';
 import Geo from './geo';
-import GeoGui from './geo_gui';
 import Spiral from './spiral';
 import Se02 from './se02';
-import ButtonMulti from './button_multi';
+//import Tablature from './tablature';
+
+import MidiReceiver from './utility/midi_receiver'
+import WavPlayer from './utility/wavplayer';
+import Console from './utility/console';
+import Users from './utility/users';
+import Sequencer from './utility/sequencer';
+import PatchPoint from './utility/patch_point';
+import Patcher from './utility/patcher';
+import HeartBeat from './utility/heartbeat';
+
+import GuiPanel from './gui/gui_panel';
+import GrabButton from './gui/grabbutton';
+import Button from './gui/button';
+
+import MidiReceiverGui from './gui/midi_receiver_gui';
+import HeartBeatGui from './gui/heartbeat_gui';
+import GeoGui from './gui/geo_gui';
+import SequencerGui from './gui/sequencer_gui';
+import WavPlayerGui from './gui/wavplayer_gui';
+import SpawnerGui from './gui/spawner_gui';
+import PianoGui from './gui/piano_gui';
+import StaffGui from './gui/staff_gui';
 
 export default class App {
 	public assets: MRE.AssetContainer;
@@ -52,7 +52,7 @@ export default class App {
 	public ourStaff: Staff = null;
 	public ourGeo: Geo = null;
 
-	public ourIce: Ice=null;
+	//public ourIce: Ice=null;
 
 	public ourConsole: Console = null;
 	public menuGrabber: GrabButton = null;
@@ -270,9 +270,9 @@ export default class App {
 			await this.showGeoPiano();
 		}
 
-		if(this.instrumentType==="ice"){
-			await this.showIce();
-		}
+		//if(this.instrumentType==="ice"){
+		//	await this.showIce();
+		//}
 		if(this.instrumentType==="spawner"){
 			await this.showSpawner();
 		}
@@ -297,13 +297,13 @@ export default class App {
 		this.session.setAuthoritativeClient(ourUser.clientId); //can't be user.id! needs to be client.id!
 	}*/
 
-	private async showIce(){
+	/*private async showIce(){
 		this.ourIce=new Ice(this);
 		await this.ourIce.createAsync(new MRE.Vector3(0,1,0));
 		this.allModules.push(this.ourIce);
 
 		this.ourUsers.showHands();
-	}
+	}*/
 
 	private async showGeoPiano(){
 		let xPos = 1.5;

@@ -7,7 +7,7 @@ import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 //import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 import App from './app';
 import WavPlayer from './utility/wavplayer';
-import GrabButton from './grabbutton';
+import GrabButton from './gui/grabbutton';
 
 interface NoteProperties{
 	timeStamp: number;

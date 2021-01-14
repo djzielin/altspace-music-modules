@@ -2,9 +2,9 @@
  * Licensed under the MIT License.
  */
 
-import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
+import * as MRE from '../../../mixed-reality-extension-sdk/packages/sdk/';
 //import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
-import App from './app';
+import App from '../app';
 
 export default class PlusMinus {
 	private ourValue=0;

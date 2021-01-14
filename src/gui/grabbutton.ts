@@ -3,9 +3,9 @@
  */
 /* eslint-disable no-warning-comments */
 
-import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
-//import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
-import App from './app';
+import * as MRE from '../../../mixed-reality-extension-sdk/packages/sdk/';
+
+import App from '../app';
 import Button from './button';
 
 export default class GrabButton {

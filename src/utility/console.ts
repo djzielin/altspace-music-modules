@@ -3,9 +3,8 @@
  */
 
 import * as MRE from '../../../mixed-reality-extension-sdk/packages/sdk/';
-//import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 import App from '../app';
-import Button from '../button';
+import Button from '../gui/button';
 
 export default class Console {
 	private consoleTextActor: MRE.Actor = null;

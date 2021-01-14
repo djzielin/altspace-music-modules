@@ -2,12 +2,11 @@
  * Licensed under the MIT License.
  */
 
-import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
-import App from './app';
-//import GrabButton from './grabbutton';
-//import Button from './button';
+import * as MRE from '../../../mixed-reality-extension-sdk/packages/sdk/';
+
+import App from '../app';
 import SequencerColumn from './sequencer_column';
-import MusicModule from './music_module';
+import MusicModule from '../music_module';
 
 enum AuthType {
 	Moderators=0,

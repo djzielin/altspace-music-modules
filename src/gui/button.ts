@@ -2,8 +2,8 @@
  * Licensed under the MIT License.
  */
 
-import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
-import App from './app';
+import * as MRE from '../../../mixed-reality-extension-sdk/packages/sdk/';
+import App from '../app';
 
 interface BCallback {
 	(b: boolean): void;

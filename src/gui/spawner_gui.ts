@@ -4,18 +4,16 @@
 
 /* eslint-disable no-warning-comments */
 
-import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
+import * as MRE from '../../../mixed-reality-extension-sdk/packages/sdk/';
 
-import App from './app';
+import App from '../app';
+import Spawner from '../spawner';
+
 import PlusMinus from './plusminus';
 import Button from './button';
-import Spawner from './spawner';
 import GuiPanel from './gui_panel';
-//import ButtonMulti from './button_multi';
 
 export default class extends GuiPanel {
-
-
 	public sendButton: Button=null;
 	public receiveButton: Button=null;
 

@@ -2,12 +2,14 @@
  * Licensed under the MIT License.
  */
 
-import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
-import App from './app';
+import * as MRE from '../../../mixed-reality-extension-sdk/packages/sdk/';
+
+import App from '../app';
+import HeartBeat from '../utility/heartbeat';
+
 import PlusMinus from './plusminus';
 import Button from './button';
 import GuiPanel from './gui_panel';
-import HeartBeat from './heartbeat';
 
 export default class HeartBeatGui extends GuiPanel{
 	private resetButton: Button=null;

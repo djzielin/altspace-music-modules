@@ -2,12 +2,13 @@
  * Licensed under the MIT License.
  */
 
-import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
-//import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
-import App from './app';
+import * as MRE from '../../../mixed-reality-extension-sdk/packages/sdk/';
+
+import App from '../app';
+import Staff from '../staff';
+
 import PlusMinus from './plusminus';
 import Button from './button';
-import Staff from './staff';
 import GuiPanel from './gui_panel';
 
 export default class StaffGui extends GuiPanel {
