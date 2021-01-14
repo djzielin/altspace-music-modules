@@ -6,11 +6,14 @@ import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 //import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 import App from './app';
 import GrabButton from './grabbutton';
+import Button from './button';
+import MusicModule from './music_module';
 
 export default class GuiPanel {
 	protected guiBackground: MRE.Actor=null;
 	protected guiGrabber: GrabButton=null;
 	protected backgroundHeight =1.75;
+	public ourModule: MusicModule=null;
 
 	constructor(protected ourApp: App) {
 		
@@ -93,6 +96,19 @@ export default class GuiPanel {
 		lineActor.transform.local.scale=new MRE.Vector3(0.01,0.01,distance);
 	}
 
+	public receiveDelete(value: boolean){
+		this.ourApp.ourConsole.logMessage("received delete request!");
+
+		this.ourApp.ourPatcher.removeAttachedPatches(this);
+
+		this.guiBackground.destroy();
+		this.guiGrabber.destroy();
+
+		if(this.ourModule!==null){
+			this.ourModule.destroy();
+		}		
+	}
+
 	public async createBackground(pos: MRE.Vector3, name: string, bgHeight: number) {
 		this.backgroundHeight=bgHeight;
 		this.guiGrabber=new GrabButton(this.ourApp);
@@ -137,5 +153,10 @@ export default class GuiPanel {
 			}
 		});
 		await guiTextActor.created();
-	}	
+
+		const deleteButton = new Button(this.ourApp);
+		const deletePos = new MRE.Vector3(1.1 / 2.0, 0.025, this.backgroundHeight * 0.5);
+		deleteButton.createAsync(deletePos,
+			this.guiBackground.id, "X", "X", false, this.receiveDelete.bind(this), 0.25);
+	}
 }

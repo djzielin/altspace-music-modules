@@ -19,6 +19,7 @@ export default class PianoGui extends GuiPanel{
 
 	constructor(protected ourApp: App, private ourPiano: Piano) {
 		super(ourApp);
+		this.ourModule=ourPiano;
 	}
 
 	public setAuthAllUsers(b: boolean): void {

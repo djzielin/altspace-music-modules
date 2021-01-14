@@ -512,7 +512,7 @@ export default class App {
 
 		for (let i = 0; i < 3; i++) {
 			const ourSpawner = new Spawner(this);
-			await ourSpawner.createAsyncItems(new MRE.Vector3(2 + i, 1, 0),
+			await ourSpawner.createAsyncItems(new MRE.Vector3(2 + i*1.5, 1, 0),
 				MRE.Quaternion.FromEulerAngles(0.0 * Math.PI / 180, 0, 0));
 			this.allModules.push(ourSpawner);
 

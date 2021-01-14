@@ -16,6 +16,10 @@ export default class MusicModule {
 		
 	}
 
+	public destroy(){
+		this.ourGrabber.destroy();
+	}
+
 	public getWorldPosFromMatrix(mPoint: MRE.Matrix) {
 		const mGrabber = MRE.Matrix.Compose(new MRE.Vector3(1, 1, 1), 
 			this.ourGrabber.getRot(), this.ourGrabber.getPos());

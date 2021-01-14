@@ -58,6 +58,10 @@ export default class extends GuiPanel {
 		this.ourSpawner.doPosRandom=b;
 	}
 
+	public setDoPhysics(b: boolean): void {
+		this.ourSpawner.doPhysics=b;
+	}
+
 	public setDoElongated(b: boolean): void {
 		this.ourSpawner.doElongatedCubes=b;
 	}
@@ -87,6 +91,12 @@ export default class extends GuiPanel {
 			this.ourSpawner.doPosRandom, this.setDoPosRandom.bind(this.ourSpawner));
 		zPos -= 0.15;
 
+		const pButton = new Button(this.ourApp);
+		await pButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
+			this.guiBackground.id, "Physics", "Animation",
+			this.ourSpawner.doPhysics, this.setDoPhysics.bind(this.ourSpawner));
+		zPos -= 0.15;
+
 		const button = new Button(this.ourApp);
 		await button.createAsync(new MRE.Vector3(0, 0.025, zPos),
 			this.guiBackground.id, "Particle On", "ParticleOff",
@@ -108,7 +118,7 @@ export default class extends GuiPanel {
 
 		const sizeGUI = new PlusMinus(this.ourApp);
 		await sizeGUI.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
-			this.guiBackground.id, "size",
+			this.guiBackground.id, "c_size",
 			this.ourSpawner.bubbleSize, 0.01, this.setBubbleSize.bind(this.ourSpawner));
 		zPos -= 0.15;
 
@@ -120,13 +130,13 @@ export default class extends GuiPanel {
 
 		const emitWidth = new PlusMinus(this.ourApp);
 		await emitWidth.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
-			this.guiBackground.id, "width",
+			this.guiBackground.id, "s_width",
 			this.ourSpawner.spawnerWidth, 0.05, this.setEmitterWidth.bind(this.ourSpawner));
 		zPos -= 0.15;
 
 		const emitHeight = new PlusMinus(this.ourApp);
 		await emitHeight.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
-			this.guiBackground.id, "height",
+			this.guiBackground.id, "s_height",
 			this.ourSpawner.spawnerHeight, 0.05, this.setEmitterHeight.bind(this.ourSpawner));
 		zPos -= 0.15;
 

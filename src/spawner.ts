@@ -12,6 +12,7 @@ interface BubbleProperties{
 	timeStamp: number;
 	actor: MRE.Actor;
 	note: number;
+	animation: MRE.Animation;
 }
 
 enum AuthType {
@@ -75,14 +76,15 @@ export default class Spawner extends MusicModule {
 
 	public availableBubbles: BubbleProperties[]=[]; 
 
-	public spawnerWidth=0.5;
+	public spawnerWidth=1.0; //0.5;
 	public spawnerHeight=0.2;
 	public bubbleLimit=50;
-	public timeOut=10.0;
-	public bubbleSize=0.05;
+	public timeOut=30.0;
+	public bubbleSize=0.1; //0.05;
 	public bubbleSpeed=0.1;
 	public doParticleEffect=false;
 	public doPosRandom=true;
+	public doPhysics=false;
 	public doElongatedCubes=true;
 	public ourInteractionAuth = AuthType.All;
 	public authorizedUser: MRE.User;
@@ -201,7 +203,7 @@ export default class Spawner extends MusicModule {
 		this.ourApp.ourConsole.logMessage("completed all spawner object creation");
 	}
 
-	private createBubble(pos: MRE.Vector3, rot: MRE.Quaternion, scale: number,
+	private createBubbleWithPhysics(pos: MRE.Vector3, rot: MRE.Quaternion, scale: number,
 		vel: MRE.Vector3, mat: MRE.Material): BubbleProperties {
 		
 		const bubbleActor = MRE.Actor.Create(this.ourApp.context, {
@@ -238,10 +240,75 @@ export default class Spawner extends MusicModule {
 		const ourBubble={
 			timeStamp: Date.now(),
 			actor: bubbleActor,
-			note: 0
+			note: 0,
+			animation: null as MRE.Animation
 		};
 
 		this.availableBubbles.push(ourBubble);
+
+		return ourBubble;
+	}
+
+	private createBubbleWithAnimations(pos: MRE.Vector3, rot: MRE.Quaternion, dir: MRE.Quaternion, scale: number,
+		speed: number, mat: MRE.Material): BubbleProperties {
+		
+		const bubbleActor = MRE.Actor.Create(this.ourApp.context, {
+			actor: {
+				name: 'sphere',
+				parentId: this.ourGrabber.getGUID(),
+				transform: {
+					local: {
+						position: pos,
+						rotation: rot,
+						scale: new MRE.Vector3(scale, scale, scale)
+					}
+				},
+				appearance: {
+					meshId: this.ourApp.boxMesh.id,
+					materialId: mat.id
+				},
+				subscriptions: ['transform']
+			}
+		});		
+
+		const ourBubble={
+			timeStamp: Date.now(),
+			actor: bubbleActor,
+			note: 0,
+			animation: null as MRE.Animation
+		};
+
+		this.availableBubbles.push(ourBubble);
+
+		const forVec = new MRE.Vector3(0, 0, -1);
+		const resultVec = new MRE.Vector3(0, 0, 0);
+		forVec.rotateByQuaternionToRef(dir, resultVec);
+
+		const totalDist=20.0;
+		const newPos = pos.add(resultVec.multiplyByFloats(totalDist,totalDist,totalDist));
+
+		const time=totalDist/speed;
+
+		const travelAnimData = this.ourApp.assets.createAnimationData("Travel", {
+			tracks: [{
+				target: MRE.ActorPath("target").transform.local.position,
+				keyframes: [
+					{ time: 0.0, value: { x: pos.x, y: pos.y, z: pos.z } },
+					{ time: time, value: { x: newPos.x, y: newPos.y, z: newPos.z } }
+				]
+			}]
+		});
+
+		travelAnimData.bind(
+			{ target: bubbleActor },
+			{ speed: 1, isPlaying: true, wrapMode: MRE.AnimationWrapMode.Once }).then((ourAnim) => {
+		
+			ourBubble.animation=ourAnim;
+
+			ourAnim.finished().then(() => {				
+				ourAnim.delete();
+			});
+		});
 
 		return ourBubble;
 	}
@@ -330,8 +397,30 @@ export default class Spawner extends MusicModule {
 		forVec.rotateByQuaternionToRef(spawnerRot, spawnForVec);
 		const velocityVec = spawnForVec.multiplyByFloats(-speed, -speed, -speed);
 		this.ourApp.ourConsole.logMessage("  bubble velocity vec: " + velocityVec);
-		const ourBubble = this.createBubble(spawnPos, spawnRot, scale, velocityVec, this.noteMaterials[noteNum]);
-		ourBubble.note=note;
+
+		if (this.doPhysics) {
+			const ourBubble = this.createBubbleWithPhysics(spawnPos, 
+				spawnRot, 
+				scale, 
+				velocityVec,
+				this.noteMaterials[noteNum]);
+
+			ourBubble.note = note;
+		} else {
+			//TODO: make angle a parameter
+			const dirRot =
+				MRE.Quaternion.FromEulerAngles(this.ourApp.degToRad((Math.random() * 2.0 - 1.0) * 30.0), 0, 0);
+
+			const ourBubble = this.createBubbleWithAnimations(spawnPos, 
+				spawnRot, 
+				dirRot, 
+				scale, 
+				speed, 
+				this.noteMaterials[noteNum]);
+
+			ourBubble.note = note;
+		}
+
 
 		/*
 		ourBubble.actor.collider.onCollision("collision-enter", (data: MRE.CollisionData) => {

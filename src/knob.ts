@@ -204,7 +204,7 @@ export default class Knob {
 		//this.updateLine(this.cutoffCenter,posVector3);
 	}
 
-	public async createAsyncItems(pos: MRE.Vector3, parentID: MRE.Guid) {
+	public async createAsyncItems(pos: MRE.Vector3, parentID: MRE.Guid, startAngle: number) {
 		this.ourApp.ourConsole.logMessage("creating knob asyn items");		
 		this.knobCenterPos=pos;
 	
@@ -267,6 +267,8 @@ export default class Knob {
 			}
 		});
 		await knobOuter.created();
+
+		this.knobAngle=startAngle;
 
 		if(this.indexType===0){
 			this.setRotationNoIndex();

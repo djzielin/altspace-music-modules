@@ -2,6 +2,7 @@
  * Licensed under the MIT License.
  */
 
+import { EEXIST } from 'constants';
 import * as MRE from '../../../mixed-reality-extension-sdk/packages/sdk/';
 
 import App from '../app';
@@ -73,6 +74,52 @@ export default class Patcher{
 		}
 	}
 
+	public removeAttachedPatches(gui: GuiPanel) {
+		const patchesToDelete: PatchProperties[]=[];
+
+		for (const patch of this.ourPatches) {
+			if(patch.receiver.gui){
+				if(patch.receiver.gui===gui){
+					this.ourApp.ourConsole.logMessage("PATCHER:  found patch to delete");
+					patchesToDelete.push(patch);
+				}
+			
+			}
+			if(patch.sender.gui){
+				if(patch.sender.gui===gui){
+					this.ourApp.ourConsole.logMessage("PATCHER:  found patch to delete");
+					patchesToDelete.push(patch);
+				}			
+			}
+			this.deletePatch(patch);
+		}
+
+		for(const patch of patchesToDelete)
+		{
+			this.deletePatchEntry(patch);			
+		}
+	}
+
+	private deletePatchEntry(patch: PatchProperties) {
+		const index = this.ourPatches.indexOf(patch);
+		if (index > -1) {
+			this.ourPatches.splice(index, 1);
+			this.ourApp.ourConsole.logMessage("PATCHER:  deleting patch entry");
+		} else{
+			this.ourApp.ourConsole.logMessage("PATCHER:  ERROR! couldn't find patch in patch list!");
+		}
+	}
+
+	private deletePatch(patch: PatchProperties) {
+		patch.sender.module.removeSendDestination(patch.receiver);
+		if (patch.line) {
+			patch.line.destroy();
+			this.ourApp.ourConsole.logMessage("PATCHER:  deleting line");
+		} else{
+			this.ourApp.ourConsole.logMessage("PATCHER:  no line to delete?");
+		}
+	}
+
 	public applyPatch(sender: PatchPoint, receiver: PatchPoint) {
 		const newPatch = {
 			sender: sender,
@@ -83,13 +130,8 @@ export default class Patcher{
 		for (const existingPatch of this.ourPatches) {
 			if (this.isPatchEqual(existingPatch,newPatch)) { //already exists! so DELETE
 				this.ourApp.ourConsole.logMessage("PATCHER:  patch already exists. deleting!");
-				sender.module.removeSendDestination(receiver);
-				if(existingPatch.line){
-					existingPatch.line.destroy();
-				}
-				const index = this.ourPatches.indexOf(existingPatch);
-				this.ourPatches.splice(index, 1);
-
+				this.deletePatch(existingPatch);
+				this.deletePatchEntry(existingPatch);
 				return;
 			}
 		}
