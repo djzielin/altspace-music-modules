@@ -160,7 +160,7 @@ export default class Spawner extends MusicModule {
 
 						if (ourUser.lHand) {
 							const lPos = ourUser.lHand.transform.app.position;
-							if (MRE.Vector3.Distance(computedPos, lPos) < 0.2) {
+							if (MRE.Vector3.Distance(computedPos, lPos) < 0.15) {
 								ourBubble.collisionPos = computedPos;
 								bubblesToPop.push(ourBubble);
 							}
@@ -169,7 +169,7 @@ export default class Spawner extends MusicModule {
 							const rPos = ourUser.rHand.transform.app.position;
 							//this.ourApp.ourConsole.logMessage("rpos: " + rPos);
 
-							if (MRE.Vector3.Distance(computedPos, rPos) < 0.2) {
+							if (MRE.Vector3.Distance(computedPos, rPos) < 0.15) {
 								ourBubble.collisionPos = computedPos;
 								bubblesToPop.push(ourBubble);
 							}

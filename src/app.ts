@@ -518,6 +518,13 @@ export default class App {
 		await ourMidiPlayerGui.createAsync(new MRE.Vector3(-1, 0.1, zPos), "Midi Player");
 		this.allGUIs.push(ourMidiPlayerGui);
 
+		const midiPlayerSendPath = new PatchPoint();
+		midiPlayerSendPath.module = ourMidiPlayer;
+		midiPlayerSendPath.messageType = "midi";
+		midiPlayerSendPath.isSender = true;
+		midiPlayerSendPath.gui = ourMidiPlayerGui;
+		midiPlayerSendPath.button = ourMidiPlayerGui.sendButton;
+
 		const ourWavPlayer = new WavPlayer(this);
 		await ourWavPlayer.loadAllSounds("piano",36,84);
 		this.allModules.push(ourWavPlayer);
@@ -525,6 +532,13 @@ export default class App {
 		const ourWavPlayerGui = new WavPlayerGui(this, ourWavPlayer);
 		await ourWavPlayerGui.createAsync(new MRE.Vector3(1, 0.1, zPos), "Piano WavPlayer")		
 		this.allGUIs.push(ourWavPlayerGui);
+
+		const receiveWavePlayerPatch = new PatchPoint();
+		receiveWavePlayerPatch.module = ourWavPlayer;
+		receiveWavePlayerPatch.messageType = "midi";
+		receiveWavePlayerPatch.isSender = false;
+		receiveWavePlayerPatch.gui = ourWavPlayerGui;
+		receiveWavePlayerPatch.button = ourWavPlayerGui.receiveButton;
 
 		zPos -= 2;
 
@@ -548,12 +562,12 @@ export default class App {
 
 			zPos -= 2;
 
-			/*const sendSpawnerPatch = new PatchPoint();
+			const sendSpawnerPatch = new PatchPoint();
 			sendSpawnerPatch.module = ourSpawner;
 			sendSpawnerPatch.messageType = "midi";
 			sendSpawnerPatch.isSender = true;
 			sendSpawnerPatch.gui = ourSpawnerGui;
-			sendSpawnerPatch.button = ourSpawnerGui.sendButton; */
+			sendSpawnerPatch.button = ourSpawnerGui.sendButton; 
 	
 			const receiveSpawnerPatch = new PatchPoint();
 			receiveSpawnerPatch.module = ourSpawner;
@@ -568,8 +582,14 @@ export default class App {
 			sendMidi.isSender = true;
 			sendMidi.gui = ourMidiReceiverGui;
 			sendMidi.button = ourMidiReceiverGui.sendButton;
+
+			if(i===0){
+				this.ourPatcher.applyPatch(midiPlayerSendPath,receiveSpawnerPatch);
+			}
 		
 			this.ourPatcher.applyPatch(sendMidi, receiveSpawnerPatch);
+			this.ourPatcher.applyPatch(sendSpawnerPatch, receiveWavePlayerPatch);
+
 		}	
 	}
 
