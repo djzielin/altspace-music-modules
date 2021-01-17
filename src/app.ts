@@ -22,6 +22,7 @@ import Sequencer from './utility/sequencer';
 import PatchPoint from './utility/patch_point';
 import Patcher from './utility/patcher';
 import HeartBeat from './utility/heartbeat';
+import MidiPlayer from './utility/midi_player';
 
 import GuiPanel from './gui/gui_panel';
 import GrabButton from './gui/grabbutton';
@@ -35,6 +36,7 @@ import WavPlayerGui from './gui/wavplayer_gui';
 import SpawnerGui from './gui/spawner_gui';
 import PianoGui from './gui/piano_gui';
 import StaffGui from './gui/staff_gui';
+import MidiPlayerGui from './gui/midi_player_gui';
 
 export default class App {
 	public assets: MRE.AssetContainer;
@@ -509,6 +511,23 @@ export default class App {
 		*/
 
 		let zPos = 0;
+
+		const ourMidiPlayer = new MidiPlayer(this);			
+
+		const ourMidiPlayerGui = new MidiPlayerGui(this, ourMidiPlayer);
+		await ourMidiPlayerGui.createAsync(new MRE.Vector3(-1, 0.1, zPos), "Midi Player");
+		this.allGUIs.push(ourMidiPlayerGui);
+
+		const ourWavPlayer = new WavPlayer(this);
+		await ourWavPlayer.loadAllSounds("piano",36,84);
+		this.allModules.push(ourWavPlayer);
+
+		const ourWavPlayerGui = new WavPlayerGui(this, ourWavPlayer);
+		await ourWavPlayerGui.createAsync(new MRE.Vector3(1, 0.1, zPos), "Piano WavPlayer")		
+		this.allGUIs.push(ourWavPlayerGui);
+
+		zPos -= 2;
+
 
 		for (let i = 0; i < 3; i++) {
 			const ourSpawner = new Spawner(this);

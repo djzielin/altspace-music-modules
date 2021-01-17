@@ -12,6 +12,7 @@ interface BubbleProperties{
 	timeStamp: number;
 	actor: MRE.Actor;
 	note: number;
+	vel: number;
 	animation: MRE.Animation;
 }
 
@@ -241,6 +242,7 @@ export default class Spawner extends MusicModule {
 			timeStamp: Date.now(),
 			actor: bubbleActor,
 			note: 0,
+			vel: 0,
 			animation: null as MRE.Animation
 		};
 
@@ -267,7 +269,13 @@ export default class Spawner extends MusicModule {
 					meshId: this.ourApp.boxMesh.id,
 					materialId: mat.id
 				},
-				subscriptions: ['transform']
+				collider: {
+					geometry: {
+						shape: MRE.ColliderType.Box
+					},
+					isTrigger: false
+				}
+				//subscriptions: ['transform']
 			}
 		});		
 
@@ -275,6 +283,7 @@ export default class Spawner extends MusicModule {
 			timeStamp: Date.now(),
 			actor: bubbleActor,
 			note: 0,
+			vel: 0,
 			animation: null as MRE.Animation
 		};
 
@@ -398,53 +407,65 @@ export default class Spawner extends MusicModule {
 		const velocityVec = spawnForVec.multiplyByFloats(-speed, -speed, -speed);
 		this.ourApp.ourConsole.logMessage("  bubble velocity vec: " + velocityVec);
 
+		let ourBubble: BubbleProperties=null;
+
 		if (this.doPhysics) {
-			const ourBubble = this.createBubbleWithPhysics(spawnPos, 
+			ourBubble = this.createBubbleWithPhysics(spawnPos, 
 				spawnRot, 
 				scale, 
 				velocityVec,
 				this.noteMaterials[noteNum]);
-
-			ourBubble.note = note;
+			
 		} else {
 			//TODO: make angle a parameter
 			const dirRot =
 				MRE.Quaternion.FromEulerAngles(this.ourApp.degToRad((Math.random() * 2.0 - 1.0) * 30.0), 0, 0);
 
-			const ourBubble = this.createBubbleWithAnimations(spawnPos, 
+			ourBubble = this.createBubbleWithAnimations(spawnPos, 
 				spawnRot, 
 				dirRot, 
 				scale, 
 				speed, 
 				this.noteMaterials[noteNum]);
-
-			ourBubble.note = note;
 		}
 
+		ourBubble.note = note;
+		ourBubble.vel = vel;
 
-		/*
-		ourBubble.actor.collider.onCollision("collision-enter", (data: MRE.CollisionData) => {
-			const otherActor = data.otherActor;
+		if (this.doPhysics) {
+			ourBubble.actor.collider.onCollision("collision-enter", (data: MRE.CollisionData) => {
+				const otherActor = data.otherActor;
 
+				if (otherActor.name.includes('SpawnerUserHand')) {
+					const collisionPos = data.contacts[0].point;
+					this.popBubble(collisionPos, ourBubble);
 
-			if (otherActor.name.includes('SpawnerUserHand')) { //bubble touches hand
-				//const impulseVec: MRE.Vector3=data.impulse;
-				//const impMag=MRE.Vector3.Distance(MRE.Vector3.Zero(),impulseVec); //not sure why length() doesn't work
-				//this.ourApp.ourConsole.logMessage("impulse of collision: " + impMag);	
-				
-				const collisionPos=data.contacts[0].point; //ourBubble.actor.transform.app.position
+				} else {
+					//this.ourApp.ourConsole.logMessage("hand collided with: " + otherActor.name);
+				}
+			});
+		} else {
+			ourBubble.actor.collider.onTrigger("trigger-enter", (otherActor: MRE.Actor) => {
+				if (otherActor.name.includes('SpawnerUserHand')) {
+					//TODO: not sure if this returns correct positions!
+					const collisionPos = otherActor.transform.app.position; 
+					this.popBubble(collisionPos, ourBubble);
+				} else {
+					//this.ourApp.ourConsole.logMessage("hand collided with: " + otherActor.name);
+				}
+			});
+		}
+	}
 
-				//this.ourWavPlayer.playSound(note,127,collisionPos);
-				this.spawnParticleEffect(collisionPos, noteNum);
-				//this.ourApp.ourSender.send(`["/NoteOn",${ourBubble.note}]`);
-				
-				this.removeFromAvailable(ourBubble);
-				ourBubble.actor.destroy();
-				this.ourApp.ourConsole.logMessage("bubble popped for note: " + note);		
-			} else {
-				//this.ourApp.ourConsole.logMessage("sphere collided with: " + otherActor.name);
-			}
-		});
-		*/
+	private popBubble(collisionPos: MRE.Vector3, bubble: BubbleProperties){
+
+		this.spawnParticleEffect(collisionPos, bubble.note % 12);
+
+		const sendMessage = [bubble.note, bubble.vel, 0, collisionPos.x, collisionPos.y, collisionPos.z];
+		this.sendData(sendMessage, "midi")
+		
+		this.removeFromAvailable(bubble);
+		bubble.actor.destroy();
+		this.ourApp.ourConsole.logMessage("bubble popped for note: " + bubble.note);				
 	}
 }
