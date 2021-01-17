@@ -230,7 +230,7 @@ export default class Users {
 				appearance:
 				{
 					meshId: this.ourApp.boxMesh.id,
-					enabled: true
+					enabled: false
 				},
 				subscriptions: ['transform']
 				/*collider: {
