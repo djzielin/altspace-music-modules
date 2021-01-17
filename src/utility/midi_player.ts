@@ -25,7 +25,7 @@ export default class MidiPlayer extends MusicModule {
 
 		this.Player.on('midiEvent', (event: MPlayer.Event) => {
 			if(event.name==='Note on'){
-				this.ourApp.ourConsole.logMessage("MIDI Player Note On: " + event.noteNumber);
+				//this.ourApp.ourConsole.logMessage("MIDI Player Note On: " + event.noteNumber);
 				this.sendMidi(event.noteNumber,event.velocity);
 			} 
 			if(event.name==='Note off'){

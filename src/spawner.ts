@@ -14,6 +14,10 @@ interface BubbleProperties{
 	note: number;
 	vel: number;
 	animation: MRE.Animation;
+	startPos: MRE.Vector3;
+	endPos: MRE.Vector3;
+	time: number;
+	collisionPos: MRE.Vector3;
 }
 
 enum AuthType {
@@ -110,8 +114,9 @@ export default class Spawner extends MusicModule {
 		setInterval(() => { //cull bubbles that have been around too long
 			const currentTime = Date.now();
 			const listOfAvailableBubblesToDelete: BubbleProperties[]=[];
-
 			for (const ourBubble of this.availableBubbles) {
+				//this.ourApp.ourConsole.logMessage("pos: " + ourBubble.actor.transform.app.position);
+
 				if (currentTime - ourBubble.timeStamp > (this.timeOut*1000)) {
 					ourBubble.actor.destroy();
 					listOfAvailableBubblesToDelete.push(ourBubble);
@@ -131,6 +136,52 @@ export default class Spawner extends MusicModule {
 				`${this.availableBubbles.length} playable `+
 				`(${listOfAvailableBubblesToDelete.length} culled)`);*/
 		}, 1000);
+
+		setInterval(() => {
+			const bubblesToPop: BubbleProperties[] = [];
+
+			for (const ourBubble of this.availableBubbles) {
+				if (ourBubble.animation) {
+					const completedTime = ourBubble.animation.normalizedTime;
+					let computedPos = MRE.Vector3.Lerp(
+						ourBubble.startPos,
+						ourBubble.endPos,
+						completedTime / ourBubble.time);
+
+					computedPos=this.getWorldPos(computedPos); //translate to world coordinates
+
+					
+					//this.ourApp.ourConsole.logMessage("computedPos: " + computedPos);
+					//this.ourApp.ourConsole.logMessage("reportedPos: " + ourBubble.actor.transform.app.position);
+
+
+					for (const ourUser of this.ourApp.ourUsers.allUsers) {
+						//this.ourApp.ourConsole.logMessage("examining: " + ourUser.name);
+
+						if (ourUser.lHand) {
+							const lPos = ourUser.lHand.transform.app.position;
+							if (MRE.Vector3.Distance(computedPos, lPos) < 0.2) {
+								ourBubble.collisionPos = computedPos;
+								bubblesToPop.push(ourBubble);
+							}
+						}
+						if (ourUser.rHand) {
+							const rPos = ourUser.rHand.transform.app.position;
+							//this.ourApp.ourConsole.logMessage("rpos: " + rPos);
+
+							if (MRE.Vector3.Distance(computedPos, rPos) < 0.2) {
+								ourBubble.collisionPos = computedPos;
+								bubblesToPop.push(ourBubble);
+							}
+						}
+					}
+				}
+			}
+			for (const ourBubble of bubblesToPop) {
+				this.popBubble(ourBubble);
+			}		
+		}, 100);
+	
 	}
 
 	private isAuthorized(user: MRE.User): boolean {
@@ -231,8 +282,8 @@ export default class Spawner extends MusicModule {
 				rigidBody: {
 					enabled: true,
 					useGravity: false,
-				},
-				subscriptions: ['transform'],
+				}
+				//subscriptions: ['transform'],
 			}
 		});		
 
@@ -243,7 +294,11 @@ export default class Spawner extends MusicModule {
 			actor: bubbleActor,
 			note: 0,
 			vel: 0,
-			animation: null as MRE.Animation
+			animation: null as MRE.Animation,
+			startPos: MRE.Vector3.Zero(),
+			endPos: MRE.Vector3.Zero(),
+			time: 0,
+			collisionPos: MRE.Vector3.Zero()
 		};
 
 		this.availableBubbles.push(ourBubble);
@@ -269,25 +324,17 @@ export default class Spawner extends MusicModule {
 					meshId: this.ourApp.boxMesh.id,
 					materialId: mat.id
 				},
-				collider: {
+				/*collider: {
 					geometry: {
 						shape: MRE.ColliderType.Box
 					},
-					isTrigger: false
-				}
-				//subscriptions: ['transform']
+					isTrigger: true
+				},*/
+				subscriptions: ['transform']
 			}
 		});		
 
-		const ourBubble={
-			timeStamp: Date.now(),
-			actor: bubbleActor,
-			note: 0,
-			vel: 0,
-			animation: null as MRE.Animation
-		};
 
-		this.availableBubbles.push(ourBubble);
 
 		const forVec = new MRE.Vector3(0, 0, -1);
 		const resultVec = new MRE.Vector3(0, 0, 0);
@@ -297,6 +344,20 @@ export default class Spawner extends MusicModule {
 		const newPos = pos.add(resultVec.multiplyByFloats(totalDist,totalDist,totalDist));
 
 		const time=totalDist/speed;
+
+		const ourBubble={
+			timeStamp: Date.now(),
+			actor: bubbleActor,
+			note: 0,
+			vel: 0,
+			animation: null as MRE.Animation,
+			startPos: pos,
+			endPos: newPos,
+			time: time,
+			collisionPos: MRE.Vector3.Zero()
+		};
+
+		this.availableBubbles.push(ourBubble);
 
 		const travelAnimData = this.ourApp.assets.createAnimationData("Travel", {
 			tracks: [{
@@ -378,7 +439,7 @@ export default class Spawner extends MusicModule {
 		const speed = this.bubbleSpeed; //0.1; //this.mapRange(note,21,108,0.1,1.0) * -0.5;
 
 		while(this.availableBubbles.length>this.bubbleLimit){
-			this.ourApp.ourConsole.logMessage("culling bubble. enforcing bubble limit of: " + this.bubbleLimit);
+			this.ourApp.ourConsole.logMessage("  culling bubble. enforcing bubble limit of: " + this.bubbleLimit);
 			const bubbleToCull=this.availableBubbles.shift();
 			bubbleToCull.actor.destroy();
 		}
@@ -405,7 +466,7 @@ export default class Spawner extends MusicModule {
 		const spawnForVec = new MRE.Vector3(0, 0, 0);
 		forVec.rotateByQuaternionToRef(spawnerRot, spawnForVec);
 		const velocityVec = spawnForVec.multiplyByFloats(-speed, -speed, -speed);
-		this.ourApp.ourConsole.logMessage("  bubble velocity vec: " + velocityVec);
+		//this.ourApp.ourConsole.logMessage("  bubble velocity vec: " + velocityVec);
 
 		let ourBubble: BubbleProperties=null;
 
@@ -434,18 +495,23 @@ export default class Spawner extends MusicModule {
 
 		if (this.doPhysics) {
 			ourBubble.actor.collider.onCollision("collision-enter", (data: MRE.CollisionData) => {
+				this.ourApp.ourConsole.logMessage("onCollision called!");			
+
 				const otherActor = data.otherActor;
 
 				if (otherActor.name.includes('SpawnerUserHand')) {
 					const collisionPos = data.contacts[0].point;
-					this.popBubble(collisionPos, ourBubble);
+					ourBubble.collisionPos=collisionPos;
+					this.popBubble(ourBubble);
 
 				} else {
 					//this.ourApp.ourConsole.logMessage("hand collided with: " + otherActor.name);
 				}
 			});
-		} else {
+		} /*else {
 			ourBubble.actor.collider.onTrigger("trigger-enter", (otherActor: MRE.Actor) => {
+				this.ourApp.ourConsole.logMessage("onTrigger called!");			
+
 				if (otherActor.name.includes('SpawnerUserHand')) {
 					//TODO: not sure if this returns correct positions!
 					const collisionPos = otherActor.transform.app.position; 
@@ -454,10 +520,12 @@ export default class Spawner extends MusicModule {
 					//this.ourApp.ourConsole.logMessage("hand collided with: " + otherActor.name);
 				}
 			});
-		}
+		}*/
 	}
 
-	private popBubble(collisionPos: MRE.Vector3, bubble: BubbleProperties){
+	private popBubble(bubble: BubbleProperties){
+
+		const collisionPos=bubble.collisionPos;
 
 		this.spawnParticleEffect(collisionPos, bubble.note % 12);
 

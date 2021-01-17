@@ -162,47 +162,54 @@ export default class Users {
 	}
 
 	private addHands(ourUser: UserProperties) {
-		this.ourApp.ourConsole.logMessage("creating hands for: " + ourUser.name);
 
-		ourUser.rHand = this.createHand('right-hand', ourUser.userID, new MRE.Vector3(0, 0, 0.1),
-			new MRE.Vector3(0.03, 0.03, 0.14));
+		setTimeout(() => {
+			this.ourApp.ourConsole.logMessage("creating hands for: " + ourUser.name);
 
-		ourUser.rHand.created().then(() => {
-			this.ourApp.ourConsole.logMessage("  right hand created for: " + ourUser.name);
+			ourUser.rHand = this.createHand('right-hand', ourUser.userID, new MRE.Vector3(0, 0, 0.1),
+				new MRE.Vector3(0.03, 0.03, 0.14));
 
+			ourUser.rHand.created().then(() => {
+				this.ourApp.ourConsole.logMessage("  right hand created for: " + ourUser.name);
+			});
+	
 			ourUser.lHand = this.createHand('left-hand', ourUser.userID, new MRE.Vector3(0, 0, 0.1),
 				new MRE.Vector3(0.03, 0.03, 0.14));
 
 			ourUser.lHand.created().then(() => {
 				this.ourApp.ourConsole.logMessage("  left hand created for: " + ourUser.name);
 			});
-		});
+
+		}, 1000);
+
 	}
 
 	private addChest(ourUser: UserProperties) {
-		this.ourApp.ourConsole.logMessage("creating chest for: " + ourUser.name);
+		setTimeout(() => {
+			this.ourApp.ourConsole.logMessage("creating chest for: " + ourUser.name);
 
-		ourUser.chest = MRE.Actor.Create(this.ourApp.context, {
-			actor: {
-				name: 'chest' + ourUser.toString(),
-				transform: {
-					local: {
-						position: new MRE.Vector3(0, -0.25, 0.0),
-						scale: MRE.Vector3.One()
-					}
-				},
-				attachment: {
-					attachPoint: "head",
-					userId: ourUser.userID
-				},
-				appearance:
-				{
-					meshId: this.ourApp.boxMesh.id,
-					enabled: false
-				},
-				subscriptions: ['transform']
-			}
-		});
+			ourUser.chest = MRE.Actor.Create(this.ourApp.context, {
+				actor: {
+					name: 'chest' + ourUser.toString(),
+					transform: {
+						local: {
+							position: new MRE.Vector3(0, -0.25, 0.0),
+							scale: MRE.Vector3.One()
+						}
+					},
+					attachment: {
+						attachPoint: "head",
+						userId: ourUser.userID
+					},
+					appearance:
+					{
+						meshId: this.ourApp.boxMesh.id,
+						enabled: false
+					},
+					subscriptions: ['transform']
+				}
+			});
+		}, 1000);
 	}
 
 
@@ -225,7 +232,8 @@ export default class Users {
 					meshId: this.ourApp.boxMesh.id,
 					enabled: true
 				},
-				collider: {
+				subscriptions: ['transform']
+				/*collider: {
 					geometry: {
 						shape: MRE.ColliderType.Box
 					},
@@ -234,7 +242,8 @@ export default class Users {
 				rigidBody: {
 					enabled: true,
 					isKinematic: true
-				}
+				}*/
+
 			}
 		});
 
