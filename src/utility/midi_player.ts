@@ -45,6 +45,9 @@ export default class MidiPlayer extends MusicModule {
 
 	public setTempo(tempo: number){
 		this.Player.tempo=tempo;
+
+		this.Player.pause(); //the library does this for internal tempo change events...
+		this.Player.play();
 	}
 
 	private sendMidi(note: number, vel: number, channel = 0) {

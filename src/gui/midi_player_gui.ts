@@ -42,7 +42,7 @@ export default class MidiPlayerGui extends GuiPanel{
 		const portSelector = new PlusMinus(this.ourApp);
 		await portSelector.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
 			this.guiBackground.id, "Tempo",
-			120, 1.0, this.setTempo.bind(this));
+			120, 5.0, this.setTempo.bind(this));
 		zPos -= 0.15;
 
 		
