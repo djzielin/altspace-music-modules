@@ -106,6 +106,7 @@ export default class Spawner extends MusicModule {
 		if (index > -1) {
 			this.availableBubbles.splice(index, 1);
 		}
+		ourBubble=null;
 	}	
 
 	constructor(protected ourApp: App) {
@@ -119,7 +120,7 @@ export default class Spawner extends MusicModule {
 
 				if (currentTime - ourBubble.timeStamp > (this.timeOut * 1000)) {
 					if (ourBubble.animation) {
-						ourBubble.animation.stop();
+						//ourBubble.animation.stop();
 						ourBubble.animation.delete();
 					}
 					ourBubble.actor.destroy();
@@ -452,6 +453,11 @@ export default class Spawner extends MusicModule {
 		while(this.availableBubbles.length>this.bubbleLimit){
 			this.ourApp.ourConsole.logMessage("  culling bubble. enforcing bubble limit of: " + this.bubbleLimit);
 			const bubbleToCull=this.availableBubbles.shift();
+
+			if(bubbleToCull.animation){
+				//bubbleToCull.animation.stop();
+				bubbleToCull.animation.delete();
+			}
 			bubbleToCull.actor.destroy();
 		}
 
@@ -543,13 +549,13 @@ export default class Spawner extends MusicModule {
 		const sendMessage = [bubble.note, bubble.vel, 0, collisionPos.x, collisionPos.y, collisionPos.z];
 		this.sendData(sendMessage, "midi")
 		
-		this.removeFromAvailable(bubble);
-
 		if(bubble.animation){
-			bubble.animation.stop();
+			//bubble.animation.stop();
 			bubble.animation.delete();
 		}
 		bubble.actor.destroy();
-		this.ourApp.ourConsole.logMessage("bubble popped for note: " + bubble.note);				
+		this.ourApp.ourConsole.logMessage("bubble popped for note: " + bubble.note);	
+		
+		this.removeFromAvailable(bubble);
 	}
 }

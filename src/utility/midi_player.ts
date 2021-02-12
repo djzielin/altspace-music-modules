@@ -19,8 +19,12 @@ export default class MidiPlayer extends MusicModule {
 		this.Player = new MPlayer.Player();
 
 		// Load a MIDI file
-		this.Player.loadFile(`${this.ourApp.baseDir}/` + 'midi/bach_847.mid');
+		this.ourApp.ourConsole.logMessage("MIDI Player - Loading Midi");
+		this.Player.loadFile(`${this.ourApp.baseDir}/` + 'midi/bach_846.mid');
+
 		//this.Player.loadFile(`${this.ourApp.baseDir}/` + 'midi/simultaneous_notes_test.mid');
+
+		this.ourApp.ourConsole.logMessage("MIDI Player - Playing Midi");
 		this.Player.play();
 
 		this.Player.on('midiEvent', (event: MPlayer.Event) => {
@@ -33,13 +37,19 @@ export default class MidiPlayer extends MusicModule {
 			}
 		});
 
-		this.Player.on('endOfFile', () => {
-			this.Player.loadFile(`${this.ourApp.baseDir}/` + 'midi/bach_846.mid');
-			//this.ourApp.ourConsole.logMessage("MIDI Player - END OF FILE");
+		this.Player.on('endOfFile', () => {			
+			this.ourApp.ourConsole.logMessage("MIDI Player - END OF FILE");
 
 			setTimeout(() => { //wait just a bit, otherwise the midi-player 'stop' kills us 
+				this.ourApp.ourConsole.logMessage("MIDI Player - Stopping");
+				this.Player.stop();
+
+				this.ourApp.ourConsole.logMessage("MIDI Player - Loading Midi");
+				this.Player.loadFile(`${this.ourApp.baseDir}/` + 'midi/bach_846.mid');
+
+				this.ourApp.ourConsole.logMessage("MIDI Player - Playing Midi");
 				this.Player.play();
-			}, 1000);
+			}, 2000);
 		});
 	}
 
