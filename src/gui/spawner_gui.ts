@@ -45,6 +45,10 @@ export default class extends GuiPanel {
 		this.ourSpawner.bubbleSize=n;
 	}
 
+	public setBubbleLimit(n: number): void {
+		this.ourSpawner.bubbleLimit=n;
+	}
+
 	public setBubbleSpeed(n: number): void {
 		this.ourSpawner.bubbleSpeed=n;
 	}
@@ -57,9 +61,9 @@ export default class extends GuiPanel {
 		this.ourSpawner.doPosRandom=b;
 	}
 
-	public setDoPhysics(b: boolean): void {
+	/*public setDoPhysics(b: boolean): void {
 		this.ourSpawner.doPhysics=b;
-	}
+	}*/
 
 	public setDoElongated(b: boolean): void {
 		this.ourSpawner.doElongatedCubes=b;
@@ -90,11 +94,11 @@ export default class extends GuiPanel {
 			this.ourSpawner.doPosRandom, this.setDoPosRandom.bind(this.ourSpawner));
 		zPos -= 0.15;
 
-		const pButton = new Button(this.ourApp);
+		/*const pButton = new Button(this.ourApp);
 		await pButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
 			this.guiBackground.id, "Physics", "Animation",
 			this.ourSpawner.doPhysics, this.setDoPhysics.bind(this.ourSpawner));
-		zPos -= 0.15;
+		zPos -= 0.15;*/
 
 		const button = new Button(this.ourApp);
 		await button.createAsync(new MRE.Vector3(0, 0.025, zPos),
@@ -102,11 +106,11 @@ export default class extends GuiPanel {
 			this.ourSpawner.doParticleEffect, this.setDoParticleEffect.bind(this.ourSpawner));
 		zPos -= 0.15;
 
-		const button2 = new Button(this.ourApp);
+		/*const button2 = new Button(this.ourApp);
 		await button2.createAsync(new MRE.Vector3(0, 0.025, zPos),
 			this.guiBackground.id, "elongated", "cubes",
 			this.ourSpawner.doElongatedCubes, this.setDoElongated.bind(this.ourSpawner));
-		zPos -= 0.15;
+		zPos -= 0.15;*/
 
 		this.ourApp.ourConsole.logMessage("creating speed plus/minus");
 		const speedGUI = new PlusMinus(this.ourApp);
@@ -117,7 +121,7 @@ export default class extends GuiPanel {
 
 		const sizeGUI = new PlusMinus(this.ourApp);
 		await sizeGUI.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
-			this.guiBackground.id, "c_size",
+			this.guiBackground.id, "size",
 			this.ourSpawner.bubbleSize, 0.01, this.setBubbleSize.bind(this.ourSpawner));
 		zPos -= 0.15;
 
@@ -125,6 +129,12 @@ export default class extends GuiPanel {
 		await timeoutGUI.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
 			this.guiBackground.id, "culltime",
 			this.ourSpawner.timeOut, 1, this.setTimeOut.bind(this.ourSpawner));
+		zPos -= 0.15;
+
+		const bubbleLimitGUI = new PlusMinus(this.ourApp);
+		await bubbleLimitGUI.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
+			this.guiBackground.id, "# limit",
+			this.ourSpawner.bubbleLimit, 10, this.setBubbleLimit.bind(this.ourSpawner));
 		zPos -= 0.15;
 
 		const emitWidth = new PlusMinus(this.ourApp);

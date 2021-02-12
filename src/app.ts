@@ -553,11 +553,11 @@ export default class App {
 			this.allModules.push(ourMidiReceiver);
 
 			const ourSpawnerGui = new SpawnerGui(this, ourSpawner);
-			await ourSpawnerGui.createAsync(new MRE.Vector3(1, 0.1, zPos), "Spawner")
+			await ourSpawnerGui.createAsync(new MRE.Vector3(1, 0.1, zPos), "Spawner " + (i+1));
 			this.allGUIs.push(ourSpawnerGui);
 
 			const ourMidiReceiverGui = new MidiReceiverGui(this, ourMidiReceiver);
-			await ourMidiReceiverGui.createAsync(new MRE.Vector3(-1, 0.1, zPos), "Midi Recv")
+			await ourMidiReceiverGui.createAsync(new MRE.Vector3(-1, 0.1, zPos), "Midi Recv" + (i+1));
 			this.allGUIs.push(ourMidiReceiverGui);
 
 			zPos -= 2;

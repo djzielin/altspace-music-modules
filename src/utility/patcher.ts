@@ -178,12 +178,12 @@ export default class Patcher{
 
 			if(sender && receiver){ //great, we got both a sender and a receiver
 				if(sender.messageType===receiver.messageType){ //do message types match? ie both midi?
-					if(sender.gui!==receiver.gui){
+					//if(sender.gui!==receiver.gui){
 						this.ourApp.ourConsole.logMessage("PATCHER:  we have a match!");
 						this.applyPatch(sender,receiver);
-					} else{
-						this.ourApp.ourConsole.logMessage("PATCHER:  not allowing user to route back to self");
-					}
+					//} else{
+					//	this.ourApp.ourConsole.logMessage("PATCHER:  not allowing user to route back to self");
+					//}
 				} else {
 					this.ourApp.ourConsole.logMessage("PATCHER:  incompatible message type");
 				}
@@ -191,13 +191,16 @@ export default class Patcher{
 				this.ourApp.ourConsole.logMessage("PATCHER:  no match. both are senders or receivers");
 			}
 
-			sender.button.setValue(true,false);
-			receiver.button.setValue(true,false);
+			for (const singlePatchPoint of this.potentialPatchStack) { //set both buttons back to green
+				if (singlePatchPoint.button) {
+					singlePatchPoint.button.setValue(true, false);
+				}
+			}
 
 			this.potentialPatchStack.pop();
 			this.potentialPatchStack.pop();
 		} else {
-			this.ourApp.ourConsole.logMessage("PATCHER:  not doing anything as we have num patches waiting: " + 
+			this.ourApp.ourConsole.logMessage("PATCHER:  not doing anything as we have num patches waiting: " +
 				this.potentialPatchStack.length);
 		}
 	}

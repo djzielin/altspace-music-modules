@@ -83,8 +83,8 @@ export default class Spawner extends MusicModule {
 
 	public spawnerWidth=1.0; //0.5;
 	public spawnerHeight=0.2;
-	public bubbleLimit=50;
-	public timeOut=30.0;
+	public bubbleLimit=200;
+	public timeOut=5.0;
 	public bubbleSize=0.1; //0.05;
 	public bubbleSpeed=0.1;
 	public doParticleEffect=false;
@@ -117,12 +117,16 @@ export default class Spawner extends MusicModule {
 			for (const ourBubble of this.availableBubbles) {
 				//this.ourApp.ourConsole.logMessage("pos: " + ourBubble.actor.transform.app.position);
 
-				if (currentTime - ourBubble.timeStamp > (this.timeOut*1000)) {
+				if (currentTime - ourBubble.timeStamp > (this.timeOut * 1000)) {
+					if (ourBubble.animation) {
+						ourBubble.animation.stop();
+						ourBubble.animation.delete();
+					}
 					ourBubble.actor.destroy();
 					listOfAvailableBubblesToDelete.push(ourBubble);
 				}
-			}		
-			
+			}
+
 			for(const ourBubble of listOfAvailableBubblesToDelete){
 				this.removeFromAvailable(ourBubble);
 			}		
@@ -340,10 +344,8 @@ export default class Spawner extends MusicModule {
 		const resultVec = new MRE.Vector3(0, 0, 0);
 		forVec.rotateByQuaternionToRef(dir, resultVec);
 
-		const totalDist=20.0;
+		const totalDist=speed*this.timeOut;
 		const newPos = pos.add(resultVec.multiplyByFloats(totalDist,totalDist,totalDist));
-
-		const time=totalDist/speed;
 
 		const ourBubble={
 			timeStamp: Date.now(),
@@ -353,7 +355,7 @@ export default class Spawner extends MusicModule {
 			animation: null as MRE.Animation,
 			startPos: pos,
 			endPos: newPos,
-			time: time,
+			time: this.timeOut,
 			collisionPos: MRE.Vector3.Zero()
 		};
 
@@ -364,9 +366,17 @@ export default class Spawner extends MusicModule {
 				target: MRE.ActorPath("target").transform.local.position,
 				keyframes: [
 					{ time: 0.0, value: { x: pos.x, y: pos.y, z: pos.z } },
-					{ time: time, value: { x: newPos.x, y: newPos.y, z: newPos.z } }
+					{ time: this.timeOut, value: { x: newPos.x, y: newPos.y, z: newPos.z } }
 				]
-			}]
+			},
+			{
+				target: MRE.ActorPath("target").transform.local.scale,
+				keyframes: [
+					{ time: 0.0, value: { x: scale, y: scale, z: scale } },
+					{ time: this.timeOut, value: { x: 0.0, y: 0.0, z: 0.0 } }
+				]
+			}
+			]
 		});
 
 		travelAnimData.bind(
@@ -375,9 +385,10 @@ export default class Spawner extends MusicModule {
 		
 			ourBubble.animation=ourAnim;
 
+			/*
 			ourAnim.finished().then(() => {				
 				ourAnim.delete();
-			});
+			});*/
 		});
 
 		return ourBubble;
@@ -533,6 +544,11 @@ export default class Spawner extends MusicModule {
 		this.sendData(sendMessage, "midi")
 		
 		this.removeFromAvailable(bubble);
+
+		if(bubble.animation){
+			bubble.animation.stop();
+			bubble.animation.delete();
+		}
 		bubble.actor.destroy();
 		this.ourApp.ourConsole.logMessage("bubble popped for note: " + bubble.note);				
 	}

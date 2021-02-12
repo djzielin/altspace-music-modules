@@ -19,7 +19,7 @@ export default class MidiPlayer extends MusicModule {
 		this.Player = new MPlayer.Player();
 
 		// Load a MIDI file
-		this.Player.loadFile(`${this.ourApp.baseDir}/` + 'midi/bach_846.mid');
+		this.Player.loadFile(`${this.ourApp.baseDir}/` + 'midi/bach_847.mid');
 		//this.Player.loadFile(`${this.ourApp.baseDir}/` + 'midi/simultaneous_notes_test.mid');
 		this.Player.play();
 
