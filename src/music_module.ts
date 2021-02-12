@@ -17,7 +17,9 @@ export default class MusicModule {
 	}
 
 	public destroy(){
-		this.ourGrabber.destroy();
+		if(this.ourGrabber){
+			this.ourGrabber.destroy();
+		}
 	}
 
 	public getWorldPosFromMatrix(mPoint: MRE.Matrix) {
