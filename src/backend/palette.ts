@@ -15,14 +15,15 @@ export default class Palette {
 	protected guiGrabber: GrabButton = null;
 	protected backgroundHeight = 1.75;
 
-	private utilityModules: string[] = ["Midi Receiver (soon)",
-		"Midi Player (soon)",
-		"Wav Player (soon)",
+	private utilityModules: string[] = ["Midi Receiver",
+		"Midi Player",
+		"Wav Player",
+		"Midi Sender (soon)",
 		"Sequencer (soon)",
 		"Heart Beat (soon)"];
 	private instrumentModules: string[] = ["Piano",
-		"Micro Piano (soon)",
 		"Staff",
+		"Micro Piano (soon)",
 		"Spiral (soon)",
 		"Spawner (soon)",
 		"Geo (soon)"];

@@ -438,25 +438,39 @@ export default class App {
 				});
 			});
 		}
+
+		if (name === "Wav Player") {
+			const ourWavPlayer = new WavPlayer(this, "Wav Player");
+			ourWavPlayer.loadAllSounds("piano", 36, 84).then(() => {
+				this.allModules.push(ourWavPlayer);
+
+				const ourWavPlayerGui = new WavPlayerGui(this, ourWavPlayer);
+				ourWavPlayerGui.createAsync(new MRE.Vector3(0, 0.1, -1), "Piano WavPlayer").then(() => {
+					this.allGUIs.push(ourWavPlayerGui);
+				});
+			});
+
+		}
+
+		if (name === "Midi Receiver") {
+			const ourMidiReceiver = new MidiReceiver(this, 3902, "Midi Receiver");
+			this.allModules.push(ourMidiReceiver);
+
+			const ourMidiReceiverGui = new MidiReceiverGui(this, ourMidiReceiver);
+			ourMidiReceiverGui.createAsync(new MRE.Vector3(0, 0.1, -1), "Midi Recv").then(() => {
+				this.allGUIs.push(ourMidiReceiverGui);
+			});
+		}
+
+		if (name === "Midi Player") {
+			const ourMidiPlayer = new MidiPlayer(this, "Midi Player");
+
+			const ourMidiPlayerGui = new MidiPlayerGui(this, ourMidiPlayer);
+			ourMidiPlayerGui.createAsync(new MRE.Vector3(0, 0.1, -1), "Midi Player").then(() => {
+				this.allGUIs.push(ourMidiPlayerGui);
+			});
+		}
 	}
-
-
-		/*
-	 MidiReceiver from '../utility_modules/midi_receiver'
-	 WavPlayer from '../utility_modules/wavplayer';
- Sequencer from '../utility_modules/sequencer';
- HeartBeat from '../utility_modules/heartbeat';
- MidiPlayer from '../utility_modules/midi_player';
-
-import Piano from '../piano'
-import MicroPiano from '../micro_piano'
-import Spawner from '../spawner'
-import Staff from '../staff';
-import Geo from '../geo';
-import Spiral from '../spiral';
-
-	*/
-
 
 	private async showSE02(){
 		this.ourPiano = new Piano(this, "Piano");

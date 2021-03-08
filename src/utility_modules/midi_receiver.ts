@@ -17,6 +17,8 @@ export default class MidiReceiver extends MusicModule {
 	private lastChannel=0;
 	private lastTime=0;
 
+	private portAttempts=0;
+
 	public createServer(){
 		if(this.wss){
 			this.wss.close();
@@ -24,9 +26,20 @@ export default class MidiReceiver extends MusicModule {
 		
 		this.wss = new WebSocket.Server({ port: this.port });
 
+		this.wss.on("error", () => {
+			this.ourApp.ourConsole.logMessage('Got an error from Websocket on port: ' + this.port);
+			this.ourApp.ourConsole.logMessage('Trying next port up');
+			this.port++;
+
+			this.portAttempts++;
+			if(this.portAttempts<100){ //want to avoid an infinte loop, ie give up eventually
+				this.createServer();
+			}
+		});
+		
 		this.wss.on('connection', (ws: WebSocket) => {
 			//is ws.url the correct way to get this?
-			MRE.log.info("app", 'remote midi keyboard has connected from: ' + ws.url); 
+			this.ourApp.ourConsole.logMessage('remote midi keyboard has connected from: ' + ws.url); 
 
 			ws.on('message', (message: string) => {
 				//MRE.log.info("app", 'received from client: %s', message);
