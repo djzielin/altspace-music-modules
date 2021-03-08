@@ -114,29 +114,5 @@ export default class GrabButton {
 		this.lockButton=new Button(this.ourApp);
 		this.lockButton.createAsync(new MRE.Vector3(0.0,0.0,-0.25),this.buttonActor.id,"unlocked","locked",
 			this.unLocked, this.setUnlocked.bind(this),0.45);
-
-		/*this.buttonActor.setBehavior(MRE.ButtonBehavior)
-			.onButton("pressed", (user: MRE.User) => {
-				const ourRoles = user.properties["altspacevr-roles"];
-				if (ourRoles.includes("moderator") ||
-					ourRoles.includes("presenter") || ourRoles.includes("terraformer")) {
-
-					this.ourApp.ourConsole.logMessage("grab button pressed!");
-					const ourUser = this.ourApp.findUserRecord(user.id);
-
-					if (ourUser) {
-						this.ourApp.ourConsole.logMessage("ourUser has enough permissions");
-					}
-				}
-			})
-			.onButton("released", (user: MRE.User) => {
-				const ourRoles = user.properties["altspacevr-roles"];
-				if (ourRoles.includes("moderator") ||
-					ourRoles.includes("presenter") || ourRoles.includes("terraformer")) {
-
-					this.ourApp.ourConsole.logMessage("grab button released!");
-					//this.buttonActor.parentId=MRE.ZeroGuid; //is this how to unparent?
-				}
-			});*/
 	}
 }

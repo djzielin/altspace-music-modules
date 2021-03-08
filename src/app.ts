@@ -9,6 +9,7 @@ import Console from './backend/console';
 import Users from './backend/users';
 import Patcher from './backend/patcher';
 import PatchPoint from './backend/patch_point';
+import Palette from './backend/palette';
 
 import Piano from './piano'
 import MicroPiano from './micro_piano'
@@ -16,6 +17,7 @@ import Spawner from './spawner'
 import Staff from './staff';
 import Geo from './geo';
 import Spiral from './spiral';
+
 import Se02 from './se02';
 //import Tablature from './tablature';
 
@@ -42,10 +44,11 @@ import MidiPlayerGui from './gui/midi_player_gui';
 export default class App {
 	public assets: MRE.AssetContainer;
 	public ourPatcher: Patcher = null;
+	public ourPalette: Palette = null;
 
 	public showGUIs = true;
 	public showGrabbers = true;
-
+	
 	public allGUIs: GuiPanel[] = [];
 	public allModules: MusicModule[] = [];
 
@@ -61,6 +64,7 @@ export default class App {
 	public menuGrabber: GrabButton = null;
 	public showGUIsButton: Button = null;
 	public showGrabbersButton: Button = null;
+	public showPaletteButton: Button = null;
 
 	public boxMesh: MRE.Mesh;
 	public sphereMesh: MRE.Mesh;
@@ -229,6 +233,15 @@ export default class App {
 		}
 	}
 
+	public showPalette(b: boolean){
+		if(b){
+			this.ourPalette.show();
+
+		} else{
+			this.ourPalette.hide();
+		}
+	}
+
 	private async loadAsyncItems() {
 		this.ourConsole.logMessage("creating console");
 		await this.ourConsole.createAsyncItems(new MRE.Vector3(-2.5, 0, 0.0),this.menuGrabber.getGUID());
@@ -250,8 +263,7 @@ export default class App {
 		buttonZPos -= 0.2;
 		this.showGUIsButton.setElevatedUserOnlyVisibility();
 
-
-		this.ourConsole.logMessage("Creating ShowGUI Button ");
+		this.ourConsole.logMessage("Creating Show Grabbers Button ");
 		this.showGrabbersButton = new Button(this);
 		await this.showGrabbersButton.createAsync(new MRE.Vector3(-0.7, 0, buttonZPos),
 			this.menuGrabber.getGUID(), "Grabbers ON", "Grabbers OFF",
@@ -259,6 +271,20 @@ export default class App {
 		buttonZPos -= 0.2;
 		this.showGrabbersButton.setElevatedUserOnlyVisibility();
 
+		this.ourConsole.logMessage("Creating Show  Pallete Button ");
+		this.ourPalette = new Palette(this);
+		await this.ourPalette.createBackground(new MRE.Vector3(5, 1.5, 0),
+			MRE.Quaternion.FromEulerAngles(-90 * Math.PI / 180, 30 * Math.PI / 180, 0),
+			"Palette",
+			1.5);
+		this.ourPalette.hide();
+
+		this.showPaletteButton = new Button(this);
+		await this.showPaletteButton.createAsync(new MRE.Vector3(-0.7, 0, buttonZPos),
+			this.menuGrabber.getGUID(), "Palette ON", "Palette OFF",
+			false, this.showPalette.bind(this));
+		buttonZPos -= 0.2;
+		this.showPaletteButton.setElevatedUserOnlyVisibility();
 
 		if(this.instrumentType==="piano"){
 			await this.showPianoStaff();
