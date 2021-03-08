@@ -47,8 +47,8 @@ export default class Sequencer extends MusicModule{
 	private isPlaying=true;
 	public noteBlankColors=NoteBlankColors.gray;
 
-	constructor(protected ourApp: App) {
-		super(ourApp);
+	constructor(protected ourApp: App, public name: string) {
+		super(ourApp, name);
 	}
 
 	/*public setPlaying(b: boolean){

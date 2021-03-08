@@ -195,8 +195,8 @@ export default class MicroPiano extends MusicModule {
 
 	private ourIntervals: PianoIntervals = null;
 
-	constructor(protected ourApp: App) {
-		super(ourApp);
+	constructor(protected ourApp: App, public name: string) {
+		super(ourApp, name);
 		this.ourIntervals = null; //new PianoIntervals(ourApp, this);
 	}
 

@@ -9,10 +9,9 @@ import PatchPoint from './patch_point';
 
 export default class MusicModule {
 	public ourGrabber: GrabButton=null;
-
 	public sendDestinations: PatchPoint[]=[];
-
-	constructor(protected ourApp: App) {
+	
+	constructor(protected ourApp: App, public name: string) {
 		
 	}
 

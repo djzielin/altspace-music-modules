@@ -32,8 +32,8 @@ export default class Se02 extends MusicModule{
 	private allKnobs: Knob[]=[];
 	private draggingKnobs: Map<MRE.User,Knob>=new Map();
 	
-	constructor(protected ourApp: App) {
-		super(ourApp);
+	constructor(protected ourApp: App, public name: string) {
+		super(ourApp, name);
 
 	}
 

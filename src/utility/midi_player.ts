@@ -13,8 +13,8 @@ export default class MidiPlayer extends MusicModule {
 
 	private Player: MPlayer.Player;
 	
-	constructor(protected ourApp: App) {
-		super(ourApp);
+	constructor(protected ourApp: App, public name: string) {
+		super(ourApp, name);
 
 		this.Player = new MPlayer.Player();
 

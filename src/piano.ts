@@ -100,8 +100,8 @@ export default class Piano extends MusicModule {
 
 	private ourIntervals: PianoIntervals = null;
 
-	constructor(protected ourApp: App) {
-		super(ourApp);
+	constructor(protected ourApp: App, public name: string) {
+		super(ourApp, name);
 		this.ourIntervals = new PianoIntervals(ourApp, this);
 	}
 

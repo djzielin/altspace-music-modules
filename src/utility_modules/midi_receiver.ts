@@ -61,8 +61,8 @@ export default class MidiReceiver extends MusicModule {
 		});
 	}
 
-	constructor(protected ourApp: App, public port: number) {
-		super(ourApp);
+	constructor(protected ourApp: App, public port: number, name: string) {
+		super(ourApp, name);
 		
 		this.createServer();
 	}

@@ -80,17 +80,24 @@ export default class Patcher{
 			if(patch.receiver.gui){
 				if(patch.receiver.gui===gui){
 					this.ourApp.ourConsole.logMessage("PATCHER:  found patch to delete");
+					this.ourApp.ourConsole.logMessage("   Sender - " + patch.sender.module.name);
+					this.ourApp.ourConsole.logMessage("   Receiver - " + patch.receiver.module.name);
+
 					patchesToDelete.push(patch);
+					this.deletePatch(patch);
 				}
 			
 			}
 			if(patch.sender.gui){
 				if(patch.sender.gui===gui){
 					this.ourApp.ourConsole.logMessage("PATCHER:  found patch to delete");
+					this.ourApp.ourConsole.logMessage("   Sender - " + patch.sender.module.name);
+					this.ourApp.ourConsole.logMessage("   Receiver - " + patch.receiver.module.name);
+					
 					patchesToDelete.push(patch);
+					this.deletePatch(patch);
 				}			
 			}
-			this.deletePatch(patch);
 		}
 
 		for(const patch of patchesToDelete)

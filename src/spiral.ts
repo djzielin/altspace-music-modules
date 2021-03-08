@@ -100,8 +100,8 @@ export default class Spiral extends MusicModule {
 
 	private ourIntervals: SpiralIntervals = null;
 
-	constructor(protected ourApp: App) {
-		super(ourApp);
+	constructor(protected ourApp: App, public name: string) {
+		super(ourApp, name);
 		this.ourIntervals = new SpiralIntervals(ourApp, this);
 	}
 

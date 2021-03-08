@@ -97,7 +97,7 @@ export default class GuiPanel {
 	}
 
 	public receiveDelete(value: boolean){
-		this.ourApp.ourConsole.logMessage("received delete request!");
+		this.ourApp.ourConsole.logMessage("GUI PANEL: received delete request!");
 
 		this.ourApp.ourPatcher.removeAttachedPatches(this);
 

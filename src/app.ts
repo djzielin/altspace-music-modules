@@ -367,7 +367,7 @@ export default class App {
 	private async showGeoPiano(){
 		let xPos = 1.5;
 
-		const ourWavPlayer = new WavPlayer(this);
+		const ourWavPlayer = new WavPlayer(this, "Wav Player");
 		ourWavPlayer.audioRange=10;
 		ourWavPlayer.cullTime=0; //don't cull sounds based on time playing
 		ourWavPlayer.doPedal=false;
@@ -380,7 +380,7 @@ export default class App {
 		this.allGUIs.push(ourWavPlayerGui);
 		xPos -= 1.75;
 
-		this.ourGeo = new Geo(this);
+		this.ourGeo = new Geo(this, "Geo");
 
 		//TODO, figure out better way to communicate how many samples available to geo 
 		await this.ourGeo.createAllGeos(new MRE.Vector3(0, 0, 0),
@@ -414,7 +414,7 @@ export default class App {
 	public spawnModule(name: string) {
 
 		if (name === "Piano") {
-			const newPiano = new Piano(this);
+			const newPiano = new Piano(this, "Piano");
 			newPiano.createAllKeys(new MRE.Vector3(2, 1, -1),
 				MRE.Quaternion.FromEulerAngles(-30 * Math.PI / 180, 0, 0)).then(() => {
 				this.allModules.push(this.ourPiano);
@@ -427,7 +427,7 @@ export default class App {
 		}
 
 		if (name === "Staff") {
-			this.ourStaff = new Staff(this);
+			this.ourStaff = new Staff(this, "Staff");
 			this.ourStaff.createAsyncItems(new MRE.Vector3(2, 2, -1),
 				MRE.Quaternion.FromEulerAngles(-90 * Math.PI / 180, 0, 0)).then(() => {
 				this.allModules.push(this.ourStaff);
@@ -459,23 +459,23 @@ import Spiral from '../spiral';
 
 
 	private async showSE02(){
-		this.ourPiano = new Piano(this);
+		this.ourPiano = new Piano(this, "Piano");
 		await this.ourPiano.createAllKeys(new MRE.Vector3(2, 1, 0),
 			MRE.Quaternion.FromEulerAngles(-30 * Math.PI / 180, 0, 0));	
 		this.allModules.push(this.ourPiano);
 
-		const ourMidiReceiver = new MidiReceiver(this,3902);
+		const ourMidiReceiver = new MidiReceiver(this,3902,"Midi Receiver");
 		this.allModules.push(ourMidiReceiver);
 
-		const ourSequencer = new Sequencer(this);
+		const ourSequencer = new Sequencer(this, "Sequencer");
 		await ourSequencer.createAsyncItems(12,new MRE.Vector3(-1.5, 2.0, 0.0),
 			MRE.Quaternion.FromEulerAngles(-45 * Math.PI / 180, 0, 0));
 		this.allModules.push(ourSequencer);		
 
-		const ourHeartBeat= new HeartBeat(this);
+		const ourHeartBeat= new HeartBeat(this, "Heartbeat");
 		this.allModules.push(ourHeartBeat);
 
-		const ourSE = new Se02(this);
+		const ourSE = new Se02(this, "SE-02");
 		await ourSE.createAsyncItems(new MRE.Vector3(2, 1.75, 0.5),
 			MRE.Quaternion.FromEulerAngles(-90 * Math.PI / 180, 0, 0));
 
@@ -503,7 +503,7 @@ import Spiral from '../spiral';
 	private async showPianoStaff(){
 		let xPos = 1.5;
 
-		const ourWavPlayer = new WavPlayer(this);
+		const ourWavPlayer = new WavPlayer(this, "Wav Player");
 		await ourWavPlayer.loadAllSounds("piano",36,84);
 		this.allModules.push(ourWavPlayer);
 
@@ -518,17 +518,17 @@ import Spiral from '../spiral';
 		this.allModules.push(this.ourMicroPiano);
 		*/
 		
-		this.ourPiano = new Piano(this);
+		this.ourPiano = new Piano(this, "Piano");
 		await this.ourPiano.createAllKeys(new MRE.Vector3(2, 1, 0),
 			MRE.Quaternion.FromEulerAngles(-30 * Math.PI / 180, 0, 0));	
 		this.allModules.push(this.ourPiano);
 
-		this.ourStaff = new Staff(this);
+		this.ourStaff = new Staff(this, "Staff");
 		await this.ourStaff.createAsyncItems(new MRE.Vector3(2, 2, 0.5),
 			MRE.Quaternion.FromEulerAngles(-90 * Math.PI / 180, 0, 0));		
 		this.allModules.push(this.ourStaff);
 		
-		const ourMidiReceiver = new MidiReceiver(this,3902);
+		const ourMidiReceiver = new MidiReceiver(this,3902, "Midi Receiver");
 		this.allModules.push(ourMidiReceiver);
 
 		const ourStaffGui = new StaffGui(this, this.ourStaff);
@@ -616,7 +616,7 @@ import Spiral from '../spiral';
 
 		let zPos = 0;
 
-		const ourMidiPlayer = new MidiPlayer(this);			
+		const ourMidiPlayer = new MidiPlayer(this, "Midi Player");			
 
 		const ourMidiPlayerGui = new MidiPlayerGui(this, ourMidiPlayer);
 		await ourMidiPlayerGui.createAsync(new MRE.Vector3(-1, 0.1, zPos), "Midi Player");
@@ -629,7 +629,7 @@ import Spiral from '../spiral';
 		midiPlayerSendPath.gui = ourMidiPlayerGui;
 		midiPlayerSendPath.button = ourMidiPlayerGui.sendButton;
 
-		const ourWavPlayer = new WavPlayer(this);
+		const ourWavPlayer = new WavPlayer(this, "Wav Player");
 		await ourWavPlayer.loadAllSounds("piano",36,84);
 		this.allModules.push(ourWavPlayer);
 
@@ -648,12 +648,12 @@ import Spiral from '../spiral';
 
 
 		for (let i = 0; i < 3; i++) {
-			const ourSpawner = new Spawner(this);
+			const ourSpawner = new Spawner(this, "Spawner");
 			await ourSpawner.createAsyncItems(new MRE.Vector3(2 + i*1.5, 1, 0),
 				MRE.Quaternion.FromEulerAngles(0.0 * Math.PI / 180, 0, 0));
 			this.allModules.push(ourSpawner);
 
-			const ourMidiReceiver = new MidiReceiver(this, 3931 + i);
+			const ourMidiReceiver = new MidiReceiver(this, 3931 + i, "Midi Receiver");
 			this.allModules.push(ourMidiReceiver);
 
 			const ourSpawnerGui = new SpawnerGui(this, ourSpawner);
@@ -700,7 +700,7 @@ import Spiral from '../spiral';
 	private async showSpiralStaff(){
 		let xPos = 1.5;
 
-		const ourWavPlayer = new WavPlayer(this);
+		const ourWavPlayer = new WavPlayer(this, "Wav Player");
 		await ourWavPlayer.loadAllSounds("piano",36,84);
 		this.allModules.push(ourWavPlayer);
 
@@ -709,11 +709,11 @@ import Spiral from '../spiral';
 		this.allGUIs.push(ourWavPlayerGui);
 		xPos -= 1.75;
 
-		this.ourSpiral = new Spiral(this);
+		this.ourSpiral = new Spiral(this, "Spiral");
 		await this.ourSpiral.createAllKeys(new MRE.Vector3(2, 0, -1));	
 		this.allModules.push(this.ourSpiral);
 
-		this.ourStaff = new Staff(this);
+		this.ourStaff = new Staff(this, "Staff");
 		await this.ourStaff.createAsyncItems(new MRE.Vector3(2, 2, 0.5),
 			MRE.Quaternion.FromEulerAngles(-90 * Math.PI / 180, 0, 0));		
 		this.allModules.push(this.ourStaff);	
@@ -768,7 +768,7 @@ import Spiral from '../spiral';
 	private async showSequencerPiano(){
 		let xPos = 1.5;
 
-		const ourWavPlayer = new WavPlayer(this);
+		const ourWavPlayer = new WavPlayer(this, "Wav Player");
 		await ourWavPlayer.loadAllSounds("piano",36,84);
 		this.allModules.push(ourWavPlayer);
 
@@ -777,7 +777,7 @@ import Spiral from '../spiral';
 		this.allGUIs.push(ourWavPlayerGui);
 		xPos -= 1.75;
 
-		this.ourPiano = new Piano(this);
+		this.ourPiano = new Piano(this, "Piano");
 		await this.ourPiano.createAllKeys(new MRE.Vector3(2, 1, 0),
 			MRE.Quaternion.FromEulerAngles(-30 * Math.PI / 180, 0, 0));	
 		this.allModules.push(this.ourPiano);
@@ -787,7 +787,7 @@ import Spiral from '../spiral';
 		this.allGUIs.push(ourPianoGui);
 		xPos -= 1.75;		
 
-		const ourSequencer = new Sequencer(this);
+		const ourSequencer = new Sequencer(this, "Sequencer");
 		await ourSequencer.createAsyncItems(12,new MRE.Vector3(-1.5, 2.0, 0.0),
 			MRE.Quaternion.FromEulerAngles(-45 * Math.PI / 180, 0, 0));
 		this.allModules.push(ourSequencer);
@@ -797,7 +797,7 @@ import Spiral from '../spiral';
 		this.allGUIs.push(ourSequencerGui);
 		xPos =1.5;			
 
-		const ourHeartBeat= new HeartBeat(this);
+		const ourHeartBeat= new HeartBeat(this, "Heart Beat");
 		this.allModules.push(ourHeartBeat);
 
 		const ourHeartBeatGui = new HeartBeatGui(this, ourHeartBeat);
@@ -805,7 +805,7 @@ import Spiral from '../spiral';
 		this.allGUIs.push(ourHeartBeatGui);
 		xPos -= 1.75;
 
-		const ourWavPlayer2 = new WavPlayer(this);
+		const ourWavPlayer2 = new WavPlayer(this, "Wav Player");
 		await ourWavPlayer2.loadAllSounds("drums/grd-music",48,54);
 		this.allModules.push(ourWavPlayer2);
 
@@ -814,7 +814,7 @@ import Spiral from '../spiral';
 		this.allGUIs.push(ourWavPlayerGui2);
 		xPos -= 1.75;
 
-		const ourSequencer2 = new Sequencer(this);
+		const ourSequencer2 = new Sequencer(this, "Sequencer");
 		await ourSequencer2.createAsyncItems(7, new MRE.Vector3(1.5, 2.0, 0.0),
 			MRE.Quaternion.FromEulerAngles(-45 * Math.PI / 180, 0, 0));
 		this.allModules.push(ourSequencer2);

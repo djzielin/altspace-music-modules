@@ -126,8 +126,8 @@ export default class Staff extends MusicModule {
 	private computedStaffScale: number;
 
 
-	constructor(protected ourApp: App) {
-		super(ourApp);
+	constructor(protected ourApp: App, public name: string) {
+		super(ourApp, name);
 	}
 
 	private drawStart(pos: MRE.Vector3){

@@ -98,8 +98,8 @@ export default class WavPlayer extends MusicModule {
 		}
 	}	
 
-	constructor(protected ourApp: App) {
-		super(ourApp);
+	constructor(protected ourApp: App, public name: string) {
+		super(ourApp, name);
 
 		setInterval(() => { //cull bubbles that have been around too long
 			const currentTime = Date.now();

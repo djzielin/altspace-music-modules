@@ -58,8 +58,8 @@ export default class Geo extends MusicModule {
 	private keyLocations: Map<number, MRE.Vector3> = new Map();
 	private canBePicked: Map<number, boolean> = new Map();
 
-	constructor(protected ourApp: App) {
-		super(ourApp);
+	constructor(protected ourApp: App, public name: string) {
+		super(ourApp, name);
 		this.artifacts = new GeoArtifacts();
 	}
 

@@ -91,8 +91,8 @@ export default class HeartBeat extends MusicModule{
 		}
 	}*/
 
-	constructor(protected ourApp: App) {
-		super(ourApp);
+	constructor(protected ourApp: App, public name: string) {
+		super(ourApp, name);
 
 		this.setBPM(110);
 		this.restartSequencer();
