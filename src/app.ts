@@ -110,55 +110,79 @@ export default class App {
 		this.context.onStopped(() => this.stopped());
 	}
 
-	private createMeshAndMaterial(){
-		this.boxMesh = this.assets.createBoxMesh('boxMesh', 1.0, 1.0, 1.0);
-		this.sphereMesh= this.assets.createSphereMesh('sphereMesh',0.5,10,10);
-
+	private async createMeshAndMaterial(){
 		this.redMat = this.assets.createMaterial('redmat', {
 			color: new MRE.Color4(1, 0, 0)
 		});
+		await this.redMat.created;
 
 		this.greenMat = this.assets.createMaterial('greenMat', {
 			color: new MRE.Color4(0, 1, 0)
 		});
+		await this.greenMat.created;
+
 		this.blackMat = this.assets.createMaterial('blackMat', {
 			color: new MRE.Color4(0, 0, 0)
 		});
+		await this.blackMat.created;
+
 		this.whiteMat = this.assets.createMaterial('whiteMat', {
 			color: new MRE.Color4(1, 1, 1)
 		});
+		await this.whiteMat.created;
+
 		this.transparentBlackMat = this.assets.createMaterial('transblackMat', {
 			color: new MRE.Color4(0, 0, 0,0.5),
 			alphaMode: MRE.AlphaMode.Blend
 		});
+		await this.transparentBlackMat.created;
+
 		this.transparentWhiteMat = this.assets.createMaterial('transwhiteMat', {
 			color: new MRE.Color4(1, 1, 1,0.5),
 			alphaMode: MRE.AlphaMode.Blend
 		});
+		await this.transparentWhiteMat.created;
+
 		this.grayMat = this.assets.createMaterial('grayMat', {
 			color: new MRE.Color4(0.5, 0.5, 0.5)
 		});
+		await this.grayMat.created;
+
 		this.grayRedMat = this.assets.createMaterial('grayMat', {
 			color: new MRE.Color4(0.5, 0.25, 0.25)
 		});
+		await this.grayRedMat.created;
+
 		this.lightgrayMat = this.assets.createMaterial('lightgrayMat', {
 			color: new MRE.Color4(0.75, 0.75, 0.75)
 		});
+		await this.lightgrayMat.created;
+
 		this.darkgrayMat = this.assets.createMaterial('lightgrayMat', {
 			color: new MRE.Color4(0.25, 0.25, 0.25)
 		});
+		await this.darkgrayMat.created;
 
 		const filename = `${this.baseUrl}/` + "hand_grey.png";
 		this.handTexture = this.assets.createTexture("hand", {
 			uri: filename
 		});
+		await this.handTexture.created;
 
 		this.handMaterial = this.assets.createMaterial('handMat', {
 			color: new MRE.Color4(1, 1, 1),
 			mainTextureId: this.handTexture.id
 		});
+		await this.handMaterial.created;
 
 		this.handMesh = this.assets.createBoxMesh('boxMesh', 0.25, 0.1, 0.25);
+		await this.handMesh.created;
+
+		this.boxMesh = this.assets.createBoxMesh('boxMesh', 1.0, 1.0, 1.0);
+		await this.boxMesh.created;
+
+		this.sphereMesh= this.assets.createSphereMesh('sphereMesh',0.5,10,10);
+		await this.sphereMesh.created;
 	}	
 
 	public degToRad(degrees: number) {
@@ -243,6 +267,12 @@ export default class App {
 	}
 
 	private async loadAsyncItems() {
+
+		await this.createMeshAndMaterial();
+
+		this.menuGrabber = new GrabButton(this);
+		this.menuGrabber.create(new MRE.Vector3(3, 0.1, 0));
+
 		this.ourConsole.logMessage("creating console");
 		await this.ourConsole.createAsyncItems(new MRE.Vector3(-2.5, 0, 0.0),this.menuGrabber.getGUID());
 
@@ -275,7 +305,7 @@ export default class App {
 		this.ourPalette = new Palette(this);
 		await this.ourPalette.createBackground(new MRE.Vector3(5, 1.5, 0),
 			MRE.Quaternion.FromEulerAngles(-90 * Math.PI / 180, 30 * Math.PI / 180, 0),
-			"Palette",
+			"Music Modules Palette",
 			1.5);
 		this.ourPalette.hide();
 
@@ -380,6 +410,40 @@ export default class App {
 
 		this.ourPatcher.applyPatch(sendPathGeo, receiveWavPlayer);
 	}
+
+	public spawnModule(name: string) {
+
+		if (name === "Piano") {
+			const newPiano = new Piano(this);
+			newPiano.createAllKeys(new MRE.Vector3(2, 1, -2),
+				MRE.Quaternion.FromEulerAngles(-30 * Math.PI / 180, 0, 0)).then(() => {
+					this.allModules.push(this.ourPiano);
+
+					const ourPianoGui = new PianoGui(this, newPiano);
+					ourPianoGui.createAsync(new MRE.Vector3(0, 0.1, -2), "Piano").then(() => {
+						this.allGUIs.push(ourPianoGui);
+					});
+				});
+		}
+	}
+
+
+		/*
+	 MidiReceiver from '../utility_modules/midi_receiver'
+	 WavPlayer from '../utility_modules/wavplayer';
+ Sequencer from '../utility_modules/sequencer';
+ HeartBeat from '../utility_modules/heartbeat';
+ MidiPlayer from '../utility_modules/midi_player';
+
+import Piano from '../piano'
+import MicroPiano from '../micro_piano'
+import Spawner from '../spawner'
+import Staff from '../staff';
+import Geo from '../geo';
+import Spiral from '../spiral';
+
+	*/
+
 
 	private async showSE02(){
 		this.ourPiano = new Piano(this);
@@ -831,11 +895,6 @@ export default class App {
 
 	private started() {
 		this.ourConsole.logMessage("started callback has begun");
-
-		this.createMeshAndMaterial();
-
-		this.menuGrabber = new GrabButton(this);
-		this.menuGrabber.create(new MRE.Vector3(3, 0.1, 0));
 
 		this.loadAsyncItems().then(() => {
 			this.ourConsole.logMessage("all async items created/loaded!");

@@ -72,12 +72,14 @@ export default class GrabButton {
 
 	public hideOnlyGrabber(){
 		this.buttonActor.appearance.meshId=null;
+		this.buttonActor.appearance.material=null;
 		this.buttonActor.collider.enabled=false;
 		this.lockButton.hide();
 	}
 
 	public showOnlyGrabber(){
 		this.buttonActor.appearance.meshId=this.ourApp.handMesh.id;
+		this.buttonActor.appearance.materialId=this.ourApp.handMaterial.id;
 		this.buttonActor.collider.enabled=true;
 		this.lockButton.show();
 	}

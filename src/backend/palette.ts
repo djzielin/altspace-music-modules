@@ -10,19 +10,6 @@ import Button from '../gui/button';
 import ButtonWithParameter from '../gui/button_with_parameter';
 import MusicModule from '../backend/music_module';
 
-import MidiReceiver from '../utility_modules/midi_receiver'
-import WavPlayer from '../utility_modules/wavplayer';
-import Sequencer from '../utility_modules/sequencer';
-import HeartBeat from '../utility_modules/heartbeat';
-import MidiPlayer from '../utility_modules/midi_player';
-
-import Piano from '../piano'
-import MicroPiano from '../micro_piano'
-import Spawner from '../spawner'
-import Staff from '../staff';
-import Geo from '../geo';
-import Spiral from '../spiral';
-
 export default class Palette {
 	protected guiBackground: MRE.Actor=null;
 	protected guiGrabber: GrabButton=null;
@@ -55,14 +42,12 @@ export default class Palette {
 		this.guiGrabber.showOnlyGrabber();
 	}
 
-	public selectUtility(b: boolean, param: any){
-		const moduleIndex=param as number;
+	public selectModule(b: boolean, param: any){
+		const moduleName=param as string;
+
+		this.ourApp.spawnModule(moduleName);
 	}
 	
-	public selectInstrument(b: boolean, param: any){
-		const moduleIndex=param as number;
-	}
-
 	public async createBackground(pos: MRE.Vector3, rot: MRE.Quaternion, name: string, bgHeight: number) {
 		this.backgroundHeight=bgHeight;
 		this.guiGrabber=new GrabButton(this.ourApp);
@@ -172,10 +157,10 @@ export default class Palette {
 		let zPos = this.backgroundHeight * 0.5 - 0.3 - 0.3;
 
 		for (const s of this.utilityModules) {
-			const selectUtility = new ButtonWithParameter(this.ourApp,0);
+			const selectUtility = new ButtonWithParameter(this.ourApp,s);
 			await selectUtility.createAsync(new MRE.Vector3(-1.0, 0.051, zPos),
 				this.guiBackground.id, s, s,
-				false, this.selectUtility.bind(this));
+				false, this.selectModule.bind(this));
 			selectUtility.doVisualUpdates=false;
 			zPos -= 0.15;
 		}
@@ -183,10 +168,10 @@ export default class Palette {
 		zPos = this.backgroundHeight * 0.5 - 0.3 - 0.3;
 
 		for (const s of this.instrumentModules) {
-			const selectInstrument = new ButtonWithParameter(this.ourApp,0);
+			const selectInstrument = new ButtonWithParameter(this.ourApp,s);
 			await selectInstrument.createAsync(new MRE.Vector3(0.0, 0.051, zPos),
 				this.guiBackground.id, s, s,
-				false, this.selectInstrument.bind(this));
+				false, this.selectModule.bind(this));
 			selectInstrument.doVisualUpdates=false;
 			zPos -= 0.15;
 		}
