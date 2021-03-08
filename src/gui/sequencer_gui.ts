@@ -5,7 +5,7 @@
 import * as MRE from '../../../mixed-reality-extension-sdk/packages/sdk/';
 
 import App from '../app';
-import Sequencer from '../utility/sequencer';
+import Sequencer from '../utility_modules/sequencer';
 
 import PlusMinus from './plusminus';
 import Button from './button';

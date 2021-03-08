@@ -2,7 +2,7 @@
  * Licensed under the MIT License.
  */
 
-import MusicModule from '../music_module';
+import MusicModule from '../backend/music_module';
 import Button from '../gui/button';
 import GuiPanel from '../gui/gui_panel';
 

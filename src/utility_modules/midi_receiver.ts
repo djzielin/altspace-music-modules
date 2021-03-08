@@ -6,7 +6,7 @@ import * as MRE from '../../../mixed-reality-extension-sdk/packages/sdk/';
 //import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 
 import WebSocket from 'ws';
-import MusicModule from '../music_module';
+import MusicModule from '../backend/music_module';
 import App from '../app';
 
 export default class MidiReceiver extends MusicModule {

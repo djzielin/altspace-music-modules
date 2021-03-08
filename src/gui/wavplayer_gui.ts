@@ -8,7 +8,7 @@ import App from '../app';
 import PlusMinus from './plusminus';
 import Button from './button';
 import GuiPanel from './gui_panel';
-import WavPlayer from '../utility/wavplayer';
+import WavPlayer from '../utility_modules/wavplayer';
 import ButtonMulti from './button_multi';
 
 export default class WavPlayerGui extends GuiPanel{

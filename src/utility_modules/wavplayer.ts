@@ -7,7 +7,7 @@ import * as MRE from '../../../mixed-reality-extension-sdk/packages/sdk/';
 
 import App from '../app';
 import fs from 'fs';
-import MusicModule from '../music_module';
+import MusicModule from '../backend/music_module';
 
 interface WavProperties{
 	timeStamp: number;

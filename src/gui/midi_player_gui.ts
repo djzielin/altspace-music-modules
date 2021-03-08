@@ -5,7 +5,7 @@
 import * as MRE from '../../../mixed-reality-extension-sdk/packages/sdk/';
 
 import App from '../app';
-import MidiPlayer from '../utility/midi_player';
+import MidiPlayer from '../utility_modules/midi_player';
 
 import PlusMinus from './plusminus';
 import Button from './button';

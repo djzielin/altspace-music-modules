@@ -6,7 +6,7 @@
 import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 
 import App from './app';
-import MusicModule from './music_module';
+import MusicModule from './backend/music_module';
 import PianoIntervals from './piano_intervals';
 
 enum AuthType {

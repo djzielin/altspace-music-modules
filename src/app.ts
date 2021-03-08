@@ -4,7 +4,12 @@
 
 import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 
-import MusicModule from './music_module';
+import MusicModule from './backend/music_module';
+import Console from './backend/console';
+import Users from './backend/users';
+import Patcher from './backend/patcher';
+import PatchPoint from './backend/patch_point';
+
 import Piano from './piano'
 import MicroPiano from './micro_piano'
 import Spawner from './spawner'
@@ -14,15 +19,11 @@ import Spiral from './spiral';
 import Se02 from './se02';
 //import Tablature from './tablature';
 
-import MidiReceiver from './utility/midi_receiver'
-import WavPlayer from './utility/wavplayer';
-import Console from './utility/console';
-import Users from './utility/users';
-import Sequencer from './utility/sequencer';
-import PatchPoint from './utility/patch_point';
-import Patcher from './utility/patcher';
-import HeartBeat from './utility/heartbeat';
-import MidiPlayer from './utility/midi_player';
+import MidiReceiver from './utility_modules/midi_receiver'
+import WavPlayer from './utility_modules/wavplayer';
+import Sequencer from './utility_modules/sequencer';
+import HeartBeat from './utility_modules/heartbeat';
+import MidiPlayer from './utility_modules/midi_player';
 
 import GuiPanel from './gui/gui_panel';
 import GrabButton from './gui/grabbutton';

@@ -2,10 +2,10 @@
  * Licensed under the MIT License.
  */
 
-import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
-import App from './app';
-import GrabButton from './gui/grabbutton';
-import PatchPoint from './utility/patch_point';
+import * as MRE from '../../../mixed-reality-extension-sdk/packages/sdk/';
+import App from '../app';
+import GrabButton from '../gui/grabbutton';
+import PatchPoint from './patch_point';
 
 export default class MusicModule {
 	public ourGrabber: GrabButton=null;

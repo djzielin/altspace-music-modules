@@ -5,7 +5,7 @@
 import * as MRE from '../../../mixed-reality-extension-sdk/packages/sdk/';
 
 import App from '../app';
-import HeartBeat from '../utility/heartbeat';
+import HeartBeat from '../utility_modules/heartbeat';
 
 import PlusMinus from './plusminus';
 import Button from './button';

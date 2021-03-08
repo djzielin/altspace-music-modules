@@ -6,12 +6,12 @@
 import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 //import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 import App from './app';
-//import WavPlayer from './utility/wavplayer';
+//import WavPlayer from './utility_modules/wavplayer';
 //import GrabButton from './grabbutton';
 //import StaffSharp from './staffsharp';
 //import StaffFlat from './staffflat';
 import Button from './gui/button';
-import MusicModule from './music_module';
+import MusicModule from './backend/music_module';
 
 interface NoteProperties{
 	timeStamp: number;
