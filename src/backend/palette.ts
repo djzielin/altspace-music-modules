@@ -11,12 +11,22 @@ import ButtonWithParameter from '../gui/button_with_parameter';
 import MusicModule from '../backend/music_module';
 
 export default class Palette {
-	protected guiBackground: MRE.Actor=null;
-	protected guiGrabber: GrabButton=null;
-	protected backgroundHeight =1.75;
+	protected guiBackground: MRE.Actor = null;
+	protected guiGrabber: GrabButton = null;
+	protected backgroundHeight = 1.75;
 
-	private utilityModules: string[]=["Midi Receiver", "Midi Player", "Wav Player", "Sequencer", "Heart Beat"];
-	private instrumentModules: string[]=["Piano","Micro Piano", "Staff", "Spiral","Spawner","Geo" ];
+	private utilityModules: string[] = ["Midi Receiver (soon)",
+		"Midi Player (soon)",
+		"Wav Player (soon)",
+		"Sequencer (soon)",
+		"Heart Beat (soon)"];
+	private instrumentModules: string[] = ["Piano",
+		"Micro Piano (soon)",
+		"Staff",
+		"Spiral (soon)",
+		"Spawner (soon)",
+		"Geo (soon)"];
+	private synthModules: string[] = ["SE-02 (soon)"];
 
 
 	constructor(protected ourApp: App) {
@@ -173,6 +183,17 @@ export default class Palette {
 				this.guiBackground.id, s, s,
 				false, this.selectModule.bind(this));
 			selectInstrument.doVisualUpdates=false;
+			zPos -= 0.15;
+		}
+
+		zPos = this.backgroundHeight * 0.5 - 0.3 - 0.3;
+
+		for (const s of this.synthModules) {
+			const selectSynth = new ButtonWithParameter(this.ourApp,s);
+			await selectSynth.createAsync(new MRE.Vector3(1.0, 0.051, zPos),
+				this.guiBackground.id, s, s,
+				false, this.selectModule.bind(this));
+				selectSynth.doVisualUpdates=false;
 			zPos -= 0.15;
 		}
 

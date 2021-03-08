@@ -415,15 +415,28 @@ export default class App {
 
 		if (name === "Piano") {
 			const newPiano = new Piano(this);
-			newPiano.createAllKeys(new MRE.Vector3(2, 1, -2),
+			newPiano.createAllKeys(new MRE.Vector3(2, 1, -1),
 				MRE.Quaternion.FromEulerAngles(-30 * Math.PI / 180, 0, 0)).then(() => {
-					this.allModules.push(this.ourPiano);
+				this.allModules.push(this.ourPiano);
 
-					const ourPianoGui = new PianoGui(this, newPiano);
-					ourPianoGui.createAsync(new MRE.Vector3(0, 0.1, -2), "Piano").then(() => {
-						this.allGUIs.push(ourPianoGui);
-					});
+				const ourPianoGui = new PianoGui(this, newPiano);
+				ourPianoGui.createAsync(new MRE.Vector3(0, 0.1, -1), "Piano").then(() => {
+					this.allGUIs.push(ourPianoGui);
 				});
+			});
+		}
+
+		if (name === "Staff") {
+			this.ourStaff = new Staff(this);
+			this.ourStaff.createAsyncItems(new MRE.Vector3(2, 2, -1),
+				MRE.Quaternion.FromEulerAngles(-90 * Math.PI / 180, 0, 0)).then(() => {
+				this.allModules.push(this.ourStaff);
+
+				const ourStaffGui = new StaffGui(this, this.ourStaff);
+				ourStaffGui.createAsync(new MRE.Vector3(0, 0.1, -1), "Staff").then(() => {
+					this.allGUIs.push(ourStaffGui);
+				});
+			});
 		}
 	}
 
