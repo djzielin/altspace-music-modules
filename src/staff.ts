@@ -22,7 +22,11 @@ interface NoteProperties{
 	bonusLine2: MRE.Actor;
 	pos: MRE.Vector3;
 	note: number;
+	vel: number;
+	size: number;
 	adjustedNote: number;
+	touchList: MRE.Actor[];
+	worldPos: MRE.Vector3;
 }
 
 enum AuthType {
@@ -126,11 +130,58 @@ export default class Staff extends MusicModule {
 
 	private computedStaffScale: number;
 
-
-
-
 	constructor(protected ourApp: App, public name: string) {
 		super(ourApp, name);
+
+		setInterval(() => {
+			for (const ourNote of this.activeNotes) {
+				ourNote.worldPos= this.getWorldPos(ourNote.pos); //translate to world coordinates					
+				
+				if (this.ourInteractionAuth === AuthType.All) {
+					for (const ourUser of this.ourApp.ourUsers.allUsers) {
+						if (ourUser.lHand) {
+							this.handleNoteTouch(ourNote, ourUser.lHand);
+						}
+						if (ourUser.rHand) {
+							this.handleNoteTouch(ourNote, ourUser.rHand);
+						}
+					}
+				}
+
+				//TODO: figure out how to not duplicate all this code from above
+				if(this.ourInteractionAuth===AuthType.Moderators){ 
+					for (const ourUser of this.ourApp.ourUsers.allElevatedUsers) {
+						if (ourUser.lHand) {
+							this.handleNoteTouch(ourNote, ourUser.lHand);
+						}
+						if (ourUser.rHand) {
+							this.handleNoteTouch(ourNote, ourUser.rHand);
+						}
+					}
+				}
+			}
+		}, 100);
+	}
+
+	private handleNoteTouch(ourNote: NoteProperties, hand: MRE.Actor){
+		const handPos = hand.transform.app.position;
+
+		if (MRE.Vector3.Distance(ourNote.worldPos, handPos) < ourNote.size) {
+			if(ourNote.touchList.includes(hand)===false){ //only play when first touched
+				this.ourApp.ourConsole.logMessage("staff note touched: " + ourNote.note);
+
+				const posInWorld: MRE.Vector3 = this.getWorldPos(ourNote.pos);
+				const message = [ourNote.note, ourNote.vel, 0, posInWorld.x, posInWorld.y, posInWorld.z];
+				this.sendData(message,"midi");
+				this.spawnParticleEffect(ourNote.pos, ourNote.size, ourNote.adjustedNote % 12);
+				ourNote.touchList.push(hand);
+			} 
+		} else{
+			const index=ourNote.touchList.indexOf(hand);
+			if(index!==-1){
+				ourNote.touchList.splice(index, 1);
+			}
+		}
 	}
 
 	private drawStart(pos: MRE.Vector3){
@@ -549,7 +600,6 @@ export default class Staff extends MusicModule {
 		return accidentalActor;
 	}
 
-
 	public createNoteAndAccidental(note: number, vel: number, isAccidental: boolean, isSharp: boolean, 
 		xPos: number, scale: number) {
 		let adjustedNote=note;
@@ -584,7 +634,7 @@ export default class Staff extends MusicModule {
 
 		const notAdjustedNoteNum=note % 12;
 		const noteNum = adjustedNote % 12;
-		const ourNote = this.createNote(adjustedNote,spawnPos, scale, this.noteMaterials[noteNum]);
+		const ourNote = this.createNote(adjustedNote, vel, spawnPos, scale, this.noteMaterials[noteNum]);
 		ourNote.note=note;
 		ourNote.adjustedNote=adjustedNote;
 
@@ -603,7 +653,7 @@ export default class Staff extends MusicModule {
 			}
 		}
 
-		ourNote.actor.collider.onTrigger("trigger-enter", (otherActor: MRE.Actor) => {
+		/*ourNote.actor.collider.onTrigger("trigger-enter", (otherActor: MRE.Actor) => {
 			//.ourApp.ourConsole.logMessage("trigger enter on staff note!");
 
 			if (otherActor.name.includes('SpawnerUserHand')) { //note touches hand
@@ -622,7 +672,7 @@ export default class Staff extends MusicModule {
 			} else {
 				//this.ourApp.ourConsole.logMessage("sphere collided with: " + otherActor.name);
 			}
-		});
+		});*/
 
 		//can toggle between flats and sharps on black keys
 		if (notAdjustedNoteNum===1 || notAdjustedNoteNum===3 || 
@@ -667,7 +717,7 @@ export default class Staff extends MusicModule {
 		}
 	}
 
-	private createNote(note: number, pos: MRE.Vector3, scale: number, mat: MRE.Material): NoteProperties {
+	private createNote(note: number, vel: number, pos: MRE.Vector3, scale: number, mat: MRE.Material): NoteProperties {
 
 		let noteActor: MRE.Actor=null;
 
@@ -689,8 +739,8 @@ export default class Staff extends MusicModule {
 					collider: {
 						geometry: {
 							shape: MRE.ColliderType.Sphere
-						},
-						isTrigger: true
+						}//,
+						//isTrigger: true
 					}
 				}
 			});
@@ -714,8 +764,8 @@ export default class Staff extends MusicModule {
 					collider: {
 						geometry: {
 							shape: MRE.ColliderType.Box
-						},
-						isTrigger: true
+						}//,
+						//isTrigger: true
 					}
 				}
 			});
@@ -791,6 +841,7 @@ export default class Staff extends MusicModule {
 			});
 		}
 
+		const touchList: MRE.Actor[]=[];
 		const ourNote={
 			timeStamp: Date.now(),
 			actor: noteActor,
@@ -800,7 +851,11 @@ export default class Staff extends MusicModule {
 			bonusLine2: bonusLineActor2,
 			pos: pos,
 			note: note,
-			adjustedNote: note
+			vel: vel,
+			size: scale,
+			adjustedNote: note,
+			touchList: touchList,
+			worldPos: this.getWorldPos(pos)
 		};
 
 		this.activeNotes.push(ourNote);

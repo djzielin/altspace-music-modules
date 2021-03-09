@@ -25,6 +25,8 @@ interface UserProperties {
 export default class Users {
 
 	public allUsers: UserProperties[] = [];
+	public allElevatedUsers: UserProperties[]=[];
+
 	public elevatedUsers: string[] = [];
 
 	constructor(private ourApp: App) {
@@ -105,18 +107,23 @@ export default class Users {
 			isModerator: isModerator,
 			chest: chest
 		}
-		this.allUsers.push(ourUser);
-
-		if (isModerator) {
-			this.elevatedUsers.push(user.id.toString());
-			user.groups.add('presenters');
-		}
+		this.allUsers.push(ourUser);	
+		this.ourApp.ourConsole.logMessage("  user array is now size: " + this.allUsers.length);
+	
 
 		if(createHands){
 			this.addHands(ourUser);
 		}
 		if(createChest){
 			this.addChest(ourUser);
+		}
+
+		if (isModerator) {
+			this.elevatedUsers.push(user.id.toString());
+			user.groups.add('presenters');
+
+			this.allElevatedUsers.push(ourUser);
+			this.ourApp.ourConsole.logMessage("  elevated user array is now size: " + this.allElevatedUsers.length);
 		}
 	}
 
@@ -132,9 +139,23 @@ export default class Users {
 		return null;
 	}	
 
+	public removeElevatedUser(user: MRE.User){
+		for (let i = 0; i < this.allElevatedUsers.length; i++) {
+			const ourUser = this.allElevatedUsers[i];
+
+			if (ourUser.userID === user.id) {				
+				this.allElevatedUsers.splice(i, 1);
+				this.ourApp.ourConsole.logMessage("removed user from elevated users listlist");
+
+				break;
+			}
+		}
+		this.ourApp.ourConsole.logMessage("  elevated user array is now size: " + this.allElevatedUsers.length);
+
+	}
+	
 	public userLeft(user: MRE.User) {
 		this.ourApp.ourConsole.logMessage("user left. name: " + user.name + " id: " + user.id);
-		this.ourApp.ourConsole.logMessage("  user array pre-deletion is size: " + this.allUsers.length);
 
 		for (let i = 0; i < this.allUsers.length; i++) {
 			const ourUser = this.allUsers[i];
@@ -149,11 +170,12 @@ export default class Users {
 					if (index !== -1) {
 						this.elevatedUsers.splice(index, 1);
 						this.ourApp.ourConsole.logMessage("removed user from moderator string list");
-					}
+					}	
+					
+					this.removeElevatedUser(user);
 				}
 
 				this.removeHands(ourUser.lHand, ourUser.rHand,ourUser.chest);
-
 				break;
 			}
 		}
