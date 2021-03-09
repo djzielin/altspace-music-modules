@@ -54,6 +54,10 @@ export default class StaffGui extends GuiPanel {
 		}
 	}
 
+	public setDoSphere(b: boolean) {
+		this.ourStaff.doSphere=b;
+	}
+
 	public showBackground(b: boolean) {
 		this.ourStaff.showBackground=b;
 
@@ -99,15 +103,21 @@ export default class StaffGui extends GuiPanel {
 			this.ourStaff.doSharps, this.setDoSharps.bind(this));
 		zPos -= 0.15;
 
+		const sphereButton = new Button(this.ourApp);
+		await sphereButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
+			this.guiBackground.id, "sphere", "cube",
+			this.ourStaff.doSphere, this.setDoSphere.bind(this));
+		zPos -= 0.15;
+
 		const clearButton = new Button(this.ourApp);
 		await clearButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
-			this.guiBackground.id, "clear avail", "no clear",
+			this.guiBackground.id, "clear btn on", "clear btn off",
 			this.ourStaff.showClear, this.setShowClear.bind(this));
 		zPos -= 0.15;
 
 		const backgroundVis = new Button(this.ourApp);
 		await backgroundVis.createAsync(new MRE.Vector3(0, 0.025, zPos),
-			this.guiBackground.id, "bg white", "bg clear",
+			this.guiBackground.id, "backgr white", "backgr clear",
 			this.ourStaff.showBackground, this.showBackground.bind(this));
 		zPos -= 0.15;
 

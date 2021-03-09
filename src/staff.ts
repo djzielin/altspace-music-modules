@@ -43,6 +43,7 @@ export default class Staff extends MusicModule {
 	public showBackground=true;
 	public drawThreshold=0.04;
 	public doTypesetOffset=true;
+	public doSphere= true;
 
 	/*
 		169, 30, 16
@@ -124,6 +125,8 @@ export default class Staff extends MusicModule {
 	private drawingUser: MRE.User;
 
 	private computedStaffScale: number;
+
+
 
 
 	constructor(protected ourApp: App, public name: string) {
@@ -666,44 +669,72 @@ export default class Staff extends MusicModule {
 
 	private createNote(note: number, pos: MRE.Vector3, scale: number, mat: MRE.Material): NoteProperties {
 
-		const noteActor = MRE.Actor.Create(this.ourApp.context, {
-			actor: {
-				name: 'sphere',
-				parentId: this.ourGrabber.getGUID(),
-				transform: {
-					local: {
-						position: pos,
-						scale: new MRE.Vector3(scale, scale, scale)
-					}
-				},
-				appearance: {
-					meshId: this.ourApp.sphereMesh.id,
-					materialId: mat.id
-				},
-				collider: {
-					geometry: {
-						shape: MRE.ColliderType.Sphere
-					},
-					isTrigger: true
-				}
-			}
-		});		
+		let noteActor: MRE.Actor=null;
 
-		let bonusLineActor: MRE.Actor=null;
-		let bonusLineActor2: MRE.Actor=null;
+		if (this.doSphere) {
+			noteActor = MRE.Actor.Create(this.ourApp.context, {
+				actor: {
+					name: 'sphere',
+					parentId: this.ourGrabber.getGUID(),
+					transform: {
+						local: {
+							position: pos,
+							scale: new MRE.Vector3(scale, scale, scale)
+						}
+					},
+					appearance: {
+						meshId: this.ourApp.sphereMesh.id,
+						materialId: mat.id
+					},
+					collider: {
+						geometry: {
+							shape: MRE.ColliderType.Sphere
+						},
+						isTrigger: true
+					}
+				}
+			});
+		}
+		else {
+			noteActor = MRE.Actor.Create(this.ourApp.context, {
+				actor: {
+					name: 'sphere',
+					parentId: this.ourGrabber.getGUID(),
+					transform: {
+						local: {
+							position: pos,
+							scale: new MRE.Vector3(scale, scale, scale),
+							rotation: MRE.Quaternion.FromEulerAngles(0,45* Math.PI / 180,0)
+						}
+					},
+					appearance: {
+						meshId: this.ourApp.boxMesh.id,
+						materialId: mat.id
+					},
+					collider: {
+						geometry: {
+							shape: MRE.ColliderType.Box
+						},
+						isTrigger: true
+					}
+				}
+			});
+		}
+		let bonusLineActor: MRE.Actor = null;
+		let bonusLineActor2: MRE.Actor = null;
 
 		//1st bonus line
-		if(note===36 || note===40 || note===60 || note===81 || note===84 || note===83 || note===38){
-			const pos2=pos.clone();			
+		if (note === 36 || note === 40 || note === 60 || note === 81 || note === 84 || note === 83 || note === 38) {
+			const pos2 = pos.clone();
 
-			if(note===38){
-				const note2=40;
-				const z=this.noteZpos.get(note2);
-				pos2.z=z;
+			if (note === 38) {
+				const note2 = 40;
+				const z = this.noteZpos.get(note2);
+				pos2.z = z;
 			}
-			if(note===83){
-				const note2=81;
-				const z=this.noteZpos.get(note2);
+			if (note === 83) {
+				const note2 = 81;
+				const z = this.noteZpos.get(note2);
 				pos2.z=z;
 			}
 
