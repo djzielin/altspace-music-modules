@@ -70,7 +70,7 @@ export default class WavPlayerGui extends GuiPanel{
 
 		const pedalButton = new Button(this.ourApp);
 		await pedalButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
-			this.guiBackground.id, "do Pedal", "no Pedal",
+			this.guiBackground.id, "Pedal", "no Pedal",
 			this.ourWavPlayer.doPedal, this.setDoPedal.bind(this));
 		zPos -= 0.15;
 
@@ -88,13 +88,13 @@ export default class WavPlayerGui extends GuiPanel{
 
 		const cullPlusMinus = new PlusMinus(this.ourApp);
 		await cullPlusMinus.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
-			this.guiBackground.id, "cull t",
+			this.guiBackground.id, "time",
 			this.ourWavPlayer.cullTime*0.001, 1.0, this.setCullTime.bind(this));
 		zPos -= 0.15;		
 
 		const audDist = new PlusMinus(this.ourApp);
 		await audDist.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
-			this.guiBackground.id, "aud m",
+			this.guiBackground.id, "range",
 			this.ourWavPlayer.audioRange, 1.0, this.setAudioRange.bind(this));
 		zPos -= 0.15;
 
