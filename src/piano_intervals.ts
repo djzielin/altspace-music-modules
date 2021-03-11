@@ -316,7 +316,7 @@ export default class PianoIntervals{
 
 	public keyReleased(note: number) {
 
-		if (this.ourPiano.intervalMode > 0) {
+		//if (this.ourPiano.intervalMode > 0) {
 			const intervalsToDelete: IntervalDisplay[] = [];
 
 			let outerLeft = -1;
@@ -343,6 +343,6 @@ export default class PianoIntervals{
 			if (outerLeft !== -1 && outerRight !== -1) {
 				this.addInterval(outerLeft, outerRight);
 			}
-		}
+		//}
 	}
 }

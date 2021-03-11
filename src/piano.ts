@@ -519,8 +519,8 @@ export default class Piano extends MusicModule {
 		this.activeNotes.delete(note);
 		this.setProperKeyColor(note);
 
-		if (this.intervalMode > 0) {
+		//if (this.intervalMode > 0) {
 			this.ourIntervals.keyReleased(note);
-		}
+		//}
 	}
 }
