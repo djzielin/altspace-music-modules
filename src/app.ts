@@ -86,10 +86,17 @@ export default class App {
 
 	public ourUsers: Users;
 
+	private moduleCounts: Map<string,number>=new Map();
 
 	constructor(public context: MRE.Context, public baseUrl: string,
 		public baseDir: string, public instrumentType: string) {
 			
+		this.moduleCounts.set("Piano",0);
+		this.moduleCounts.set("Staff",0);
+		this.moduleCounts.set("Wav Player",0);
+		this.moduleCounts.set("Midi Receiver",0);
+		this.moduleCounts.set("Spawner",0);
+
 		this.ourConsole = new Console(this);
 		this.ourPatcher = new Patcher(this);
 		this.ourUsers = new Users(this);
@@ -411,64 +418,92 @@ export default class App {
 		this.ourPatcher.applyPatch(sendPathGeo, receiveWavPlayer);
 	}
 
+	//TODO: do something better about placing these, so it doesn't overlap (especially GUI's)
 	public spawnModule(name: string) {
+		let moduleNum=0;
+		if(this.moduleCounts.has(name)){
+			moduleNum=this.moduleCounts.get(name);
+		}
+
+		let displayName=name;
+		if(moduleNum>0){
+			displayName=displayName+" "+(moduleNum+1).toString();
+		}
 
 		if (name === "Piano") {
-			const newPiano = new Piano(this, "Piano");
+			const newPiano = new Piano(this, displayName);
 			newPiano.createAllKeys(new MRE.Vector3(2, 1, -1),
 				MRE.Quaternion.FromEulerAngles(-30 * Math.PI / 180, 0, 0)).then(() => {
 				this.allModules.push(this.ourPiano);
 
 				const ourPianoGui = new PianoGui(this, newPiano);
-				ourPianoGui.createAsync(new MRE.Vector3(0, 0.1, -1), "Piano").then(() => {
+				ourPianoGui.createAsync(new MRE.Vector3(0, 0.1, -1), displayName).then(() => {
 					this.allGUIs.push(ourPianoGui);
 				});
 			});
 		}
 
 		if (name === "Staff") {
-			this.ourStaff = new Staff(this, "Staff");
+			this.ourStaff = new Staff(this, displayName);
 			this.ourStaff.createAsyncItems(new MRE.Vector3(2, 2, -1),
 				MRE.Quaternion.FromEulerAngles(-90 * Math.PI / 180, 0, 0)).then(() => {
 				this.allModules.push(this.ourStaff);
 
 				const ourStaffGui = new StaffGui(this, this.ourStaff);
-				ourStaffGui.createAsync(new MRE.Vector3(0, 0.1, -1), "Staff").then(() => {
+				ourStaffGui.createAsync(new MRE.Vector3(0, 0.1, -1), displayName).then(() => {
 					this.allGUIs.push(ourStaffGui);
 				});
 			});
 		}
 
 		if (name === "Wav Player") {
-			const ourWavPlayer = new WavPlayer(this, "Wav Player");
+			const ourWavPlayer = new WavPlayer(this, displayName);
 			ourWavPlayer.loadAllSounds("piano", 36, 84).then(() => {
 				this.allModules.push(ourWavPlayer);
 
 				const ourWavPlayerGui = new WavPlayerGui(this, ourWavPlayer);
-				ourWavPlayerGui.createAsync(new MRE.Vector3(0, 0.1, -1), "Piano WavPlayer").then(() => {
+				ourWavPlayerGui.createAsync(new MRE.Vector3(0, 0.1, -1), displayName).then(() => {
 					this.allGUIs.push(ourWavPlayerGui);
 				});
 			});
-
 		}
 
 		if (name === "Midi Receiver") {
-			const ourMidiReceiver = new MidiReceiver(this, 3902, "Midi Receiver");
+			const ourMidiReceiver = new MidiReceiver(this, 3902, displayName);
 			this.allModules.push(ourMidiReceiver);
 
 			const ourMidiReceiverGui = new MidiReceiverGui(this, ourMidiReceiver);
-			ourMidiReceiverGui.createAsync(new MRE.Vector3(0, 0.1, -1), "Midi Recv").then(() => {
+			ourMidiReceiverGui.createAsync(new MRE.Vector3(0, 0.1, -1), displayName).then(() => {
 				this.allGUIs.push(ourMidiReceiverGui);
 			});
 		}
 
 		if (name === "Midi Player") {
-			const ourMidiPlayer = new MidiPlayer(this, "Midi Player");
+			const ourMidiPlayer = new MidiPlayer(this, displayName);
 
 			const ourMidiPlayerGui = new MidiPlayerGui(this, ourMidiPlayer);
-			ourMidiPlayerGui.createAsync(new MRE.Vector3(0, 0.1, -1), "Midi Player").then(() => {
+			ourMidiPlayerGui.createAsync(new MRE.Vector3(0, 0.1, -1), displayName).then(() => {
 				this.allGUIs.push(ourMidiPlayerGui);
 			});
+		}
+
+		if (name === "Spawner") {
+			const ourSpawner = new Spawner(this, displayName);
+			ourSpawner.createAsyncItems(new MRE.Vector3(2, 1, 0),
+				MRE.Quaternion.FromEulerAngles(0.0 * Math.PI / 180, 0, 0)).then(() => {
+
+				this.allModules.push(ourSpawner);
+
+				const ourSpawnerGui = new SpawnerGui(this, ourSpawner);
+				ourSpawnerGui.createAsync(new MRE.Vector3(0, 0.1, -1), displayName).then(() => {
+					this.allGUIs.push(ourSpawnerGui);
+				});
+			});
+		}
+
+		if(this.moduleCounts.has(name)){
+			const currentCount=this.moduleCounts.get(name);
+			this.moduleCounts.set(name,currentCount+1);
 		}
 	}
 
