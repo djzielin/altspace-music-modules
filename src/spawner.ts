@@ -369,14 +369,15 @@ export default class Spawner extends MusicModule {
 					{ time: 0.0, value: { x: pos.x, y: pos.y, z: pos.z } },
 					{ time: this.timeOut, value: { x: newPos.x, y: newPos.y, z: newPos.z } }
 				]
-			},
+			}
+			/*,
 			{
 				target: MRE.ActorPath("target").transform.local.scale,
 				keyframes: [
 					{ time: 0.0, value: { x: scale, y: scale, z: scale } },
 					{ time: this.timeOut, value: { x: 0.0, y: 0.0, z: 0.0 } }
 				]
-			}
+			}*/
 			]
 		});
 
