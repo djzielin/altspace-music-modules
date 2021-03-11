@@ -91,12 +91,6 @@ export default class App {
 	constructor(public context: MRE.Context, public baseUrl: string,
 		public baseDir: string, public instrumentType: string) {
 			
-		this.moduleCounts.set("Piano",0);
-		this.moduleCounts.set("Staff",0);
-		this.moduleCounts.set("Wav Player",0);
-		this.moduleCounts.set("Midi Receiver",0);
-		this.moduleCounts.set("Spawner",0);
-
 		this.ourConsole = new Console(this);
 		this.ourPatcher = new Patcher(this);
 		this.ourUsers = new Users(this);
@@ -437,7 +431,7 @@ export default class App {
 				this.allModules.push(this.ourPiano);
 
 				const ourPianoGui = new PianoGui(this, newPiano);
-				ourPianoGui.createAsync(new MRE.Vector3(0, 0.1, -1), displayName).then(() => {
+				ourPianoGui.createAsync(new MRE.Vector3(0, 0.1, -2), displayName).then(() => {
 					this.allGUIs.push(ourPianoGui);
 				});
 			});
@@ -450,7 +444,7 @@ export default class App {
 				this.allModules.push(this.ourStaff);
 
 				const ourStaffGui = new StaffGui(this, this.ourStaff);
-				ourStaffGui.createAsync(new MRE.Vector3(0, 0.1, -1), displayName).then(() => {
+				ourStaffGui.createAsync(new MRE.Vector3(0, 0.1, -2), displayName).then(() => {
 					this.allGUIs.push(ourStaffGui);
 				});
 			});
@@ -462,7 +456,7 @@ export default class App {
 				this.allModules.push(ourWavPlayer);
 
 				const ourWavPlayerGui = new WavPlayerGui(this, ourWavPlayer);
-				ourWavPlayerGui.createAsync(new MRE.Vector3(0, 0.1, -1), displayName).then(() => {
+				ourWavPlayerGui.createAsync(new MRE.Vector3(0, 0.1, -2), displayName).then(() => {
 					this.allGUIs.push(ourWavPlayerGui);
 				});
 			});
@@ -473,7 +467,7 @@ export default class App {
 			this.allModules.push(ourMidiReceiver);
 
 			const ourMidiReceiverGui = new MidiReceiverGui(this, ourMidiReceiver);
-			ourMidiReceiverGui.createAsync(new MRE.Vector3(0, 0.1, -1), displayName).then(() => {
+			ourMidiReceiverGui.createAsync(new MRE.Vector3(0, 0.1, -2), displayName).then(() => {
 				this.allGUIs.push(ourMidiReceiverGui);
 			});
 		}
@@ -482,7 +476,7 @@ export default class App {
 			const ourMidiPlayer = new MidiPlayer(this, displayName);
 
 			const ourMidiPlayerGui = new MidiPlayerGui(this, ourMidiPlayer);
-			ourMidiPlayerGui.createAsync(new MRE.Vector3(0, 0.1, -1), displayName).then(() => {
+			ourMidiPlayerGui.createAsync(new MRE.Vector3(0, 0.1, -2), displayName).then(() => {
 				this.allGUIs.push(ourMidiPlayerGui);
 			});
 		}
@@ -495,7 +489,7 @@ export default class App {
 				this.allModules.push(ourSpawner);
 
 				const ourSpawnerGui = new SpawnerGui(this, ourSpawner);
-				ourSpawnerGui.createAsync(new MRE.Vector3(0, 0.1, -1), displayName).then(() => {
+				ourSpawnerGui.createAsync(new MRE.Vector3(0, 0.1, -2), displayName).then(() => {
 					this.allGUIs.push(ourSpawnerGui);
 				});
 			});
@@ -504,6 +498,8 @@ export default class App {
 		if(this.moduleCounts.has(name)){
 			const currentCount=this.moduleCounts.get(name);
 			this.moduleCounts.set(name,currentCount+1);
+		} else{
+			this.moduleCounts.set(name,1);
 		}
 	}
 
@@ -590,10 +586,16 @@ export default class App {
 		this.allGUIs.push(ourPianoGui);
 		ourPianoGui.removeSharpsButton(); //TODO: should have global sharp/flat button
 
+		xPos -= 1.75;
+		const ourMidiPlayer = new MidiPlayer(this, "Midi Player");
+		const ourMidiPlayerGui = new MidiPlayerGui(this, ourMidiPlayer);
+		await ourMidiPlayerGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Midi Player");
+		this.allGUIs.push(ourMidiPlayerGui);
+
 		const ourMidiReceiverGui = new MidiReceiverGui(this, ourMidiReceiver);
 		await ourMidiReceiverGui.createAsync(new MRE.Vector3(xPos, 0.1, -2), "Midi Recv")
 		this.allGUIs.push(ourMidiReceiverGui);
-		
+				
 		const sendPatchPiano = new PatchPoint();
 		//sendPatchPiano.module = this.ourMicroPiano;
 		sendPatchPiano.module = this.ourPiano;
@@ -601,6 +603,13 @@ export default class App {
 		sendPatchPiano.isSender = true;
 		sendPatchPiano.gui = ourPianoGui;
 		sendPatchPiano.button = ourPianoGui.sendButton;
+
+		const sendPatchPlayer = new PatchPoint();
+		sendPatchPlayer.module = ourMidiPlayer;
+		sendPatchPlayer.messageType = "midi";
+		sendPatchPlayer.isSender = true;
+		sendPatchPlayer.gui = ourMidiPlayerGui;
+		sendPatchPlayer.button = ourMidiPlayerGui.sendButton;
 
 		const receivePatchPiano = new PatchPoint();
 		receivePatchPiano.module = this.ourPiano;
@@ -639,6 +648,9 @@ export default class App {
 
 		this.ourConsole.logMessage("patching midi -> piano");
 		this.ourPatcher.applyPatch(sendMidi, receivePatchPiano);
+
+		this.ourConsole.logMessage("patching player -> piano");
+		this.ourPatcher.applyPatch(sendPatchPlayer, receivePatchPiano);
 
 		this.ourConsole.logMessage("patching piano -> staff");
 		this.ourPatcher.applyPatch(sendPatchPiano, receivePatchStaff);

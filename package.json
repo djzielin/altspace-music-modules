@@ -39,6 +39,7 @@
     "@types/dotenv": "^6.1.0",
     "@types/node": "^10.17.27",
     "@types/ws": "^7.2.6",
+    "axios": "^0.21.1",
     "colorsys": "^1.0.22",
     "dotenv": "",
     "midi-player-ts": "^2.0.1-tm2",
