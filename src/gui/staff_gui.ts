@@ -105,7 +105,7 @@ export default class StaffGui extends GuiPanel {
 
 		const sphereButton = new Button(this.ourApp);
 		await sphereButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
-			this.guiBackground.id, "sphere", "cube",
+			this.guiBackground.id, "spheres", "cubes",
 			this.ourStaff.doSphere, this.setDoSphere.bind(this));
 		zPos -= 0.15;
 

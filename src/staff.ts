@@ -745,7 +745,8 @@ export default class Staff extends MusicModule {
 				}
 			});
 		}
-		else {
+		else { //do cube
+			const cubeScale=scale*0.7071067;
 			noteActor = MRE.Actor.Create(this.ourApp.context, {
 				actor: {
 					name: 'sphere',
@@ -753,7 +754,7 @@ export default class Staff extends MusicModule {
 					transform: {
 						local: {
 							position: pos,
-							scale: new MRE.Vector3(scale, scale, scale),
+							scale: new MRE.Vector3(cubeScale, cubeScale, cubeScale),
 							rotation: MRE.Quaternion.FromEulerAngles(0,45* Math.PI / 180,0)
 						}
 					},
