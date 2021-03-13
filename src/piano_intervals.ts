@@ -45,9 +45,9 @@ export default class PianoIntervals{
 	}
 	
 	public drawInterval(ourInterval: IntervalDisplay, intervalName: string){
-		const notePosition1=this.ourPiano.ourKeyColliderPositions.get(ourInterval.note1).clone();
-		const notePosition2=this.ourPiano.ourKeyColliderPositions.get(ourInterval.note2).clone();
-
+		const notePosition1=this.ourPiano.ourKeys.get(ourInterval.note1).position;
+		const notePosition2=this.ourPiano.ourKeys.get(ourInterval.note2).position;
+		
 		notePosition1.z+=0.02; //so we dont cover the note name
 		if(this.ourPiano.isAccidental(ourInterval.note1)){
 			notePosition1.z-=0.032;

@@ -68,11 +68,11 @@ export default class PianoGui extends GuiPanel{
 		const pos = this.ourPiano.ourGrabber.getPos();
 		const rot = this.ourPiano.ourGrabber.getRot();
 
-		this.ourPiano.destroyKeys();
+		/*this.ourPiano.destroyKeys();
 		this.ourPiano.createAllKeys(pos, rot).then(() => {
 			this.ourApp.ourConsole.logMessage("piano reset complete!");
 			this.resetButton.setValue(false);
-		});
+		});*/
 	}
 
 	public async createAsync(pos: MRE.Vector3, name: string) {
