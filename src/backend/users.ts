@@ -188,15 +188,21 @@ export default class Users {
 		setTimeout(() => {
 			this.ourApp.ourConsole.logMessage("creating hands for: " + ourUser.name);
 
-			ourUser.rHand = this.createHand('right-hand', ourUser.userID, new MRE.Vector3(0, 0, 0.1),
-				new MRE.Vector3(0.03, 0.03, 0.14));
+			ourUser.rHand = this.createHand('right-hand', ourUser.userID, 
+				//new MRE.Vector3(0, 0, 0.1),
+				new MRE.Vector3(-0.03, 0.01, 0.16),
+				//new MRE.Vector3(0.03, 0.03, 0.14));
+				new MRE.Vector3(0.03, 0.03, 0.03));
 
 			ourUser.rHand.created().then(() => {
 				this.ourApp.ourConsole.logMessage("  right hand created for: " + ourUser.name);
 			});
 	
-			ourUser.lHand = this.createHand('left-hand', ourUser.userID, new MRE.Vector3(0, 0, 0.1),
-				new MRE.Vector3(0.03, 0.03, 0.14));
+			ourUser.lHand = this.createHand('left-hand', ourUser.userID, 
+				//new MRE.Vector3(0, 0, 0.1),
+				new MRE.Vector3(0.03, 0.01, 0.16),
+				//new MRE.Vector3(0.03, 0.03, 0.14));
+				new MRE.Vector3(0.03, 0.03, 0.03));
 
 			ourUser.lHand.created().then(() => {
 				this.ourApp.ourConsole.logMessage("  left hand created for: " + ourUser.name);

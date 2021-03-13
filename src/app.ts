@@ -73,6 +73,7 @@ export default class App {
 	public greenMat: MRE.Material;
 	public whiteMat: MRE.Material;
 	public blackMat: MRE.Material;
+	public almostBlackMat: MRE.Material;
 	public grayMat: MRE.Material;
 	public darkgrayMat: MRE.Material;
 	public grayRedMat: MRE.Material;
@@ -126,6 +127,11 @@ export default class App {
 			color: new MRE.Color4(0, 0, 0)
 		});
 		await this.blackMat.created;
+
+		this.almostBlackMat = this.assets.createMaterial('blackMat', {
+			color: new MRE.Color4(0.2, 0.2, 0.2)
+		});
+		await this.almostBlackMat.created;
 
 		this.whiteMat = this.assets.createMaterial('whiteMat', {
 			color: new MRE.Color4(1, 1, 1)

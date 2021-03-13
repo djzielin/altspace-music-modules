@@ -4,9 +4,11 @@
 /* eslint-disable no-warning-comments */
 
 import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
+import { User } from '../../mixed-reality-extension-sdk/packages/sdk/';
 
 import App from './app';
 import MusicModule from './backend/music_module';
+import Users from './backend/users';
 import PianoIntervals from './piano_intervals';
 
 enum AuthType {
@@ -44,6 +46,9 @@ interface PianoKey{
 	position: MRE.Vector3;
 	collisionPos: MRE.Vector3;
 	touchList: MRE.Actor[];
+	worldPos: MRE.Vector3;
+	collisionWorldPos: MRE.Vector3;
+	collisionSize: MRE.Vector3;
 }
 
 export default class Piano extends MusicModule {
@@ -51,16 +56,7 @@ export default class Piano extends MusicModule {
 	public authorizedUser: MRE.User;
 
 	public activeNotes: Set<number> = new Set();
-
-	//Package these into a class
-	private ourKeys: Map<number, PianoKey> = new Map();
-
-	/*private ourKeys: Map<number, MRE.Actor> = new Map();
-	private ourKeyCollisionActors: Map<number, MRE.Actor> = new Map();
-	private ourNoteNames: Map<number, MRE.Actor> = new Map();
-	public ourKeyColliderPositions: Map<number, MRE.Vector3> = new Map();
-	private keyLocations: Map<number, MRE.Vector3> = new Map();*/
-	
+	public ourKeys: Map<number, PianoKey> = new Map();
 
 	public keyboardParent: MRE.Actor;
 	public breathAnimData: MRE.AnimationData;
@@ -76,16 +72,16 @@ export default class Piano extends MusicModule {
 
 	private noteColors: MRE.Color4[] = [
 		new MRE.Color4(169 / 255, 30 / 255, 16 / 255), //C
-		new MRE.Color4(169 / 255, 30 / 255, 16 / 255), 
+		new MRE.Color4(169 / 255, 30 / 255, 16 / 255),
 		new MRE.Color4(252 / 255, 147 / 255, 8 / 255), //D
-		new MRE.Color4(252 / 255, 147 / 255, 8 / 255), 
+		new MRE.Color4(252 / 255, 147 / 255, 8 / 255),
 		new MRE.Color4(232 / 255, 227 / 255, 14 / 255), //E
 		new MRE.Color4(34 / 255, 121 / 255, 18 / 255),  //F
-		new MRE.Color4(34 / 255, 121 / 255, 18 / 255), 		
+		new MRE.Color4(34 / 255, 121 / 255, 18 / 255),
 		new MRE.Color4(23 / 255, 166 / 255, 249 / 255), //G
-		new MRE.Color4(23 / 255, 166 / 255, 249 / 255), 
+		new MRE.Color4(23 / 255, 166 / 255, 249 / 255),
 		new MRE.Color4(19 / 255, 0 / 255, 140 / 255),   //A
-		new MRE.Color4(19 / 255, 0 / 255, 140 / 255), 
+		new MRE.Color4(19 / 255, 0 / 255, 140 / 255),
 		new MRE.Color4(145 / 255, 0 / 255, 190 / 255)]; //B
 	public noteMaterials: MRE.Material[] = [];
 
@@ -111,11 +107,11 @@ export default class Piano extends MusicModule {
 			this.inch - 0.001, 0];
 	private zOffsetCollision =
 		[-this.inch * 1.75, this.inch, -this.inch * 1.75, this.inch, -this.inch * 1.75,
-			-this.inch * 1.75, this.inch, -this.inch * 1.75, this.inch, -this.inch * 1.75,
-			this.inch, -this.inch * 1.75];
+		-this.inch * 1.75, this.inch, -this.inch * 1.75, this.inch, -this.inch * 1.75,
+		this.inch, -this.inch * 1.75];
 	private octaveSize = this.inch * 7.0;
 
-	private isBlack: boolean[]=[false,true,false,true,false,false,true,false,true,false,true,false]
+	private isBlack: boolean[] = [false, true, false, true, false, false, true, false, true, false, true, false]
 
 	private noteNamesFlats =
 		["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
@@ -125,78 +121,154 @@ export default class Piano extends MusicModule {
 	private solfegeSharpNames = ["Do", "Di", "Re", "Ri", "Mi", "Fa", "Fi", "Sol", "Si", "La", "Li", "Ti"];
 	private solfegeFlatNames = ["Do", "Ra", "Re", "Me", "Mi", "Fa", "Se", "Sol", "Le", "La", "Te", "Ti"];
 
-	
-
 	private ourIntervals: PianoIntervals = null;
+	private ourTransformInverse: MRE.Matrix;
+	private isKeysSetup = false;
 
 	constructor(protected ourApp: App, public name: string) {
 		super(ourApp, name);
 		this.ourIntervals = new PianoIntervals(ourApp, this);
 
 		setInterval(() => {
-			for (const [key,keyParameters] of this.ourKeys) {
-				//translate to world coordinates
-				const keyWorldPos= this.getWorldPos(keyParameters.position); 					
-				
+			if (this.isKeysSetup) {
+				const allHands: Map<MRE.Actor, MRE.Vector3> = new Map();
+
 				if (this.ourInteractionAuth === AuthType.All) {
 					for (const ourUser of this.ourApp.ourUsers.allUsers) {
 						if (ourUser.lHand) {
-							this.handleKeyTouch(key, keyWorldPos, ourUser.lHand);
+							allHands.set(ourUser.lHand,
+								this.convertHandToKeySpace(ourUser.lHand.transform.app.position));
 						}
 						if (ourUser.rHand) {
-							this.handleKeyTouch(key, keyWorldPos, ourUser.lHand);
+							allHands.set(ourUser.rHand,
+								this.convertHandToKeySpace(ourUser.rHand.transform.app.position));
+						}
+					}
+				} else { //TODO, how do we not repeat above code?
+					for (const ourUser of this.ourApp.ourUsers.allElevatedUsers) {
+						if (ourUser.lHand) {
+							allHands.set(ourUser.lHand,
+								this.convertHandToKeySpace(ourUser.lHand.transform.app.position));
+						}
+						if (ourUser.rHand) {
+							allHands.set(ourUser.rHand,
+								this.convertHandToKeySpace(ourUser.rHand.transform.app.position));
 						}
 					}
 				}
 
-				//TODO: figure out how to not duplicate all this code from above
-				if(this.ourInteractionAuth===AuthType.Moderators){ 
-					for (const ourUser of this.ourApp.ourUsers.allElevatedUsers) {
-						if (ourUser.lHand) {
-							this.handleKeyTouch(key, keyWorldPos, ourUser.lHand);
-						}
-						if (ourUser.rHand) {
-							this.handleKeyTouch(key, keyWorldPos, ourUser.lHand);
-						}
+
+				for (const [note, key] of this.ourKeys) {
+					for (const [hand, handPos] of allHands) {
+						this.handleKeyTouch(note, key, hand, handPos);
 					}
 				}
 			}
 		}, 100);
 	}
 
-	private handleKeyTouch(key: number, position: MRE.Vector3, hand: MRE.Actor){
+	private convertHandToKeySpace(handPos: MRE.Vector3): MRE.Vector3 {
+		const mHand = MRE.Matrix.Compose(
+			new MRE.Vector3(1, 1, 1),
+			MRE.Quaternion.Identity(),
+			handPos);
 
-		let radius=this.inch*0.9;
-		if(this.isBlack[key%12]){
-			radius=this.halfinch;
+		const mHandTransformed = mHand.multiply(this.ourTransformInverse);
+		return mHandTransformed.getTranslation();
+	}
+
+	private computeTransformInverseMatrix4() {
+		const mKeyboard = MRE.Matrix.Compose(
+			this.keyboardParent.transform.local.scale,
+			this.keyboardParent.transform.local.rotation,
+			this.keyboardParent.transform.local.position);
+
+		const mGrabber = MRE.Matrix.Compose(
+			new MRE.Vector3(1, 1, 1),
+			this.ourGrabber.getRot(),
+			this.ourGrabber.getPos());
+
+		const mResult = mKeyboard.multiply(mGrabber);
+
+		this.ourTransformInverse = mResult.invert();
+	}
+
+	private computeWorldPos(keyPos: MRE.Vector3): MRE.Vector3 {
+		const mKeyboard = MRE.Matrix.Compose(
+			this.keyboardParent.transform.local.scale,
+			this.keyboardParent.transform.local.rotation,
+			this.keyboardParent.transform.local.position);
+
+		const mPoint = MRE.Matrix.Compose(
+			new MRE.Vector3(1, 1, 1),
+			MRE.Quaternion.Identity(),
+			keyPos);
+
+		const transformedPoint = mPoint.multiply(mKeyboard);
+		return this.getWorldPosFromMatrix(transformedPoint);
+	}
+
+	private handleKeyTouch(note: number, key: PianoKey, hand: MRE.Actor, handPosition: MRE.Vector3){
+
+		/*if (note === 36) {
+			this.ourApp.ourConsole.logMessage("note 36 pos: " + key.position +
+				" handPos: " + handPosition);
+		}*/
+
+		const keyPos = key.collisionPos;
+
+		if (handPosition.y < (keyPos.y + key.collisionSize.y * 0.5) &&
+			handPosition.y > (keyPos.y - key.collisionSize.y * 0.5)) {
+
+			//if (note === 36) { this.ourApp.ourConsole.logMessage("hand is inside Y"); }
+
+			if (handPosition.x < (keyPos.x + key.collisionSize.x * 0.5) &&
+				handPosition.x > (keyPos.x - key.collisionSize.x * 0.5)) {
+
+				//if (note === 36) { this.ourApp.ourConsole.logMessage("hand is inside X"); }
+
+				if (handPosition.z < (keyPos.z + key.collisionSize.z * 0.5) &&
+					handPosition.z > (keyPos.z - key.collisionSize.z * 0.5)) {
+					//if (note === 36) { this.ourApp.ourConsole.logMessage("hand is inside Z"); }
+
+					if(key.touchList.includes(hand)===false){ //only play when first touched
+						this.ourApp.ourConsole.logMessage("piano key touched: " + note);
+		
+						this.keyPressed(note,100);
+						key.touchList.push(hand);						
+					} 
+					return;
+				}
+			}
 		}
 
-		/*if (MRE.Vector3.Distance(position, handPos) < radius) {
-			
-			if(ourNote.touchList.includes(hand)===false){ //only play when first touched
-				this.ourApp.ourConsole.logMessage("staff note touched: " + ourNote.note);
+		const index = key.touchList.indexOf(hand);
+		if (index !== -1) {
+			this.ourApp.ourConsole.logMessage("piano key released: " + note);
+			key.touchList.splice(index, 1);
+			this.keyReleased(note);
+		}
+	}
 
-				const posInWorld: MRE.Vector3 = this.getWorldPos(ourNote.pos);
-				const message = [ourNote.note, ourNote.vel, 0, posInWorld.x, posInWorld.y, posInWorld.z];
-				this.sendData(message,"midi");
-				this.spawnParticleEffect(ourNote.pos, ourNote.size, ourNote.adjustedNote % 12);
-				ourNote.touchList.push(hand);
-			} 
-		} else{
-			const index=ourNote.touchList.indexOf(hand);
-			if(index!==-1){
-				ourNote.touchList.splice(index, 1);
-			}
-		}*/
+	private updateWorldPositions() {
+		for (const [note, key] of this.ourKeys) {
+			key.worldPos = this.computeWorldPos(key.position);
+			key.collisionWorldPos = this.computeWorldPos(key.collisionPos);
+		}
+
+		this.computeTransformInverseMatrix4();
 	}
 
 	public setScale(scale: number) {
 		this.pianoScale = scale;
+
 		if (this.keyboardParent) {
 			this.keyboardParent.transform.local.scale =
 				new MRE.Vector3(this.pianoScale, this.pianoScale, this.pianoScale);
+			
 			this.updateKeyboardCenter();
-		}
+			this.updateWorldPositions();
+		}		
 	}
 
 	public updateKeyboardCenter() {
@@ -216,7 +288,7 @@ export default class Piano extends MusicModule {
 		
 		const pitchClass = note % 12;
 
-		let matt = this.ourApp.blackMat;
+		let matt = this.ourApp.almostBlackMat;
 
 		if (this.zOffset[pitchClass] === 0) {
 			matt = this.ourApp.whiteMat;
@@ -288,6 +360,9 @@ export default class Piano extends MusicModule {
 		const whiteKeyMesh = this.ourApp.assets.createBoxMesh('box', this.inch * 0.9, this.inch, this.inch * 5.5);
 		await whiteKeyMesh.created;
 
+		const whiteCollisionSize=new MRE.Vector3( this.inch * 0.9,this.inch, this.inch * 2.0);
+		const blackCollisionSize=new MRE.Vector3(this.halfinch, this.inch, this.inch * 3.5);
+
 		const whiteKeyCollisionMesh = this.ourApp.assets.createBoxMesh('box', this.inch * 0.9,
 			this.inch, this.inch * 2.0);
 		await whiteKeyCollisionMesh.created;
@@ -314,24 +389,28 @@ export default class Piano extends MusicModule {
 				}
 			}
 		});
+		await this.keyboardParent.created();
 
 		this.updateKeyboardCenter();
+		this.computeTransformInverseMatrix4();
 
 		this.ourApp.ourConsole.
 			logMessage(`PIANO: creating new keyboard with range ${this.keyLowest} to ${this.keyHighest}`);
 
 		for (let i = this.keyLowest; i < this.keyHighest; i++) {
 			let meshId: MRE.Guid = blackKeyMesh.id;
-			let mattId: MRE.Guid = this.ourApp.blackMat.id;
+			let mattId: MRE.Guid = this.ourApp.almostBlackMat.id;
 			const note = i % 12;
 			//const octave = Math.floor(i / 12);
 
 			let collisionMeshID: MRE.Guid = blackKeyMesh.id;
+			let collisionSize=blackCollisionSize;
 
-			if (this.zOffset[note] === 0) {
+			if (this.isBlack[note] === false) {
 				meshId = whiteKeyMesh.id;
 				mattId = this.ourApp.whiteMat.id;
 				collisionMeshID = whiteKeyCollisionMesh.id;
+				collisionSize=whiteCollisionSize;
 			}
 
 			const position = new MRE.Vector3(
@@ -387,12 +466,17 @@ export default class Piano extends MusicModule {
 				noteActor: null as MRE.Actor,
 				position: position,
 				collisionPos: positionCollision,
-				touchList: [] as MRE.Actor[]
+				touchList: [] as MRE.Actor[],
+				worldPos: this.computeWorldPos(position),
+				collisionWorldPos: this.computeWorldPos(positionCollision),
+				collisionSize: collisionSize
 			};
 
 			this.ourKeys.set(i,ourKeyParameters);
 			this.setupInteractions(i);
 		}
+
+		this.isKeysSetup=true;
 	}	
 
 	private setupInteractions(i: number) {
@@ -445,6 +529,8 @@ export default class Piano extends MusicModule {
 		//TODO: only do release if user had triggered note
 		buttonBehavior.onButton("released", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
 			if (this.isAuthorized(user)) {
+				this.ourApp.ourConsole.logMessage("PIANO: user released piano note: " + i);
+
 				this.keyReleased(i);
 			}
 		});
@@ -452,7 +538,11 @@ export default class Piano extends MusicModule {
 		//TODO: only do release if user had triggered note
 		buttonBehavior.onHover("exit", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
 			if (this.isAuthorized(user)) {
-				this.keyReleased(i);
+				const key=this.ourKeys.get(i);
+				if(key.touchList.length===0){ //don't allow exist if user is still physicall touching
+					this.ourApp.ourConsole.logMessage("PIANO: user left note: " + i);
+					this.keyReleased(i);
+				}
 			}
 		});
 	}
@@ -490,12 +580,12 @@ export default class Piano extends MusicModule {
 	public keyPressed(note: number, vel: number) {
 		//this.ourApp.ourConsole.logMessage("piano received note ON message! note: " + note);
 
-		/*if (!this.ourKeys.has(note) || (!this.keyLocations.has(note))) {
-			//allow to midi data to pass through to staff and waveplayer
+		//allow notes not on keyboatd to pass through to staff and waveplayer
+		if (this.ourKeys.has(note)===false) {
 			const message = [note, vel, 0]; //TODO: should make effort to calculate position
 			this.sendData(message, "midi");
 			return;
-		}*/
+		}
 
 		if(this.ourKeys.has(note)===false){
 			return;
@@ -507,23 +597,9 @@ export default class Piano extends MusicModule {
 
 		const newPos = key.position.clone();
 		newPos.y -= 0.01;
+		key.actor.transform.local.position=newPos;
 
-		key.actor.transform.local.position = newPos;
-		
-		const mKeyboard = MRE.Matrix.Compose(
-			this.keyboardParent.transform.local.scale,
-			this.keyboardParent.transform.local.rotation,
-			this.keyboardParent.transform.local.position);
-
-		const mPoint = MRE.Matrix.Compose(
-			new MRE.Vector3(1, 1, 1),
-			MRE.Quaternion.Identity(),
-			key.position);
-
-		const transformedPoint = mPoint.multiply(mKeyboard);
-		const posInWorld = this.getWorldPosFromMatrix(transformedPoint);
-
-		const message = [note, vel, 0, posInWorld.x, posInWorld.y, posInWorld.z];
+		const message = [note, vel, 0, key.worldPos.x, key.worldPos.y, key.worldPos.z];
 		this.sendData(message, "midi");
 
 		this.setFancyKeyColor(note);
@@ -548,8 +624,7 @@ export default class Piano extends MusicModule {
 				noteHeight = noteHeight * 0.5;
 			}
 
-
-			const notePosition = key.collisionPos;
+			const notePosition = key.collisionPos.clone();
 			notePosition.y -= 0.01;
 			notePosition.y += this.halfinch;
 			notePosition.y += 0.001;
@@ -618,9 +693,7 @@ export default class Piano extends MusicModule {
 		const message = [note, 0, 0];
 		this.sendData(message, "midi")
 
-		const newPos = key.position;
-
-		key.actor.transform.local.position = newPos;
+		key.actor.transform.local.position = key.position;
 	
 		if (key.noteActor) {
 			key.noteActor.destroy();
