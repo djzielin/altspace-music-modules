@@ -11,7 +11,6 @@ import PlusMinus from './plusminus';
 import Button from './button';
 import ButtonMulti from './button_multi';
 import GuiPanel from './gui_panel';
-import { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } from 'constants';
 import ButtonWithParameter from './button_with_parameter';
 
 enum PlayState {
@@ -20,11 +19,11 @@ enum PlayState {
 	Playing = 2
 }
 
-enum PlayType {
+/*enum PlayType {
 	Single = 0,
 	Loop = 1,
 	Playlist = 2
-}
+}*/
 
 export default class MidiPlayerGui extends GuiPanel{
 	public sendButton: Button=null;
@@ -195,4 +194,4 @@ export default class MidiPlayerGui extends GuiPanel{
 			});
 		});
 
-		*/
+*/

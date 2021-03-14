@@ -67,17 +67,6 @@ export default class PianoGui extends GuiPanel{
 	public grabRelease(){
 		this.ourApp.ourPatcher.updatePatchLines(this);
 	}
-	
-	public doReset(b: boolean): void {
-		const pos = this.ourPiano.ourGrabber.getPos();
-		const rot = this.ourPiano.ourGrabber.getRot();
-
-		/*this.ourPiano.destroyKeys();
-		this.ourPiano.createAllKeys(pos, rot).then(() => {
-			this.ourApp.ourConsole.logMessage("piano reset complete!");
-			this.resetButton.setValue(false);
-		});*/
-	}
 
 	public async createAsync(pos: MRE.Vector3, name: string) {
 		this.ourApp.ourConsole.logMessage("creating piano gui");
@@ -92,16 +81,9 @@ export default class PianoGui extends GuiPanel{
 			this.ourPiano.ourInteractionAuth === 1, this.setAuthAllUsers.bind(this));
 		zPos -= 0.15;
 
-		/*this.resetButton = new Button(this.ourApp);
-		await this.resetButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
-			this.guiBackground.id, "Relayout", "Relayout",
-			false, this.doReset.bind(this));
-		zPos -= 0.15;
-*/
-
 		const scaleSelector = new PlusMinus(this.ourApp);
 		await scaleSelector.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
-			this.guiBackground.id, "scale",
+			this.guiBackground.id, "Size",
 			this.ourPiano.pianoScale, 0.1, this.setScale.bind(this));
 		zPos -= 0.15;
 

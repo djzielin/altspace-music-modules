@@ -2,8 +2,7 @@
  * Licensed under the MIT License.
  */
 
-import * as MRE from '../../../mixed-reality-extension-sdk/packages/sdk/';
-//import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
+//import * as MRE from '../../../mixed-reality-extension-sdk/packages/sdk/';
 
 import MusicModule from '../backend/music_module';
 import App from '../app';
@@ -37,12 +36,12 @@ export default class MidiPlayer extends MusicModule {
 	constructor(protected ourApp: App, public name: string) {
 		super(ourApp, name);
 
-		this.midiFiles.push(
-	"https://www.mutopiaproject.org/ftp/BachJS/BWV846/wtk1-prelude1/wtk1-prelude1.mid");
-		this.midiFiles.push(
-	"https://www.mutopiaproject.org/ftp/DebussyC/L75/debussy_Ste_Bergamesq_Clair/debussy_Ste_Bergamesq_Clair.mid");
-		this.midiFiles.push(
-	"https://www.mutopiaproject.org/ftp/ChopinFF/O9/chopin_nocturne_op9_n2/chopin_nocturne_op9_n2.mid");
+		this.midiFiles.push("https://www.mutopiaproject.org/ftp/BachJS/"+
+			"BWV846/wtk1-prelude1/wtk1-prelude1.mid");
+		this.midiFiles.push("https://www.mutopiaproject.org/ftp/DebussyC/"+
+			"L75/debussy_Ste_Bergamesq_Clair/debussy_Ste_Bergamesq_Clair.mid");
+		this.midiFiles.push("https://www.mutopiaproject.org/ftp/ChopinFF/"+
+			"O9/chopin_nocturne_op9_n2/chopin_nocturne_op9_n2.mid");
 
 		this.Player = new MPlayer.Player();
 

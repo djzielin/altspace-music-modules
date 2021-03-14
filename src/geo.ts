@@ -130,7 +130,7 @@ export default class Geo extends MusicModule {
 		return artifact;
 	}
 
-	public async createAllGeos(pos: MRE.Vector3, rot = new MRE.Quaternion(), lowestMidi: number, highestMidi: number) {
+	public async createAllGeos(pos: MRE.Vector3, rot: MRE.Quaternion, lowestMidi: number, highestMidi: number) {
 		if (!this.ourGrabber) {
 			this.createGrabber(pos, rot);
 		} else {

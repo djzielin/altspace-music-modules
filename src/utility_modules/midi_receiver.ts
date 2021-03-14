@@ -2,8 +2,7 @@
  * Licensed under the MIT License.
  */
 
-import * as MRE from '../../../mixed-reality-extension-sdk/packages/sdk/';
-//import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
+//import * as MRE from '../../../mixed-reality-extension-sdk/packages/sdk/';
 
 import WebSocket from 'ws';
 import MusicModule from '../backend/music_module';

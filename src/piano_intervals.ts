@@ -317,32 +317,32 @@ export default class PianoIntervals{
 	public keyReleased(note: number) {
 
 		//if (this.ourPiano.intervalMode > 0) {
-			const intervalsToDelete: IntervalDisplay[] = [];
+		const intervalsToDelete: IntervalDisplay[] = [];
 
-			let outerLeft = -1;
-			let outerRight = -1;
+		let outerLeft = -1;
+		let outerRight = -1;
 
-			for (const singleInterval of this.activeIntervals) {
-				if (singleInterval.note1 === note || singleInterval.note2 === note) {
-					if (singleInterval.note1 === note) {
-						outerRight = singleInterval.note2;
-					}
-					if (singleInterval.note2 === note) {
-						outerLeft = singleInterval.note1;
-					}
-					this.destroyInterval(singleInterval);
-					intervalsToDelete.push(singleInterval);
+		for (const singleInterval of this.activeIntervals) {
+			if (singleInterval.note1 === note || singleInterval.note2 === note) {
+				if (singleInterval.note1 === note) {
+					outerRight = singleInterval.note2;
 				}
+				if (singleInterval.note2 === note) {
+					outerLeft = singleInterval.note1;
+				}
+				this.destroyInterval(singleInterval);
+				intervalsToDelete.push(singleInterval);
 			}
+		}
 
-			for (const singleInterval of intervalsToDelete) {
-				const index = this.activeIntervals.indexOf(singleInterval);
-				this.activeIntervals.splice(index, 1);
-			}
+		for (const singleInterval of intervalsToDelete) {
+			const index = this.activeIntervals.indexOf(singleInterval);
+			this.activeIntervals.splice(index, 1);
+		}
 
-			if (outerLeft !== -1 && outerRight !== -1) {
-				this.addInterval(outerLeft, outerRight);
-			}
+		if (outerLeft !== -1 && outerRight !== -1) {
+			this.addInterval(outerLeft, outerRight);
+		}
 		//}
 	}
 }

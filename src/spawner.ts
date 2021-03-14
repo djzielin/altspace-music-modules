@@ -339,8 +339,6 @@ export default class Spawner extends MusicModule {
 			}
 		});		
 
-
-
 		const forVec = new MRE.Vector3(0, 0, -1);
 		const resultVec = new MRE.Vector3(0, 0, 0);
 		forVec.rotateByQuaternionToRef(dir, resultVec);

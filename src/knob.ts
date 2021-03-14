@@ -180,7 +180,7 @@ export default class Knob {
 			endAngle -= 360;
 		}
 
-		let deltaAngle = this.startAngle - endAngle;
+		const deltaAngle = this.startAngle - endAngle;
 
 		this.knobAngle += deltaAngle;
 		if (this.knobAngle > this.angleMax) {

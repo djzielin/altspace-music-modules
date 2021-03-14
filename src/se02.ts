@@ -110,8 +110,7 @@ export default class Se02 extends MusicModule{
 
 						ourKnob.userPressed(posVector3);
 						this.draggingKnobs.set(user, ourKnob);
-					}
-					else {
+					} else {
 						this.ourApp.ourConsole.logMessage("ERROR: couldnt figure out nearest knob!");
 					}
 				}

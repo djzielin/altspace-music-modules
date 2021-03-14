@@ -8,7 +8,6 @@ import { User } from '../../mixed-reality-extension-sdk/packages/sdk/';
 
 import App from './app';
 import MusicModule from './backend/music_module';
-import Users from './backend/users';
 import PianoIntervals from './piano_intervals';
 
 enum AuthType {
@@ -107,8 +106,8 @@ export default class Piano extends MusicModule {
 			this.inch - 0.001, 0];
 	private zOffsetCollision =
 		[-this.inch * 1.75, this.inch, -this.inch * 1.75, this.inch, -this.inch * 1.75,
-		-this.inch * 1.75, this.inch, -this.inch * 1.75, this.inch, -this.inch * 1.75,
-		this.inch, -this.inch * 1.75];
+			-this.inch * 1.75, this.inch, -this.inch * 1.75, this.inch, -this.inch * 1.75,
+			this.inch, -this.inch * 1.75];
 	private octaveSize = this.inch * 7.0;
 
 	private isBlack: boolean[] = [false, true, false, true, false, false, true, false, true, false, true, false]
@@ -267,7 +266,7 @@ export default class Piano extends MusicModule {
 	}
 
 	private updateWorldPositions() {
-		for (const [note, key] of this.ourKeys) {
+		for (const key of this.ourKeys.values()) {
 			key.worldPos = this.computeWorldPos(key.position);
 			key.collisionWorldPos = this.computeWorldPos(key.collisionPos);
 		}
@@ -578,9 +577,7 @@ export default class Piano extends MusicModule {
 			key.touchList=null;
 			this.ourKeys.delete(i);
 		}
-	}
-
-	
+	}	
 
 	private setupInteractions(i: number) {
 		const keyCollisionActor = this.ourKeys.get(i).collisionActor;

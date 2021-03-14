@@ -100,8 +100,7 @@ export default class Patcher{
 			}
 		}
 
-		for(const patch of patchesToDelete)
-		{
+		for(const patch of patchesToDelete)	{
 			this.deletePatchEntry(patch);			
 		}
 	}
@@ -183,14 +182,14 @@ export default class Patcher{
 				}
 			}
 
-			if(sender && receiver){ //great, we got both a sender and a receiver
-				if(sender.messageType===receiver.messageType){ //do message types match? ie both midi?
-					//if(sender.gui!==receiver.gui){
+			if (sender && receiver) { //great, we got both a sender and a receiver
+				if (sender.messageType === receiver.messageType) { //do message types match? ie both midi?
+					if (sender.module !== receiver.module) {
 						this.ourApp.ourConsole.logMessage("PATCHER:  we have a match!");
-						this.applyPatch(sender,receiver);
-					//} else{
-					//	this.ourApp.ourConsole.logMessage("PATCHER:  not allowing user to route back to self");
-					//}
+						this.applyPatch(sender, receiver);
+					} else {
+						this.ourApp.ourConsole.logMessage("PATCHER:  not allowing user to route back to self");
+					}
 				} else {
 					this.ourApp.ourConsole.logMessage("PATCHER:  incompatible message type");
 				}

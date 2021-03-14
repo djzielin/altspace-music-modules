@@ -744,8 +744,7 @@ export default class Staff extends MusicModule {
 					}
 				}
 			});
-		}
-		else { //do cube
+		} else { //do cube
 			const cubeScale=scale*0.7071067;
 			noteActor = MRE.Actor.Create(this.ourApp.context, {
 				actor: {

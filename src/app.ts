@@ -669,7 +669,7 @@ export default class App {
 	}
 
 	private async showSpawner(){
-		let xPos = 1.5;
+		//const xPos = 1.5;
 
 		/*const ourWavPlayer = new WavPlayer(this);
 		await ourWavPlayer.loadAllSounds("piano",36,84);
