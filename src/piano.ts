@@ -67,7 +67,7 @@ export default class Piano extends MusicModule {
 	public pianoScale = 5.0;
 	public audioRange = 50.0;
 	public doSharps = true;
-	public isTwelveTone=false;
+	public isTwelveTone=true;
 
 	public intervalMode: IntervalMode = IntervalMode.western;
 	public noteNameMode: NoteNameMode = NoteNameMode.letter;

@@ -12,7 +12,6 @@ import PatchPoint from './backend/patch_point';
 import Palette from './backend/palette';
 
 import Piano from './piano'
-import MicroPiano from './micro_piano'
 import Spawner from './spawner'
 import Staff from './staff';
 import Geo from './geo';
@@ -53,12 +52,9 @@ export default class App {
 	public allModules: MusicModule[] = [];
 
 	public ourPiano: Piano = null;
-	public ourMicroPiano: MicroPiano = null;
 	public ourSpiral: Spiral = null;
 	public ourStaff: Staff = null;
 	public ourGeo: Geo = null;
-
-	//public ourIce: Ice=null;
 
 	public ourConsole: Console = null;
 	public menuGrabber: GrabButton = null;
@@ -562,12 +558,6 @@ export default class App {
 		await ourWavPlayerGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Piano WavPlayer")		
 		this.allGUIs.push(ourWavPlayerGui);
 		xPos -= 1.75;
-
-		/*this.ourMicroPiano = new MicroPiano(this);
-		await this.ourMicroPiano.createAllKeys(new MRE.Vector3(2, 1, 0),
-			MRE.Quaternion.FromEulerAngles(-30 * Math.PI / 180, 0, 0));	
-		this.allModules.push(this.ourMicroPiano);
-		*/
 		
 		this.ourPiano = new Piano(this, "Piano");
 		await this.ourPiano.createAllKeys(new MRE.Vector3(2, 1, 0),
@@ -603,7 +593,6 @@ export default class App {
 		this.allGUIs.push(ourMidiReceiverGui);
 				
 		const sendPatchPiano = new PatchPoint();
-		//sendPatchPiano.module = this.ourMicroPiano;
 		sendPatchPiano.module = this.ourPiano;
 		sendPatchPiano.messageType = "midi";
 		sendPatchPiano.isSender = true;
