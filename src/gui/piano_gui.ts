@@ -43,10 +43,14 @@ export default class PianoGui extends GuiPanel{
 		this.ourPiano.setScale(n);
 	}
 	public setLowestKey(n: number): void {
-		this.ourPiano.keyLowest = n;
+		this.ourPiano.setKeyLowest(n).then( ()=> {
+			this.ourApp.ourConsole.logMessage("low key adjustment complete");
+		});
 	}
 	public setHighestKey(n: number): void {
-		this.ourPiano.keyHighest = n;
+		this.ourPiano.setKeyHighest(n).then( ()=> {
+			this.ourApp.ourConsole.logMessage("high key adjustment complete");
+		});
 	}
 	public setAudioRange(n: number): void {
 		this.ourPiano.audioRange = n;
@@ -101,18 +105,17 @@ export default class PianoGui extends GuiPanel{
 			this.ourPiano.pianoScale, 0.1, this.setScale.bind(this));
 		zPos -= 0.15;
 
-		/*const lowestKeySelector = new PlusMinus(this.ourApp);
+		const lowestKeySelector = new PlusMinus(this.ourApp);
 		await lowestKeySelector.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
-			this.guiBackground.id, "L key",
+			this.guiBackground.id, "Low",
 			this.ourPiano.keyLowest, 1, this.setLowestKey.bind(this));
 		zPos -= 0.15;
 
 		const highestKeySelector = new PlusMinus(this.ourApp);
 		await highestKeySelector.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
-			this.guiBackground.id, "H key",
+			this.guiBackground.id, "High",
 			this.ourPiano.keyHighest, 1, this.setHighestKey.bind(this));
 		zPos -= 0.15;
-		*/
 
 		const noteLabels: string[]=["Names Off","Letter Names","Solfege"];
 		const noteNamesButton = new ButtonMulti(this.ourApp);

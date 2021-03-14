@@ -62,7 +62,7 @@ export default class Piano extends MusicModule {
 	public breathAnimData: MRE.AnimationData;
 
 	public keyLowest = 36;
-	public keyHighest = 85;
+	public keyHighest = 84;
 	public pianoScale = 5.0;
 	public audioRange = 50.0;
 	public doSharps = true;
@@ -125,8 +125,25 @@ export default class Piano extends MusicModule {
 	private ourTransformInverse: MRE.Matrix;
 	private isKeysSetup = false;
 
+
+	private whiteKeySize: MRE.Vector3;
+	private whiteCollisionSize: MRE.Vector3;
+
+	private blackKeySize: MRE.Vector3;
+	private blackCollisionSize: MRE.Vector3;	 
+
+	private whiteKeyMesh: MRE.Mesh;
+	private whiteKeyCollisionMesh: MRE.Mesh;
+	private blackKeyMesh: MRE.Mesh; 
+
 	constructor(protected ourApp: App, public name: string) {
 		super(ourApp, name);
+	
+		this.whiteKeySize=new MRE.Vector3(this.inch * 0.9, this.inch, this.inch * 5.5);
+		this.whiteCollisionSize=new MRE.Vector3( this.inch * 0.9,this.inch, this.inch * 2.0);
+		this.blackKeySize=new MRE.Vector3(this.halfinch, this.inch, this.inch * 3.5);
+		this.blackCollisionSize=this.blackKeySize.clone();		
+		
 		this.ourIntervals = new PianoIntervals(ourApp, this);
 
 		setInterval(() => {
@@ -156,7 +173,6 @@ export default class Piano extends MusicModule {
 						}
 					}
 				}
-
 
 				for (const [note, key] of this.ourKeys) {
 					for (const [hand, handPos] of allHands) {
@@ -262,20 +278,34 @@ export default class Piano extends MusicModule {
 	public setScale(scale: number) {
 		this.pianoScale = scale;
 
-		if (this.keyboardParent) {
+		if (this.isKeysSetup){
 			this.keyboardParent.transform.local.scale =
 				new MRE.Vector3(this.pianoScale, this.pianoScale, this.pianoScale);
 			
-			this.updateKeyboardCenter();
-			this.updateWorldPositions();
-		}		
+			this.updatePositioning();
+		} else{
+			this.ourApp.ourConsole.logMessage("ERROR: trying to set scale before setup is complete!");
+		}
+	}
+
+	private updateBoundingBox(){
+		//calc max min of bounding
+	}
+
+	public updatePositioning(){
+		this.updateBoundingBox();
+		this.updateKeyboardCenter();
+		this.updateWorldPositions();
+	}
+
+	private computeKeyboardCenterX(): number{
+		const highPos = this.computePosX(this.keyHighest) * this.pianoScale;
+		const offset = -highPos - 0.5;
+		return offset;
 	}
 
 	public updateKeyboardCenter() {
-		const highPos = this.computepositionitionX(this.keyHighest) * this.pianoScale;
-
-		const offset = -highPos - 0.5;
-
+		const offset=this.computeKeyboardCenterX();
 		this.keyboardParent.transform.local.position.x = offset;
 	}
 
@@ -337,14 +367,24 @@ export default class Piano extends MusicModule {
 		//this.ourGrabber.destroy();
 	}*/
 
-	private computepositionitionX(i: number): number {
-		const totalOctaves = Math.ceil((this.keyHighest - this.keyLowest) / 12.0);
-		const baseOctave = Math.floor(this.keyLowest / 12);
-		const octave = Math.floor(i / 12);
-		const relativeOctave = octave - baseOctave;
-		const note = i % 12;
+	private computePosX(i: number): number {
+		const centerNote=60;
+		let noteDiff=i-centerNote;
+		let baseX=0.0;
 
-		return -this.octaveSize * totalOctaves + relativeOctave * this.octaveSize + this.xOffset[note];
+		const octaves=Math.floor(noteDiff/12.0);
+		baseX+=octaves*this.octaveSize;
+		noteDiff-=octaves*12;
+
+		if(noteDiff>0){
+			baseX+=this.xOffset[noteDiff]; //add remaining notes
+		}
+		if(noteDiff<0){
+			baseX-=this.octaveSize; //go down one octave
+			baseX+=this.xOffset[12+noteDiff]; //and back up
+		}
+
+		return baseX;
 	}
 
 	public async createAllKeys(pos: MRE.Vector3, rot = new MRE.Quaternion()) {
@@ -357,18 +397,23 @@ export default class Piano extends MusicModule {
 			this.noteMaterials.push(ourMat);
 		}
 
-		const whiteKeyMesh = this.ourApp.assets.createBoxMesh('box', this.inch * 0.9, this.inch, this.inch * 5.5);
-		await whiteKeyMesh.created;
+		this.whiteKeyMesh = this.ourApp.assets.createBoxMesh('box',
+			this.whiteKeySize.x,
+			this.whiteKeySize.y,
+			this.whiteKeySize.z);
+		await this.whiteKeyMesh.created;
 
-		const whiteCollisionSize=new MRE.Vector3( this.inch * 0.9,this.inch, this.inch * 2.0);
-		const blackCollisionSize=new MRE.Vector3(this.halfinch, this.inch, this.inch * 3.5);
+		this.whiteKeyCollisionMesh = this.ourApp.assets.createBoxMesh('box',
+			this.whiteCollisionSize.x,
+			this.whiteCollisionSize.y,
+			this.whiteCollisionSize.z);
+		await this.whiteKeyCollisionMesh.created;
 
-		const whiteKeyCollisionMesh = this.ourApp.assets.createBoxMesh('box', this.inch * 0.9,
-			this.inch, this.inch * 2.0);
-		await whiteKeyCollisionMesh.created;
-
-		const blackKeyMesh = this.ourApp.assets.createBoxMesh('box', this.halfinch, this.inch, this.inch * 3.5);
-		await blackKeyMesh.created;
+		this.blackKeyMesh = this.ourApp.assets.createBoxMesh('box',
+			this.blackKeySize.x,
+			this.blackKeySize.y,
+			this.blackKeySize.z);
+		await this.blackKeyMesh.created;
 
 		if (!this.ourGrabber) {
 			this.createGrabber(pos, rot);
@@ -383,7 +428,7 @@ export default class Piano extends MusicModule {
 				parentId: this.ourGrabber.getGUID(),
 				transform: {
 					local: {
-						position: new MRE.Vector3(-0.5, 0, 0),
+						position: new MRE.Vector3(this.computeKeyboardCenterX(), 0, 0),
 						scale: new MRE.Vector3(this.pianoScale, this.pianoScale, this.pianoScale)
 					}
 				}
@@ -391,93 +436,151 @@ export default class Piano extends MusicModule {
 		});
 		await this.keyboardParent.created();
 
-		this.updateKeyboardCenter();
-		this.computeTransformInverseMatrix4();
-
 		this.ourApp.ourConsole.
 			logMessage(`PIANO: creating new keyboard with range ${this.keyLowest} to ${this.keyHighest}`);
 
-		for (let i = this.keyLowest; i < this.keyHighest; i++) {
-			let meshId: MRE.Guid = blackKeyMesh.id;
-			let mattId: MRE.Guid = this.ourApp.almostBlackMat.id;
-			const note = i % 12;
-			//const octave = Math.floor(i / 12);
-
-			let collisionMeshID: MRE.Guid = blackKeyMesh.id;
-			let collisionSize=blackCollisionSize;
-
-			if (this.isBlack[note] === false) {
-				meshId = whiteKeyMesh.id;
-				mattId = this.ourApp.whiteMat.id;
-				collisionMeshID = whiteKeyCollisionMesh.id;
-				collisionSize=whiteCollisionSize;
-			}
-
-			const position = new MRE.Vector3(
-				this.computepositionitionX(i),
-				this.yOffset[note],
-				this.zOffset[note]);
-
-			const positionCollision = position.clone();
-			positionCollision.z = this.zOffsetCollision[note]; //different zPos
-
-			const keyActor = MRE.Actor.Create(this.ourApp.context, {
-				actor: {
-					name: 'PianoKey' + i,
-					parentId: this.keyboardParent.id,
-					transform: {
-						local: { position: position }
-					},
-					appearance:
-					{
-						meshId: meshId,
-						materialId: mattId
-					},
-				}
-			});
-			await keyActor.created();
-
-			const keyCollisionActor = MRE.Actor.Create(this.ourApp.context, {
-				actor: {
-					name: 'CollisionPianoKey' + i,
-					parentId: this.keyboardParent.id,
-					transform: {
-						local: { position: positionCollision }
-					},
-					appearance:
-					{
-						meshId: collisionMeshID,
-						materialId: this.ourApp.redMat.id,
-						enabled: false
-					},
-					collider: {
-						geometry: {
-							shape: MRE.ColliderType.Box
-						},
-						isTrigger: true
-					}
-				}
-			});
-			await keyCollisionActor.created();
-
-			const ourKeyParameters = {
-				actor: keyActor,
-				collisionActor: keyCollisionActor,
-				noteActor: null as MRE.Actor,
-				position: position,
-				collisionPos: positionCollision,
-				touchList: [] as MRE.Actor[],
-				worldPos: this.computeWorldPos(position),
-				collisionWorldPos: this.computeWorldPos(positionCollision),
-				collisionSize: collisionSize
-			};
-
-			this.ourKeys.set(i,ourKeyParameters);
-			this.setupInteractions(i);
+		for (let i = this.keyLowest; i <=this.keyHighest; i++) {
+			await this.createKey(i);
 		}
 
+		this.updatePositioning();
 		this.isKeysSetup=true;
+		this.ourGrabber.setGrabReleaseCallback(this.updatePositioning.bind(this));
 	}	
+
+	private async createKey(i: number) {
+		this.ourApp.ourConsole.logMessage("PIANO: creating key: " + i);
+
+		let meshId: MRE.Guid = this.blackKeyMesh.id;
+		let mattId: MRE.Guid = this.ourApp.almostBlackMat.id;
+		const note = i % 12;
+		//const octave = Math.floor(i / 12);
+
+		let collisionMeshID: MRE.Guid = this.blackKeyMesh.id;
+		let collisionSize = this.blackCollisionSize;
+
+		if (this.isBlack[note] === false) {
+			meshId = this.whiteKeyMesh.id;
+			mattId = this.ourApp.whiteMat.id;
+			collisionMeshID = this.whiteKeyCollisionMesh.id;
+			collisionSize = this.whiteCollisionSize;
+		}
+
+		const position = new MRE.Vector3(
+			this.computePosX(i),
+			this.yOffset[note],
+			this.zOffset[note]);
+
+		const positionCollision = position.clone();
+		positionCollision.z = this.zOffsetCollision[note]; //different zPos
+
+		const keyActor = MRE.Actor.Create(this.ourApp.context, {
+			actor: {
+				name: 'PianoKey' + i,
+				parentId: this.keyboardParent.id,
+				transform: {
+					local: { position: position }
+				},
+				appearance:
+				{
+					meshId: meshId,
+					materialId: mattId
+				},
+			}
+		});
+		await keyActor.created();
+
+		const keyCollisionActor = MRE.Actor.Create(this.ourApp.context, {
+			actor: {
+				name: 'CollisionPianoKey' + i,
+				parentId: this.keyboardParent.id,
+				transform: {
+					local: { position: positionCollision }
+				},
+				appearance:
+				{
+					meshId: collisionMeshID,
+					materialId: this.ourApp.redMat.id,
+					enabled: false
+				},
+				collider: {
+					geometry: {
+						shape: MRE.ColliderType.Box
+					},
+					isTrigger: true
+				}
+			}
+		});
+		await keyCollisionActor.created();
+
+		const ourKeyParameters = {
+			actor: keyActor,
+			collisionActor: keyCollisionActor,
+			noteActor: null as MRE.Actor,
+			position: position,
+			collisionPos: positionCollision,
+			touchList: [] as MRE.Actor[],
+			worldPos: this.computeWorldPos(position),
+			collisionWorldPos: this.computeWorldPos(positionCollision),
+			collisionSize: collisionSize
+		};
+
+		this.ourKeys.set(i, ourKeyParameters);
+		this.setupInteractions(i);
+	}
+
+	public async setKeyLowest(n: number){
+		this.ourApp.ourConsole.logMessage("PIANO: low key was: " + this.keyLowest + " requested to: " + n);
+
+		if(n>this.keyLowest){ //we need to delete some keys!
+			for(let i=this.keyLowest;i<n;i++){
+				this.keyReleased(i);
+				this.destroyKey(i);
+			}
+		} else{ //we need to add some keys
+			for(let i=n;i<this.keyLowest;i++){
+				await this.createKey(i);
+			}
+		}
+
+		this.keyLowest=n;
+		this.updatePositioning();
+	}
+
+	public async setKeyHighest(n: number){
+		this.ourApp.ourConsole.logMessage("PIANO: high key was: " + this.keyHighest + " requested to: " + n);
+
+		if(n<this.keyHighest){ //we need to delete some keys!
+			for(let i=n+1;i<=this.keyHighest;i++){
+				this.keyReleased(i);
+				this.destroyKey(i);
+			}
+		} else{ //we need to add some keys
+			for(let i=this.keyHighest+1;i<=n;i++){
+				await this.createKey(i);
+			}
+		}
+
+		this.keyHighest=n;
+		this.updatePositioning();
+	}
+
+	public destroyKey(i: number){
+		this.ourApp.ourConsole.logMessage("PIANO: destroying key: " + i);
+
+		if(this.ourKeys.has(i)){
+			const key=this.ourKeys.get(i);
+			key.actor.destroy();
+			key.collisionActor.destroy();
+			if(key.noteActor){
+				key.noteActor.destroy();
+			}
+			key.touchList=null;
+			this.ourKeys.delete(i);
+		}
+	}
+
+	
 
 	private setupInteractions(i: number) {
 		const keyCollisionActor = this.ourKeys.get(i).collisionActor;
@@ -526,7 +629,6 @@ export default class Piano extends MusicModule {
 			}
 		});
 
-		//TODO: only do release if user had triggered note
 		buttonBehavior.onButton("released", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
 			if (this.isAuthorized(user)) {
 				this.ourApp.ourConsole.logMessage("PIANO: user released piano note: " + i);
@@ -535,7 +637,6 @@ export default class Piano extends MusicModule {
 			}
 		});
 
-		//TODO: only do release if user had triggered note
 		buttonBehavior.onHover("exit", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
 			if (this.isAuthorized(user)) {
 				const key=this.ourKeys.get(i);

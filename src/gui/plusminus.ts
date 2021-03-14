@@ -159,9 +159,7 @@ export default class PlusMinus {
 
 		buttonM.setBehavior(MRE.ButtonBehavior)
 			.onButton("released", (user: MRE.User) => {	
-				const ourRoles = user.properties["altspacevr-roles"];
-				if (ourRoles.includes("moderator") ||
-					ourRoles.includes("presenter") || ourRoles.includes("terraformer")) {
+				if (this.ourApp.ourUsers.isAuthorized(user)) {
 					
 					this.ourValue -= this.ourChangeAmount;
 					if(this.ourValue<0){ //always prevent negative numbers?
@@ -175,9 +173,7 @@ export default class PlusMinus {
 			
 		buttonP.setBehavior(MRE.ButtonBehavior)
 			.onButton("released", (user: MRE.User) => {
-				const ourRoles = user.properties["altspacevr-roles"];
-				if (ourRoles.includes("moderator") ||
-					ourRoles.includes("presenter") || ourRoles.includes("terraformer")) {
+				if (this.ourApp.ourUsers.isAuthorized(user)) {
 					this.ourValue += this.ourChangeAmount;
 					this.updateDisplayValue();
 					callback(this.ourValue);
@@ -187,7 +183,7 @@ export default class PlusMinus {
 	}
 
 	private updateDisplayValue() {
-		this.ourApp.ourConsole.logMessage(this.ourLabel + " is now: " + this.ourValue);
+		this.ourApp.ourConsole.logMessage("PlusMinus: " + this.ourLabel + " is now: " + this.ourValue);
 		this.buttonValueDisplay.text.contents= this.ourValue.toFixed(2);
 	}
 
