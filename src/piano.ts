@@ -9,6 +9,7 @@ import { User } from '../../mixed-reality-extension-sdk/packages/sdk/';
 import App from './app';
 import MusicModule from './backend/music_module';
 import PianoIntervals from './piano_intervals';
+import PianoLayout from './piano_layout';
 
 enum AuthType {
 	Moderators = 0,
@@ -66,52 +67,10 @@ export default class Piano extends MusicModule {
 	public pianoScale = 5.0;
 	public audioRange = 50.0;
 	public doSharps = true;
+	public isTwelveTone=false;
 
 	public intervalMode: IntervalMode = IntervalMode.western;
 	public noteNameMode: NoteNameMode = NoteNameMode.letter;
-
-	private noteColors: MRE.Color4[] = [
-		new MRE.Color4(169 / 255, 30 / 255, 16 / 255), //C
-		new MRE.Color4(169 / 255, 30 / 255, 16 / 255),
-		new MRE.Color4(252 / 255, 147 / 255, 8 / 255), //D
-		new MRE.Color4(252 / 255, 147 / 255, 8 / 255),
-		new MRE.Color4(232 / 255, 227 / 255, 14 / 255), //E
-		new MRE.Color4(34 / 255, 121 / 255, 18 / 255),  //F
-		new MRE.Color4(34 / 255, 121 / 255, 18 / 255),
-		new MRE.Color4(23 / 255, 166 / 255, 249 / 255), //G
-		new MRE.Color4(23 / 255, 166 / 255, 249 / 255),
-		new MRE.Color4(19 / 255, 0 / 255, 140 / 255),   //A
-		new MRE.Color4(19 / 255, 0 / 255, 140 / 255),
-		new MRE.Color4(145 / 255, 0 / 255, 190 / 255)]; //B
-	public noteMaterials: MRE.Material[] = [];
-
-	private inch = 0.0254;
-	public halfinch = this.inch * 0.5;
-	private xOffset =
-		[0.0,
-			0.0 + this.halfinch,
-			this.inch * 1.0,
-			this.inch * 1.0 + this.halfinch,
-			this.inch * 2.0,
-			this.inch * 3.0,
-			this.inch * 3.0 + this.halfinch,
-			this.inch * 4.0,
-			this.inch * 4.0 + this.halfinch,
-			this.inch * 5.0,
-			this.inch * 5.0 + this.halfinch,
-			this.inch * 6.0];
-	private yOffset =
-		[0, this.halfinch, 0, this.halfinch, 0, 0, this.halfinch, 0, this.halfinch, 0, this.halfinch, 0];
-	private zOffset =
-		[0, this.inch - 0.001, 0, this.inch - 0.001, 0, 0, this.inch - 0.001, 0, this.inch - 0.001, 0,
-			this.inch - 0.001, 0];
-	private zOffsetCollision =
-		[-this.inch * 1.75, this.inch, -this.inch * 1.75, this.inch, -this.inch * 1.75,
-			-this.inch * 1.75, this.inch, -this.inch * 1.75, this.inch, -this.inch * 1.75,
-			this.inch, -this.inch * 1.75];
-	private octaveSize = this.inch * 7.0;
-
-	private isBlack: boolean[] = [false, true, false, true, false, false, true, false, true, false, true, false]
 
 	private noteNamesFlats =
 		["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
@@ -122,21 +81,10 @@ export default class Piano extends MusicModule {
 	private solfegeFlatNames = ["Do", "Ra", "Re", "Me", "Mi", "Fa", "Se", "Sol", "Le", "La", "Te", "Ti"];
 
 	private ourIntervals: PianoIntervals = null;
+	public ourLayout: PianoLayout=null;
+
 	private ourTransformInverse: MRE.Matrix;
 	private isKeysSetup = false;
-
-
-	private whiteKeySize: MRE.Vector3;
-	private whiteCollisionSize: MRE.Vector3;
-
-	private blackKeySize: MRE.Vector3;
-	private blackCollisionSize: MRE.Vector3;	 
-	private grayKeySize: MRE.Vector3;
-
-	private whiteKeyMesh: MRE.Mesh;
-	private whiteKeyCollisionMesh: MRE.Mesh;
-	private blackKeyMesh: MRE.Mesh; 
-	private grayMesh: MRE.Mesh;
 
 	private keyboardBounds: number[]=[];
 
@@ -146,14 +94,9 @@ export default class Piano extends MusicModule {
 		for(let i=0;i<6;i++){
 			this.keyboardBounds.push(0);
 		}
-	
-		this.whiteKeySize=new MRE.Vector3(this.inch * 0.9, this.inch, this.inch * 5.5);
-		this.whiteCollisionSize=new MRE.Vector3( this.inch * 0.9,this.inch, this.inch * 2.0);
-		this.blackKeySize=new MRE.Vector3(this.halfinch, this.inch, this.inch * 3.5);
-		this.blackCollisionSize=this.blackKeySize.clone();		
-		this.grayKeySize=new MRE.Vector3(this.halfinch * 0.9, this.inch, this.inch * 4.5);
 		
 		this.ourIntervals = new PianoIntervals(ourApp, this);
+		this.ourLayout = new PianoLayout(ourApp, this);
 
 		//let previousHands: Map<MRE.Actor, MRE.Vector3> = new Map();
 
@@ -257,7 +200,7 @@ export default class Piano extends MusicModule {
 		this.ourTransformInverse = mResult.invert();
 	}
 
-	private computeWorldPos(keyPos: MRE.Vector3): MRE.Vector3 {
+	public computeWorldPos(keyPos: MRE.Vector3): MRE.Vector3 {
 		const mKeyboard = MRE.Matrix.Compose(
 			this.keyboardParent.transform.local.scale,
 			this.keyboardParent.transform.local.rotation,
@@ -374,6 +317,22 @@ export default class Piano extends MusicModule {
 		}
 	}
 
+	private updateLowHighKey(){
+		let keyLow=this.keyHighest;
+		let keyHigh=this.keyLowest;
+
+		for(const note of this.ourKeys.keys()){
+			if(note<keyLow){
+				keyLow=note;
+			}
+			if(note>keyHigh){
+				keyHigh=note;
+			}
+		}
+		this.keyHighest=keyHigh;
+		this.keyLowest=keyLow;
+	}
+
 	public updatePositioning(){
 		this.updateKeyboardCenter();
 		this.updateWorldPositions();
@@ -382,7 +341,7 @@ export default class Piano extends MusicModule {
 	}
 
 	private computeKeyboardCenterX(): number{
-		const highPos = this.computePosX(this.keyHighest) * this.pianoScale;
+		const highPos = this.ourLayout.computePosX(this.keyHighest) * this.pianoScale;
 		const offset = -highPos - 0.5;
 		return offset;
 	}
@@ -390,37 +349,6 @@ export default class Piano extends MusicModule {
 	public updateKeyboardCenter() {
 		const offset=this.computeKeyboardCenterX();
 		this.keyboardParent.transform.local.position.x = offset;
-	}
-
-	public setProperKeyColor(note: number) {
-		if(this.ourKeys.has(note)===false){
-			return;
-		}
-
-		const key=this.ourKeys.get(note);
-		
-		const pitchClass = note % 12;
-
-		let matt = this.ourApp.almostBlackMat;
-
-		if (this.zOffset[pitchClass] === 0) {
-			matt = this.ourApp.whiteMat;
-		}
-
-		key.actor.appearance.material = matt;
-	}
-
-	public setFancyKeyColor(note: number) {		
-
-		if(this.ourKeys.has(note)===false){
-			return;
-		}
-
-		const key=this.ourKeys.get(note);
-		const pitchClass = note % 12;
-
-		const materialID = this.noteMaterials[pitchClass].id;
-		key.actor.appearance.materialId = materialID;
 	}
 
 	private isAuthorized(user: MRE.User): boolean {
@@ -437,62 +365,45 @@ export default class Piano extends MusicModule {
 		}
 
 		return false;
-	}
+	}	
 
-	private computePosX(i: number): number {
-		const centerNote=60;
-		let noteDiff=i-centerNote;
-		let baseX=0.0;
+	public setTwelveTone(){
+		//destroy all fractional keys
 
-		const octaves=Math.floor(noteDiff/12.0);
-		baseX+=octaves*this.octaveSize;
-		noteDiff-=octaves*12;
-
-		if(noteDiff>0){
-			baseX+=this.xOffset[noteDiff]; //add remaining notes
-		}
-		if(noteDiff<0){
-			baseX-=this.octaveSize; //go down one octave
-			baseX+=this.xOffset[12+noteDiff]; //and back up
+		const destroyList: number[]=[];
+		for (const note of this.ourKeys.keys()) {
+			if(note-Math.trunc(note)>0.0){
+				destroyList.push(note);
+			}
 		}
 
-		return baseX;
+		for(const n of destroyList){
+			this.destroyKey(n);
+		}
+
+		for (const note of this.ourKeys.keys()) {
+			if(note-Math.trunc(note)>0.0){
+				destroyList.push(note);
+			}
+		}
+
+		for (const note of this.ourKeys.keys()) {
+			this.ourLayout.updateKey(note);
+		}
+
+		this.updatePositioning();
+		this.updateLowHighKey();
 	}
 
 	public async createAllKeys(pos: MRE.Vector3, rot = new MRE.Quaternion()) {
-		for (const noteColor of this.noteColors) {
-			const ourMat: MRE.Material = this.ourApp.assets.createMaterial('notemat', {
-				color: noteColor
-				//mainTextureId: this.sphereTexture.id
-			});
-			await ourMat.created;
-			this.noteMaterials.push(ourMat);
-		}
-
-		this.whiteKeyMesh = this.ourApp.assets.createBoxMesh('box',
-			this.whiteKeySize.x,
-			this.whiteKeySize.y,
-			this.whiteKeySize.z);
-		await this.whiteKeyMesh.created;
-
-		this.whiteKeyCollisionMesh = this.ourApp.assets.createBoxMesh('box',
-			this.whiteCollisionSize.x,
-			this.whiteCollisionSize.y,
-			this.whiteCollisionSize.z);
-		await this.whiteKeyCollisionMesh.created;
-
-		this.blackKeyMesh = this.ourApp.assets.createBoxMesh('box',
-			this.blackKeySize.x,
-			this.blackKeySize.y,
-			this.blackKeySize.z);
-		await this.blackKeyMesh.created;
-
 		if (!this.ourGrabber) {
 			this.createGrabber(pos, rot);
 		} else {
 			this.ourGrabber.setPos(pos);
 			this.ourGrabber.setRot(rot);
 		}
+
+		await this.ourLayout.createAsync();
 
 		this.keyboardParent = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
@@ -511,8 +422,13 @@ export default class Piano extends MusicModule {
 		this.ourApp.ourConsole.
 			logMessage(`PIANO: creating new keyboard with range ${this.keyLowest} to ${this.keyHighest}`);
 
-		for (let i = this.keyLowest; i <=this.keyHighest; i++) {
-			await this.createKey(i);
+		let increment=1.0;
+		if(this.isTwelveTone===false){
+			increment=0.5;
+		}
+
+		for (let i = this.keyLowest; i <=this.keyHighest; i+=increment) {
+			await this.ourLayout.createKey(i);
 		}
 
 		this.updatePositioning();
@@ -520,125 +436,43 @@ export default class Piano extends MusicModule {
 		this.ourGrabber.setGrabReleaseCallback(this.updatePositioning.bind(this));
 	}	
 
-	private async createKey(i: number) {
-		this.ourApp.ourConsole.logMessage("PIANO: creating key: " + i);
-
-		const pitchClass = i % 12;
-		//const octave = Math.floor(i / 12);
-
-		let meshId: MRE.Guid = this.blackKeyMesh.id;
-		let mattId: MRE.Guid = this.ourApp.almostBlackMat.id;
-		let collisionMeshID: MRE.Guid = this.blackKeyMesh.id;
-		let collisionSize = this.blackCollisionSize;
-
-		if (this.isBlack[pitchClass] === false) {
-			meshId = this.whiteKeyMesh.id;
-			mattId = this.ourApp.whiteMat.id;
-			collisionMeshID = this.whiteKeyCollisionMesh.id;
-			collisionSize = this.whiteCollisionSize;
-		}
-
-		const position = new MRE.Vector3(
-			this.computePosX(i),
-			this.yOffset[pitchClass],
-			this.zOffset[pitchClass]);
-
-		const positionCollision = position.clone();
-		positionCollision.z = this.zOffsetCollision[pitchClass]; //different zPos
-
-		const keyActor = MRE.Actor.Create(this.ourApp.context, {
-			actor: {
-				name: 'PianoKey' + i,
-				parentId: this.keyboardParent.id,
-				transform: {
-					local: { position: position }
-				},
-				appearance:
-				{
-					meshId: meshId,
-					materialId: mattId
-				},
-			}
-		});
-		await keyActor.created();
-
-		const keyCollisionActor = MRE.Actor.Create(this.ourApp.context, {
-			actor: {
-				name: 'CollisionPianoKey' + i,
-				parentId: this.keyboardParent.id,
-				transform: {
-					local: { position: positionCollision }
-				},
-				appearance:
-				{
-					meshId: collisionMeshID,
-					materialId: this.ourApp.redMat.id,
-					enabled: false
-				},
-				collider: {
-					geometry: {
-						shape: MRE.ColliderType.Box
-					},
-					isTrigger: true
-				}
-			}
-		});
-		await keyCollisionActor.created();
-
-		const ourKeyParameters = {
-			actor: keyActor,
-			collisionActor: keyCollisionActor,
-			noteActor: null as MRE.Actor,
-			position: position,
-			collisionPos: positionCollision,
-			touchList: [] as MRE.Actor[],
-			worldPos: this.computeWorldPos(position),
-			collisionWorldPos: this.computeWorldPos(positionCollision),
-			collisionSize: collisionSize,
-			keyBounds: [] as number[]
-		};
-
-		for(let e=0;e<6;e++){
-			ourKeyParameters.keyBounds.push(0);
-		}
-
-		this.ourKeys.set(i, ourKeyParameters);
-		this.setupInteractions(i);
-	}
-
-	public async setKeyLowest(n: number){
+	public async setKeyLowest(n: number) {
 		this.ourApp.ourConsole.logMessage("PIANO: low key was: " + this.keyLowest + " requested to: " + n);
 
-		if(n>this.keyLowest){ //we need to delete some keys!
-			for(let i=this.keyLowest;i<n;i++){
-				this.keyReleased(i);
-				this.destroyKey(i);
-			}
-		} else{ //we need to add some keys
-			for(let i=n;i<this.keyLowest;i++){
-				await this.createKey(i);
+		if (this.isTwelveTone) {
+			if (n > this.keyLowest) { //we need to delete some keys!
+				for (let i = this.keyLowest; i < n; i++) {
+					this.keyReleased(i);
+					this.destroyKey(i);
+				}
+			} else { //we need to add some keys
+				for (let i = n; i < this.keyLowest; i++) {
+					await this.ourLayout.createKey(i);
+				}
 			}
 		}
 
-		this.keyLowest=n;
+		this.keyLowest = n;
 		this.updatePositioning();
 	}
 
-	public async setKeyHighest(n: number){
+	public async setKeyHighest(n: number) {
 		this.ourApp.ourConsole.logMessage("PIANO: high key was: " + this.keyHighest + " requested to: " + n);
 
-		if(n<this.keyHighest){ //we need to delete some keys!
-			for(let i=n+1;i<=this.keyHighest;i++){
-				this.keyReleased(i);
-				this.destroyKey(i);
-			}
-		} else{ //we need to add some keys
-			for(let i=this.keyHighest+1;i<=n;i++){
-				await this.createKey(i);
+		if (this.isTwelveTone) {
+			if (n < this.keyHighest) { //we need to delete some keys!
+				for (let i = n + 1; i <= this.keyHighest; i++) {
+					this.keyReleased(i);
+					this.destroyKey(i);
+				}
+			} else { //we need to add some keys
+				for (let i = this.keyHighest + 1; i <= n; i++) {
+					await this.ourLayout.createKey(i);
+				}
 			}
 		}
 
-		this.keyHighest=n;
+		this.keyHighest = n;
 		this.updatePositioning();
 	}
 
@@ -657,7 +491,7 @@ export default class Piano extends MusicModule {
 		}
 	}	
 
-	private setupInteractions(i: number) {
+	public setupInteractions(i: number) {
 		const keyCollisionActor = this.ourKeys.get(i).collisionActor;
 
 		/*keyCollisionActor.collider.onTrigger("trigger-enter", (otherActor: MRE.Actor) => {
@@ -778,9 +612,9 @@ export default class Piano extends MusicModule {
 		const message = [note, vel, 0, key.worldPos.x, key.worldPos.y, key.worldPos.z];
 		this.sendData(message, "midi");
 
-		this.setFancyKeyColor(note);
+		this.ourLayout.setFancyKeyColor(note);
 
-		if (this.noteNameMode > 0) {
+		if (this.noteNameMode > 0 && this.isTwelveTone) {
 			const noteNum = note % 12;
 			let noteName = "";
 			let noteHeight = 0.005;
@@ -802,7 +636,7 @@ export default class Piano extends MusicModule {
 
 			const notePosition = key.collisionPos.clone();
 			notePosition.y -= 0.01;
-			notePosition.y += this.halfinch;
+			notePosition.y += this.ourLayout.halfinch;
 			notePosition.y += 0.001;
 
 			if (this.isAccidental(note)) {
@@ -844,7 +678,7 @@ export default class Piano extends MusicModule {
 
 		if (!this.activeNotes.has(note)) {
 
-			if (this.intervalMode > 0) {
+			if (this.intervalMode > 0 && this.isTwelveTone) {
 				this.ourIntervals.keyPressed(note);
 			}
 			this.activeNotes.add(note);
@@ -877,7 +711,7 @@ export default class Piano extends MusicModule {
 		}
 
 		this.activeNotes.delete(note);
-		this.setProperKeyColor(note);
+		this.ourLayout.setProperKeyColor(note);
 		this.ourIntervals.keyReleased(note);
 	}
 }

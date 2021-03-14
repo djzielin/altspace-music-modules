@@ -17,6 +17,7 @@ export default class PianoGui extends GuiPanel{
 	private sharpsButton: Button=null;
 	public sendButton: Button=null;
 	public receiveButton: Button=null;
+	public twelveToneButton: Button=null;
 
 	constructor(protected ourApp: App, private ourPiano: Piano) {
 		super(ourApp);
@@ -68,6 +69,18 @@ export default class PianoGui extends GuiPanel{
 		this.ourApp.ourPatcher.updatePatchLines(this);
 	}
 
+	public setTwelveTone(b: boolean){
+		this.ourPiano.isTwelveTone=b;
+
+		if(b){
+			this.ourPiano.setTwelveTone();
+		} else{
+			//this.ourPiano.setTwentyFourTone();
+		}
+			//set increment of High Low key selectors to 1
+			//pull back in values for high low key
+	}
+
 	public async createAsync(pos: MRE.Vector3, name: string) {
 		this.ourApp.ourConsole.logMessage("creating piano gui");
 
@@ -110,6 +123,12 @@ export default class PianoGui extends GuiPanel{
 		await this.sharpsButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
 			this.guiBackground.id, "Sharps", "Flats",
 			this.ourPiano.doSharps, this.setDoSharps.bind(this));
+		zPos -= 0.15;
+
+		this.twelveToneButton = new Button(this.ourApp);
+		await this.twelveToneButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
+			this.guiBackground.id, "12 tone", "24 tone",
+			this.ourPiano.isTwelveTone, this.setTwelveTone.bind(this));
 		zPos -= 0.15;
 
 		const intervalLabels: string[]=["no intervals","western int","jazz int","num int"];

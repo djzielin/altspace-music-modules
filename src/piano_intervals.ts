@@ -60,8 +60,8 @@ export default class PianoIntervals{
 		
 		notePosition1.y-=0.01;
 		notePosition2.y-=0.01;
-		notePosition1.y+=this.ourPiano.halfinch;
-		notePosition2.y+=this.ourPiano.halfinch;
+		notePosition1.y+=this.ourPiano.ourLayout.halfinch;
+		notePosition2.y+=this.ourPiano.ourLayout.halfinch;
 		notePosition1.y+=0.001;
 		notePosition2.y+=0.001;
 
@@ -72,7 +72,7 @@ export default class PianoIntervals{
 		notePosition2b.y=0;
 
 		const halfwayPoint=this.halfWay(notePosition1b,notePosition2b);
-		halfwayPoint.y=this.ourPiano.halfinch+0.03;
+		halfwayPoint.y=this.ourPiano.ourLayout.halfinch+0.03;
 
 		const towardsPoint2=(notePosition2b.subtract(notePosition1b)).normalize();
 
