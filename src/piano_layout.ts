@@ -148,7 +148,7 @@ export default class PianoLayout {
 	}
 
 	public getCollisionZOffsetByType(n: number) {
-		this.ourApp.ourConsole.logMessage("PIANO: trying to compute z offset for type:  " + n);
+		//this.ourApp.ourConsole.logMessage("PIANO: trying to compute z offset for type:  " + n);
 
 		if (n === 0) {
 			return -this.inch * 1.75; //white keys have smaller collision zone

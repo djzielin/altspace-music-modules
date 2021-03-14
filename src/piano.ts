@@ -3,6 +3,7 @@
  */
 /* eslint-disable no-warning-comments */
 
+import { SSL_OP_EPHEMERAL_RSA } from 'constants';
 import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 import { User } from '../../mixed-reality-extension-sdk/packages/sdk/';
 
@@ -367,9 +368,7 @@ export default class Piano extends MusicModule {
 		return false;
 	}	
 
-	public setTwelveTone(){
-		//destroy all fractional keys
-
+	public async setTwelveTone(){
 		const destroyList: number[]=[];
 		for (const note of this.ourKeys.keys()) {
 			if(note-Math.trunc(note)>0.0){
@@ -379,6 +378,7 @@ export default class Piano extends MusicModule {
 
 		for(const n of destroyList){
 			this.destroyKey(n);
+			await new Promise(resolve => setTimeout(resolve, 50));
 		}
 
 		for (const note of this.ourKeys.keys()) {
@@ -389,10 +389,27 @@ export default class Piano extends MusicModule {
 
 		for (const note of this.ourKeys.keys()) {
 			this.ourLayout.updateKey(note);
+			await new Promise(resolve => setTimeout(resolve, 50));
 		}
 
 		this.updatePositioning();
 		this.updateLowHighKey();
+	}
+
+	public async setTwentyFourTone(){
+		//update positions and meshes of existing keys
+		for (const note of this.ourKeys.keys()) {
+			this.ourLayout.updateKey(note);
+			await new Promise(resolve => setTimeout(resolve, 50));
+		}
+
+		for (let i = this.keyLowest; i <=this.keyHighest; i+=0.5) {
+			if(this.ourKeys.has(i)===false){
+				await this.ourLayout.createKey(i);		
+			}
+		}	
+
+		this.updatePositioning();
 	}
 
 	public async createAllKeys(pos: MRE.Vector3, rot = new MRE.Quaternion()) {
@@ -439,16 +456,20 @@ export default class Piano extends MusicModule {
 	public async setKeyLowest(n: number) {
 		this.ourApp.ourConsole.logMessage("PIANO: low key was: " + this.keyLowest + " requested to: " + n);
 
-		if (this.isTwelveTone) {
-			if (n > this.keyLowest) { //we need to delete some keys!
-				for (let i = this.keyLowest; i < n; i++) {
-					this.keyReleased(i);
-					this.destroyKey(i);
-				}
-			} else { //we need to add some keys
-				for (let i = n; i < this.keyLowest; i++) {
-					await this.ourLayout.createKey(i);
-				}
+		let incrementAmount = 1.0;
+
+		if (this.isTwelveTone === false) {
+			incrementAmount = 0.5;
+		}
+
+		if (n > this.keyLowest) { //we need to delete some keys!
+			for (let i = this.keyLowest; i < n; i += incrementAmount) {
+				this.keyReleased(i);
+				this.destroyKey(i);
+			}
+		} else { //we need to add some keys
+			for (let i = n; i < this.keyLowest; i += incrementAmount) {
+				await this.ourLayout.createKey(i);
 			}
 		}
 
@@ -459,16 +480,20 @@ export default class Piano extends MusicModule {
 	public async setKeyHighest(n: number) {
 		this.ourApp.ourConsole.logMessage("PIANO: high key was: " + this.keyHighest + " requested to: " + n);
 
-		if (this.isTwelveTone) {
-			if (n < this.keyHighest) { //we need to delete some keys!
-				for (let i = n + 1; i <= this.keyHighest; i++) {
-					this.keyReleased(i);
-					this.destroyKey(i);
-				}
-			} else { //we need to add some keys
-				for (let i = this.keyHighest + 1; i <= n; i++) {
-					await this.ourLayout.createKey(i);
-				}
+		let incrementAmount = 1.0;
+
+		if (this.isTwelveTone === false) {
+			incrementAmount = 0.5;
+		}
+
+		if (n < this.keyHighest) { //we need to delete some keys!
+			for (let i = n + incrementAmount; i <= this.keyHighest; i += incrementAmount) {
+				this.keyReleased(i);
+				this.destroyKey(i);
+			}
+		} else { //we need to add some keys
+			for (let i = this.keyHighest + incrementAmount; i <= n; i += incrementAmount) {
+				await this.ourLayout.createKey(i);
 			}
 		}
 

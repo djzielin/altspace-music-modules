@@ -17,6 +17,8 @@ export default class PianoGui extends GuiPanel{
 	private sharpsButton: Button=null;
 	public sendButton: Button=null;
 	public receiveButton: Button=null;
+	public highestKeySelector: PlusMinus=null;
+	public lowestKeySelector: PlusMinus=null;
 	public twelveToneButton: Button=null;
 
 	constructor(protected ourApp: App, private ourPiano: Piano) {
@@ -73,9 +75,23 @@ export default class PianoGui extends GuiPanel{
 		this.ourPiano.isTwelveTone=b;
 
 		if(b){
-			this.ourPiano.setTwelveTone();
+			this.ourPiano.setTwelveTone().then( ()=> {
+				this.ourApp.ourConsole.logMessage("conversion complete!");
+
+				this.highestKeySelector.setValue(this.ourPiano.keyHighest);
+				this.lowestKeySelector.setValue(this.ourPiano.keyLowest);
+
+				this.highestKeySelector.setChangeAmount(1.0);
+				this.lowestKeySelector.setChangeAmount(1.0);
+
+			});
 		} else{
-			//this.ourPiano.setTwentyFourTone();
+			this.ourPiano.setTwentyFourTone().then( ()=> {
+				this.ourApp.ourConsole.logMessage("conversion complete!");
+
+				this.highestKeySelector.setChangeAmount(0.5);
+				this.lowestKeySelector.setChangeAmount(0.5);
+			});
 		}
 			//set increment of High Low key selectors to 1
 			//pull back in values for high low key
@@ -100,14 +116,14 @@ export default class PianoGui extends GuiPanel{
 			this.ourPiano.pianoScale, 0.1, this.setSize.bind(this));
 		zPos -= 0.15;
 
-		const lowestKeySelector = new PlusMinus(this.ourApp);
-		await lowestKeySelector.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
+		this.lowestKeySelector = new PlusMinus(this.ourApp);
+		await this.lowestKeySelector.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
 			this.guiBackground.id, "Low",
 			this.ourPiano.keyLowest, 1, this.setLowestKey.bind(this));
 		zPos -= 0.15;
 
-		const highestKeySelector = new PlusMinus(this.ourApp);
-		await highestKeySelector.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
+		this.highestKeySelector = new PlusMinus(this.ourApp);
+		await this.highestKeySelector.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
 			this.guiBackground.id, "High",
 			this.ourPiano.keyHighest, 1, this.setHighestKey.bind(this));
 		zPos -= 0.15;

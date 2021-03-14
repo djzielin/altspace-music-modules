@@ -17,6 +17,10 @@ export default class PlusMinus {
 		
 	}
 
+	public setChangeAmount(n: number){
+		this.ourChangeAmount=n;
+	}
+
 	public async createAsync(pos: MRE.Vector3, parentId: MRE.Guid, label: 
 		string, ourVal: number, changeAmount: number, callback: (n: number) => any) {
 		this.ourValue=ourVal;
