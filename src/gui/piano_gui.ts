@@ -39,8 +39,8 @@ export default class PianoGui extends GuiPanel{
 		this.ourPiano.noteNameMode=n;
 	}
 
-	public setScale(n: number): void {
-		this.ourPiano.setScale(n);
+	public setSize(n: number): void {
+		this.ourPiano.setSize(n);
 	}
 	public setLowestKey(n: number): void {
 		this.ourPiano.setKeyLowest(n).then( ()=> {
@@ -84,7 +84,7 @@ export default class PianoGui extends GuiPanel{
 		const scaleSelector = new PlusMinus(this.ourApp);
 		await scaleSelector.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
 			this.guiBackground.id, "Size",
-			this.ourPiano.pianoScale, 0.1, this.setScale.bind(this));
+			this.ourPiano.pianoScale, 0.1, this.setSize.bind(this));
 		zPos -= 0.15;
 
 		const lowestKeySelector = new PlusMinus(this.ourApp);

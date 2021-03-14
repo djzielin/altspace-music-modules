@@ -131,10 +131,12 @@ export default class Piano extends MusicModule {
 
 	private blackKeySize: MRE.Vector3;
 	private blackCollisionSize: MRE.Vector3;	 
+	private grayKeySize: MRE.Vector3;
 
 	private whiteKeyMesh: MRE.Mesh;
 	private whiteKeyCollisionMesh: MRE.Mesh;
 	private blackKeyMesh: MRE.Mesh; 
+	private grayMesh: MRE.Mesh;
 
 	private keyboardBounds: number[]=[];
 
@@ -149,6 +151,7 @@ export default class Piano extends MusicModule {
 		this.whiteCollisionSize=new MRE.Vector3( this.inch * 0.9,this.inch, this.inch * 2.0);
 		this.blackKeySize=new MRE.Vector3(this.halfinch, this.inch, this.inch * 3.5);
 		this.blackCollisionSize=this.blackKeySize.clone();		
+		this.grayKeySize=new MRE.Vector3(this.halfinch * 0.9, this.inch, this.inch * 4.5);
 		
 		this.ourIntervals = new PianoIntervals(ourApp, this);
 
@@ -324,7 +327,7 @@ export default class Piano extends MusicModule {
 		}
 	}
 
-	public setScale(scale: number) {
+	public setSize(scale: number) {
 		this.pianoScale = scale;
 
 		if (this.isKeysSetup) {
