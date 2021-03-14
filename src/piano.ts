@@ -46,6 +46,7 @@ interface PianoKey{
 	collisionPos: MRE.Vector3;
 	touchList: MRE.Actor[];
 	worldPos: MRE.Vector3;
+	keyBounds: number[];
 	collisionWorldPos: MRE.Vector3;
 	collisionSize: MRE.Vector3;
 }
@@ -135,8 +136,14 @@ export default class Piano extends MusicModule {
 	private whiteKeyCollisionMesh: MRE.Mesh;
 	private blackKeyMesh: MRE.Mesh; 
 
+	private keyboardBounds: number[]=[];
+
 	constructor(protected ourApp: App, public name: string) {
 		super(ourApp, name);
+
+		for(let i=0;i<6;i++){
+			this.keyboardBounds.push(0);
+		}
 	
 		this.whiteKeySize=new MRE.Vector3(this.inch * 0.9, this.inch, this.inch * 5.5);
 		this.whiteCollisionSize=new MRE.Vector3( this.inch * 0.9,this.inch, this.inch * 2.0);
@@ -144,6 +151,8 @@ export default class Piano extends MusicModule {
 		this.blackCollisionSize=this.blackKeySize.clone();		
 		
 		this.ourIntervals = new PianoIntervals(ourApp, this);
+
+		//let previousHands: Map<MRE.Actor, MRE.Vector3> = new Map();
 
 		setInterval(() => {
 			if (this.isKeysSetup) {
@@ -172,14 +181,51 @@ export default class Piano extends MusicModule {
 						}
 					}
 				}
+				for (const [hand, handPos] of allHands) {
+					//this.ourApp.ourConsole.logMessage("hand pos: " + handPos);
 
-				for (const [note, key] of this.ourKeys) {
-					for (const [hand, handPos] of allHands) {
-						this.handleKeyTouch(note, key, hand, handPos);
+					if (this.isInsideBoundingBox(handPos)) {
+						this.ourApp.ourConsole.logMessage("hand is inside piano bounding box!");
+						for (const [note, key] of this.ourKeys) {
+
+							//experiments with lerping between current and prev hand pos
+							//if(previousHands.has(hand)){
+							//	const prevPos=previousHands.get(hand);
+							//	for(let t=0.0;t<=1.0;t+=0.1){
+							//		const interpPos=MRE.Vector3.Lerp(prevPos,handPos,t);
+							//		this.handleKeyTouch(note, key, hand, interpPos);
+							//	} else {
+							//	this.handleKeyTouch(note, key, hand, handPos);
+							//}							
+
+							this.handleKeyTouch(note, key, hand, handPos);
+						}
+					} else {
+						for (const [note, key] of this.ourKeys) {
+							this.touchRelease(note, key, hand);
+						}
 					}
 				}
+				//previousHands=allHands;
 			}
 		}, 100);
+	}
+
+	private isInsideBoundingBox(pos: MRE.Vector3) {
+
+		if (pos.x < this.keyboardBounds[0] &&
+			pos.x > this.keyboardBounds[1]) {
+
+			if (pos.y < this.keyboardBounds[2] &&
+				pos.y > this.keyboardBounds[3]) {
+
+				if (pos.z < this.keyboardBounds[4] &&
+					pos.z > this.keyboardBounds[5]) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	private convertHandToKeySpace(handPos: MRE.Vector3): MRE.Vector3 {
@@ -223,48 +269,6 @@ export default class Piano extends MusicModule {
 		return this.getWorldPosFromMatrix(transformedPoint);
 	}
 
-	private handleKeyTouch(note: number, key: PianoKey, hand: MRE.Actor, handPosition: MRE.Vector3){
-
-		/*if (note === 36) {
-			this.ourApp.ourConsole.logMessage("note 36 pos: " + key.position +
-				" handPos: " + handPosition);
-		}*/
-
-		const keyPos = key.collisionPos;
-
-		if (handPosition.y < (keyPos.y + key.collisionSize.y * 0.5) &&
-			handPosition.y > (keyPos.y - key.collisionSize.y * 0.5)) {
-
-			//if (note === 36) { this.ourApp.ourConsole.logMessage("hand is inside Y"); }
-
-			if (handPosition.x < (keyPos.x + key.collisionSize.x * 0.5) &&
-				handPosition.x > (keyPos.x - key.collisionSize.x * 0.5)) {
-
-				//if (note === 36) { this.ourApp.ourConsole.logMessage("hand is inside X"); }
-
-				if (handPosition.z < (keyPos.z + key.collisionSize.z * 0.5) &&
-					handPosition.z > (keyPos.z - key.collisionSize.z * 0.5)) {
-					//if (note === 36) { this.ourApp.ourConsole.logMessage("hand is inside Z"); }
-
-					if(key.touchList.includes(hand)===false){ //only play when first touched
-						this.ourApp.ourConsole.logMessage("piano key touched: " + note);
-		
-						this.keyPressed(note,100);
-						key.touchList.push(hand);						
-					} 
-					return;
-				}
-			}
-		}
-
-		const index = key.touchList.indexOf(hand);
-		if (index !== -1) {
-			this.ourApp.ourConsole.logMessage("piano key released: " + note);
-			key.touchList.splice(index, 1);
-			this.keyReleased(note);
-		}
-	}
-
 	private updateWorldPositions() {
 		for (const key of this.ourKeys.values()) {
 			key.worldPos = this.computeWorldPos(key.position);
@@ -274,10 +278,56 @@ export default class Piano extends MusicModule {
 		this.computeTransformInverseMatrix4();
 	}
 
+	private handleKeyTouch(note: number, key: PianoKey, hand: MRE.Actor, handPosition: MRE.Vector3){
+
+		/*if (note === 36) {
+			this.ourApp.ourConsole.logMessage("note 36 pos: " + key.position +
+				" handPos: " + handPosition);
+		}*/
+
+		const keyPos = key.collisionPos;
+
+		if (handPosition.x < key.keyBounds[0] &&
+			handPosition.x > key.keyBounds[1]) {
+
+			//if (note === 36) { this.ourApp.ourConsole.logMessage("hand is inside Y"); }
+
+			if (handPosition.y < key.keyBounds[2] &&
+				handPosition.y > key.keyBounds[3]) {
+
+				//if (note === 36) { this.ourApp.ourConsole.logMessage("hand is inside X"); }
+
+				if (handPosition.z < key.keyBounds[4] &&
+					handPosition.z > key.keyBounds[5]) {
+					//if (note === 36) { this.ourApp.ourConsole.logMessage("hand is inside Z"); }
+
+					if (key.touchList.includes(hand) === false) { //only play when first touched
+						this.ourApp.ourConsole.logMessage("piano key touched: " + note);
+
+						this.keyPressed(note, 100);
+						key.touchList.push(hand);
+					}
+					return;
+				}
+			}
+		}
+
+		this.touchRelease(note,key,hand);
+	}
+
+	public touchRelease(note: number, key: PianoKey, hand: MRE.Actor) {
+		const index = key.touchList.indexOf(hand);
+		if (index !== -1) {
+			this.ourApp.ourConsole.logMessage("piano key released: " + note);
+			key.touchList.splice(index, 1);
+			this.keyReleased(note);
+		}
+	}
+
 	public setScale(scale: number) {
 		this.pianoScale = scale;
 
-		if (this.isKeysSetup){
+		if (this.isKeysSetup) {
 			this.keyboardParent.transform.local.scale =
 				new MRE.Vector3(this.pianoScale, this.pianoScale, this.pianoScale);
 			
@@ -288,13 +338,44 @@ export default class Piano extends MusicModule {
 	}
 
 	private updateBoundingBox(){
-		//calc max min of bounding
+		for(let i=0;i<6;i++){
+			this.keyboardBounds[i]=0;
+		}	
+
+		for(const key of this.ourKeys.values()){
+			this.keyboardBounds[0]=Math.max(key.keyBounds[0],this.keyboardBounds[0])
+			this.keyboardBounds[1]=Math.min(key.keyBounds[1],this.keyboardBounds[1])
+			this.keyboardBounds[2]=Math.max(key.keyBounds[2],this.keyboardBounds[2])
+			this.keyboardBounds[3]=Math.min(key.keyBounds[3],this.keyboardBounds[3])
+			this.keyboardBounds[4]=Math.max(key.keyBounds[4],this.keyboardBounds[4])
+			this.keyboardBounds[5]=Math.min(key.keyBounds[5],this.keyboardBounds[5])
+		}
+		this.ourApp.ourConsole.logMessage("PIANO BOUNDING BOX IS NOW:");
+		this.ourApp.ourConsole.logMessage("X: " + this.keyboardBounds[0] + " " + this.keyboardBounds[1]);
+		this.ourApp.ourConsole.logMessage("Y: " + this.keyboardBounds[2] + " " + this.keyboardBounds[3]);
+		this.ourApp.ourConsole.logMessage("Z: " + this.keyboardBounds[4] + " " + this.keyboardBounds[5]);
+
+	}
+
+	private updateKeyBounds(){
+
+		for(const key of this.ourKeys.values()){
+			key.keyBounds[0]=key.collisionPos.x + key.collisionSize.x * 0.5;
+			key.keyBounds[1]=key.collisionPos.x - key.collisionSize.x * 0.5;
+
+			key.keyBounds[2]=key.collisionPos.y + key.collisionSize.y * 0.5;
+			key.keyBounds[3]=key.collisionPos.y - key.collisionSize.y * 0.5;
+
+			key.keyBounds[4]=key.collisionPos.z + key.collisionSize.z * 0.5;
+			key.keyBounds[5]=key.collisionPos.z - key.collisionSize.z * 0.5;
+		}
 	}
 
 	public updatePositioning(){
-		this.updateBoundingBox();
 		this.updateKeyboardCenter();
 		this.updateWorldPositions();
+		this.updateKeyBounds();
+		this.updateBoundingBox();
 	}
 
 	private computeKeyboardCenterX(): number{
@@ -354,17 +435,6 @@ export default class Piano extends MusicModule {
 
 		return false;
 	}
-
-	/*public destroyKeys() {
-		for (const keyActor of this.ourKeys.values()) {
-			keyActor.destroy();
-		}
-		this.ourKeys.clear();
-		this.keyLocations.clear();
-
-		this.keyboardParent.destroy();
-		//this.ourGrabber.destroy();
-	}*/
 
 	private computePosX(i: number): number {
 		const centerNote=60;
@@ -450,15 +520,15 @@ export default class Piano extends MusicModule {
 	private async createKey(i: number) {
 		this.ourApp.ourConsole.logMessage("PIANO: creating key: " + i);
 
-		let meshId: MRE.Guid = this.blackKeyMesh.id;
-		let mattId: MRE.Guid = this.ourApp.almostBlackMat.id;
-		const note = i % 12;
+		const pitchClass = i % 12;
 		//const octave = Math.floor(i / 12);
 
+		let meshId: MRE.Guid = this.blackKeyMesh.id;
+		let mattId: MRE.Guid = this.ourApp.almostBlackMat.id;
 		let collisionMeshID: MRE.Guid = this.blackKeyMesh.id;
 		let collisionSize = this.blackCollisionSize;
 
-		if (this.isBlack[note] === false) {
+		if (this.isBlack[pitchClass] === false) {
 			meshId = this.whiteKeyMesh.id;
 			mattId = this.ourApp.whiteMat.id;
 			collisionMeshID = this.whiteKeyCollisionMesh.id;
@@ -467,11 +537,11 @@ export default class Piano extends MusicModule {
 
 		const position = new MRE.Vector3(
 			this.computePosX(i),
-			this.yOffset[note],
-			this.zOffset[note]);
+			this.yOffset[pitchClass],
+			this.zOffset[pitchClass]);
 
 		const positionCollision = position.clone();
-		positionCollision.z = this.zOffsetCollision[note]; //different zPos
+		positionCollision.z = this.zOffsetCollision[pitchClass]; //different zPos
 
 		const keyActor = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
@@ -521,8 +591,13 @@ export default class Piano extends MusicModule {
 			touchList: [] as MRE.Actor[],
 			worldPos: this.computeWorldPos(position),
 			collisionWorldPos: this.computeWorldPos(positionCollision),
-			collisionSize: collisionSize
+			collisionSize: collisionSize,
+			keyBounds: [] as number[]
 		};
+
+		for(let e=0;e<6;e++){
+			ourKeyParameters.keyBounds.push(0);
+		}
 
 		this.ourKeys.set(i, ourKeyParameters);
 		this.setupInteractions(i);
