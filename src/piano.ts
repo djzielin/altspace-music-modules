@@ -3,7 +3,6 @@
  */
 /* eslint-disable no-warning-comments */
 
-import { SSL_OP_EPHEMERAL_RSA } from 'constants';
 import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 import { User } from '../../mixed-reality-extension-sdk/packages/sdk/';
 
@@ -392,8 +391,8 @@ export default class Piano extends MusicModule {
 			await new Promise(resolve => setTimeout(resolve, 50));
 		}
 
-		this.updatePositioning();
 		this.updateLowHighKey();
+		this.updatePositioning();
 	}
 
 	public async setTwentyFourTone(){

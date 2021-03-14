@@ -93,8 +93,6 @@ export default class PianoGui extends GuiPanel{
 				this.lowestKeySelector.setChangeAmount(0.5);
 			});
 		}
-			//set increment of High Low key selectors to 1
-			//pull back in values for high low key
 	}
 
 	public async createAsync(pos: MRE.Vector3, name: string) {
@@ -116,16 +114,21 @@ export default class PianoGui extends GuiPanel{
 			this.ourPiano.pianoScale, 0.1, this.setSize.bind(this));
 		zPos -= 0.15;
 
+		let keyIncAmount=1.0;
+		if(this.ourPiano.isTwelveTone===false){
+			keyIncAmount=0.5;
+		}
+
 		this.lowestKeySelector = new PlusMinus(this.ourApp);
 		await this.lowestKeySelector.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
 			this.guiBackground.id, "Low",
-			this.ourPiano.keyLowest, 1, this.setLowestKey.bind(this));
+			this.ourPiano.keyLowest, keyIncAmount, this.setLowestKey.bind(this));
 		zPos -= 0.15;
 
 		this.highestKeySelector = new PlusMinus(this.ourApp);
 		await this.highestKeySelector.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
 			this.guiBackground.id, "High",
-			this.ourPiano.keyHighest, 1, this.setHighestKey.bind(this));
+			this.ourPiano.keyHighest, keyIncAmount, this.setHighestKey.bind(this));
 		zPos -= 0.15;
 
 		const noteLabels: string[]=["Names Off","Letter Names","Solfege"];

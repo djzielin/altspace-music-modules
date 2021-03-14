@@ -244,20 +244,22 @@ export default class PianoLayout {
 
 		if (noteDiff > 0) {
 			if(this.ourPiano.isTwelveTone){
+				this.ourApp.ourConsole.logMessage("PIANO: offset index " + noteDiff);
 				baseX += this.offset12[noteDiff].x; //add remaining notes
 			} else{
 				const offsetIndex=Math.trunc(noteDiff*2.0);
-				//this.ourApp.ourConsole.logMessage("PIANO: offset index " + offsetIndex);
+				this.ourApp.ourConsole.logMessage("PIANO: offset index " + offsetIndex);
 				baseX += this.offset24[offsetIndex].x;
 			}
 		}
 		if (noteDiff < 0) {
 			baseX -= oSize; //go down one octave
 			if (this.ourPiano.isTwelveTone) {
+				this.ourApp.ourConsole.logMessage("PIANO: offset index " + noteDiff);
 				baseX += this.offset12[noteDiff].x; //and back up
 			} else {
 				const offsetIndex = Math.trunc(24.0 + noteDiff * 2.0);
-				//this.ourApp.ourConsole.logMessage("PIANO: offset index " + offsetIndex);
+				this.ourApp.ourConsole.logMessage("PIANO: offset index " + offsetIndex);
 				baseX += this.offset24[offsetIndex].x; //and back up
 			}
 		}
