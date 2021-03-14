@@ -39,12 +39,8 @@ export default class GuiPanel {
 		this.guiGrabber.showOnlyGrabber();
 	}
 
-	private halfWay(a: MRE.Vector3, b: MRE.Vector3): MRE.Vector3 { //TODO should be in util class
+	private halfWay(a: MRE.Vector3, b: MRE.Vector3): MRE.Vector3 { 
 		return (a.add(b)).multiplyByFloats(0.5,0.5,0.5);
-	}
-
-	private getLength(a: MRE.Vector3, b: MRE.Vector3): number {
-		return (a.subtract(b)).length();
 	}
 
 	public transformPoint(point: MRE.Vector3): MRE.Vector3 {
@@ -65,7 +61,7 @@ export default class GuiPanel {
 
 	public createPatchLine(linePosition1: MRE.Vector3, linePosition2: MRE.Vector3): MRE.Actor{
 		const halfwayLine=this.halfWay(linePosition1, linePosition2);
-		const distance=this.getLength(linePosition1,linePosition2);
+		const distance=MRE.Vector3.Distance(linePosition1,linePosition2);
 
 		const lineActor = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
@@ -89,7 +85,7 @@ export default class GuiPanel {
 
 	public updatePatchLine(lineActor: MRE.Actor, linePosition1: MRE.Vector3, linePosition2: MRE.Vector3){
 		const halfwayLine=this.halfWay(linePosition1, linePosition2);
-		const distance=this.getLength(linePosition1,linePosition2);
+		const distance=MRE.Vector3.Distance(linePosition1,linePosition2);
 
 		lineActor.transform.local.position=halfwayLine;
 		lineActor.transform.local.rotation=MRE.Quaternion.LookAt(linePosition1,linePosition2);

@@ -21,7 +21,6 @@ export default class HeartBeatGui extends GuiPanel{
 		this.ourModule=ourHeartBeat;
 	}
 
-	public polyphonyLimit=10; // TODO: allow these to be set in in-world GUI
 	public volume=0.75;
 	public cullTime=5000;
 	public doPedal=true;
