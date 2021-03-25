@@ -28,6 +28,7 @@ export default class Users {
 	public allElevatedUsers: UserProperties[]=[];
 
 	public elevatedUsers: string[] = [];
+	public doFreePlay=false;
 
 	constructor(private ourApp: App) {
 
@@ -56,6 +57,10 @@ export default class Users {
 	}
 
 	public isAuthorized(user: MRE.User): boolean {
+		if(this.doFreePlay){
+			return true;
+		}
+
 		const ourRoles = user.properties["altspacevr-roles"];
 
 		if (ourRoles.includes("moderator") || ourRoles.includes("presenter") ||
@@ -67,6 +72,10 @@ export default class Users {
 	}
 
 	public isAuthorizedString(user: string): boolean {
+		if(this.doFreePlay){
+			return true;
+		}
+		
 		if (this.elevatedUsers.includes(user)) {
 			//this.ourConsole.logMessage("user is moderator based on GUID");
 			return true;
@@ -80,7 +89,7 @@ export default class Users {
 		return new MRE.GroupMask(this.ourApp.context, ['presenters']);
 	}
 
-	public userJoined(user: MRE.User, createHands: boolean, createChest: boolean) {
+	public userJoined(user: MRE.User, createHands: boolean){  //, createChest: boolean) {
 		this.ourApp.ourConsole.logMessage("user joined. name: " + user.name + " id: " + user.id);
 
 		let isModerator = false
@@ -114,9 +123,9 @@ export default class Users {
 		if(createHands){
 			this.addHands(ourUser);
 		}
-		if(createChest){
-			this.addChest(ourUser);
-		}
+		//if(createChest){
+		//	this.addChest(ourUser);
+		//}
 
 		if (isModerator) {
 			this.elevatedUsers.push(user.id.toString());
@@ -212,7 +221,7 @@ export default class Users {
 
 	}
 
-	private addChest(ourUser: UserProperties) {
+	/*private addChest(ourUser: UserProperties) {
 		setTimeout(() => {
 			this.ourApp.ourConsole.logMessage("creating chest for: " + ourUser.name);
 
@@ -238,7 +247,7 @@ export default class Users {
 				}
 			});
 		}, 1000);
-	}
+	}*/
 
 
 	private createHand(aPoint: string, userID: MRE.Guid, handPos: MRE.Vector3, handScale: MRE.Vector3) {

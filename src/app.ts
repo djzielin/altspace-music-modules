@@ -72,7 +72,7 @@ export default class App {
 		//const createChest = isGeo;
 
 		this.context.onUserJoined(user => {
-			this.ourUsers.userJoined(user,true,false);
+			this.ourUsers.userJoined(user,true);
 		});
 
 		this.context.onStarted(() => this.started());
@@ -250,6 +250,10 @@ export default class App {
 		}
 	}
 
+	public setFreePlay(b: boolean){
+		this.ourUsers.doFreePlay=b;
+	}
+
 	private async loadAsyncItems() {
 
 		await this.createMeshAndMaterial();
@@ -285,13 +289,21 @@ export default class App {
 		buttonZPos -= 0.2;
 		this.showGrabbersButton.setElevatedUserOnlyVisibility();
 
+		this.ourConsole.logMessage("Creating User Auth Button ");
+		const setFreePlayButton = new Button(this);
+		await setFreePlayButton.createAsync(new MRE.Vector3(-0.7, 0, buttonZPos),
+			this.menuGrabber.getGUID(), "Freeplay", "Auth Users",
+			this.ourUsers.doFreePlay, this.setFreePlay.bind(this));
+		buttonZPos -= 0.2;
+		setFreePlayButton.setElevatedUserOnlyVisibility();
+
 		this.ourConsole.logMessage("Creating Show  Pallete Button ");
 		this.ourPalette = new Palette(this);
 		await this.ourPalette.createBackground(new MRE.Vector3(6, 1.5, 0),
 			MRE.Quaternion.FromEulerAngles(-90 * Math.PI / 180, 30 * Math.PI / 180, 0),
 			"Music Modules Palette",
 			1.5);
-		this.ourPalette.hide();
+		this.ourPalette.hide();		
 
 		this.showPaletteButton = new Button(this);
 		await this.showPaletteButton.createAsync(new MRE.Vector3(-0.7, 0, buttonZPos),
@@ -303,9 +315,7 @@ export default class App {
 		await this.ourPresets.spawnPreset(this.instrumentType);		
 
 		this.ourConsole.logMessage("Finished creation of all asyn items");
-	}
-
-	
+	}	
 
 	private stopped() {
 		MRE.log.info("app", "stopped callback has been called");
