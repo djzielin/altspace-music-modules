@@ -160,7 +160,7 @@ export default class Spawner extends MusicModule {
 				`${this.ourApp.pad(timeNow.getSeconds(),2,'0')} - ` +
 				`${this.availableBubbles.length} playable `+
 				`(${listOfAvailableBubblesToDelete.length} culled)`);*/
-		}, 1000);
+		}, 200);
 
 		this.ourInterval2=setInterval(() => {
 			const bubblesToPop: BubbleProperties[] = [];
@@ -454,7 +454,7 @@ export default class Spawner extends MusicModule {
 		if(this.isEnabled===false){
 			return;
 		}
-		
+
 		if (messageType === "midi") {
 			if (data.length > 1) {
 				if (data[1] > 0) {

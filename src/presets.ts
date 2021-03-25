@@ -237,41 +237,59 @@ export default class Presets {
 		this.ourApp.ourPatcher.applyPatch(sendPathGeo, receiveWavPlayer);
 	}
 
-	public async showSpawner(){
-		//const xPos = 1.5;
+	public async showSpawner() {
+		let xPos = -3;
+		let zPos = 0;
 
-		/*const ourWavPlayer = new WavPlayer(this.ourApp);
-		await ourWavPlayer.loadAllSounds("piano",36,84);
+		
+		//======================================================================
+
+		const ourMidiPlayer = new MidiPlayer(this.ourApp, "Midi Player");
+
+		const ourMidiPlayerGui = new MidiPlayerGui(this.ourApp, ourMidiPlayer);
+		await ourMidiPlayerGui.createAsync(new MRE.Vector3(xPos, 0.1, zPos), "Midi Player");
+		this.ourApp.allGUIs.push(ourMidiPlayerGui);
+
+		//======================================================================
+
+		const ourMidiReceiver = new MidiReceiver(this.ourApp, 3902, "Midi Receiver");
+		this.ourApp.allModules.push(ourMidiReceiver);
+		
+		const ourMidiReceiverGui = new MidiReceiverGui(this.ourApp, ourMidiReceiver);
+		await ourMidiReceiverGui.createAsync(new MRE.Vector3(xPos, 0.1, zPos-2), "Midi Recv");
+		this.ourApp.allGUIs.push(ourMidiReceiverGui);		
+		xPos+=1.75;
+
+		//======================================================================
+
+		const ourSpawner = new Spawner(this.ourApp, "Spawner");
+		await ourSpawner.createAsyncItems(new MRE.Vector3(xPos + 2, 1, zPos),
+			MRE.Quaternion.FromEulerAngles(0.0 * Math.PI / 180, 0, 0));
+		this.ourApp.allModules.push(ourSpawner);		
+
+		const ourSpawnerGui = new SpawnerGui(this.ourApp, ourSpawner);
+		await ourSpawnerGui.createAsync(new MRE.Vector3(xPos, 0.1, zPos), "Spawner");
+		this.ourApp.allGUIs.push(ourSpawnerGui);
+		xPos+=1.75;
+		
+		//======================================================================
+
+		const ourWavPlayer = new WavPlayer(this.ourApp, "Wav Player");
+		await ourWavPlayer.loadAllSounds("piano", 36, 84);
 		this.ourApp.allModules.push(ourWavPlayer);
 
 		const ourWavPlayerGui = new WavPlayerGui(this.ourApp, ourWavPlayer);
-		await ourWavPlayerGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Piano WavPlayer")		
+		await ourWavPlayerGui.createAsync(new MRE.Vector3(xPos, 0.1, zPos), "Piano WavPlayer")
 		this.ourApp.allGUIs.push(ourWavPlayerGui);
-		xPos -= 1.75;
-		*/
 
-		let zPos = 0;
-
-		const ourMidiPlayer = new MidiPlayer(this.ourApp, "Midi Player");			
-
-		const ourMidiPlayerGui = new MidiPlayerGui(this.ourApp, ourMidiPlayer);
-		await ourMidiPlayerGui.createAsync(new MRE.Vector3(-1, 0.1, zPos), "Midi Player");
-		this.ourApp.allGUIs.push(ourMidiPlayerGui);
-
+		//======================================================================
+		
 		const midiPlayerSendPath = new PatchPoint();
 		midiPlayerSendPath.module = ourMidiPlayer;
 		midiPlayerSendPath.messageType = "midi";
 		midiPlayerSendPath.isSender = true;
 		midiPlayerSendPath.gui = ourMidiPlayerGui;
 		midiPlayerSendPath.button = ourMidiPlayerGui.sendButton;
-
-		const ourWavPlayer = new WavPlayer(this.ourApp, "Wav Player");
-		await ourWavPlayer.loadAllSounds("piano",36,84);
-		this.ourApp.allModules.push(ourWavPlayer);
-
-		const ourWavPlayerGui = new WavPlayerGui(this.ourApp, ourWavPlayer);
-		await ourWavPlayerGui.createAsync(new MRE.Vector3(1, 0.1, zPos), "Piano WavPlayer")		
-		this.ourApp.allGUIs.push(ourWavPlayerGui);
 
 		const receiveWavePlayerPatch = new PatchPoint();
 		receiveWavePlayerPatch.module = ourWavPlayer;
@@ -280,57 +298,33 @@ export default class Presets {
 		receiveWavePlayerPatch.gui = ourWavPlayerGui;
 		receiveWavePlayerPatch.button = ourWavPlayerGui.receiveButton;
 
-		zPos -= 2;
+		const sendSpawnerPatch = new PatchPoint();
+		sendSpawnerPatch.module = ourSpawner;
+		sendSpawnerPatch.messageType = "midi";
+		sendSpawnerPatch.isSender = true;
+		sendSpawnerPatch.gui = ourSpawnerGui;
+		sendSpawnerPatch.button = ourSpawnerGui.sendButton;
+
+		const receiveSpawnerPatch = new PatchPoint();
+		receiveSpawnerPatch.module = ourSpawner;
+		receiveSpawnerPatch.messageType = "midi";
+		receiveSpawnerPatch.isSender = false;
+		receiveSpawnerPatch.gui = ourSpawnerGui;
+		receiveSpawnerPatch.button = ourSpawnerGui.receiveButton;
+
+		const sendMidi = new PatchPoint();
+		sendMidi.module = ourMidiReceiver;
+		sendMidi.messageType = "midi";
+		sendMidi.isSender = true;
+		sendMidi.gui = ourMidiReceiverGui;
+		sendMidi.button = ourMidiReceiverGui.sendButton;
 
 
-		for (let i = 0; i < 2; i++) {
-			const ourSpawner = new Spawner(this.ourApp, "Spawner");
-			await ourSpawner.createAsyncItems(new MRE.Vector3(2 + i*1.5, 1, 0),
-				MRE.Quaternion.FromEulerAngles(0.0 * Math.PI / 180, 0, 0));
-			this.ourApp.allModules.push(ourSpawner);
+		this.ourApp.ourPatcher.applyPatch(midiPlayerSendPath, receiveSpawnerPatch);
+		this.ourApp.ourPatcher.applyPatch(sendMidi, receiveSpawnerPatch);
+		this.ourApp.ourPatcher.applyPatch(sendSpawnerPatch, receiveWavePlayerPatch);
 
-			const ourMidiReceiver = new MidiReceiver(this.ourApp, 3931 + i, "Midi Receiver");
-			this.ourApp.allModules.push(ourMidiReceiver);
-
-			const ourSpawnerGui = new SpawnerGui(this.ourApp, ourSpawner);
-			await ourSpawnerGui.createAsync(new MRE.Vector3(1, 0.1, zPos), "Spawner " + (i+1));
-			this.ourApp.allGUIs.push(ourSpawnerGui);
-
-			const ourMidiReceiverGui = new MidiReceiverGui(this.ourApp, ourMidiReceiver);
-			await ourMidiReceiverGui.createAsync(new MRE.Vector3(-1, 0.1, zPos), "Midi Recv" + (i+1));
-			this.ourApp.allGUIs.push(ourMidiReceiverGui);
-
-			zPos -= 2;
-
-			const sendSpawnerPatch = new PatchPoint();
-			sendSpawnerPatch.module = ourSpawner;
-			sendSpawnerPatch.messageType = "midi";
-			sendSpawnerPatch.isSender = true;
-			sendSpawnerPatch.gui = ourSpawnerGui;
-			sendSpawnerPatch.button = ourSpawnerGui.sendButton; 
-	
-			const receiveSpawnerPatch = new PatchPoint();
-			receiveSpawnerPatch.module = ourSpawner;
-			receiveSpawnerPatch.messageType = "midi";
-			receiveSpawnerPatch.isSender = false;
-			receiveSpawnerPatch.gui = ourSpawnerGui;
-			receiveSpawnerPatch.button = ourSpawnerGui.receiveButton;
-	
-			const sendMidi = new PatchPoint();
-			sendMidi.module = ourMidiReceiver;
-			sendMidi.messageType = "midi";
-			sendMidi.isSender = true;
-			sendMidi.gui = ourMidiReceiverGui;
-			sendMidi.button = ourMidiReceiverGui.sendButton;
-
-			if(i===0){
-				this.ourApp.ourPatcher.applyPatch(midiPlayerSendPath,receiveSpawnerPatch);
-			}
 		
-			this.ourApp.ourPatcher.applyPatch(sendMidi, receiveSpawnerPatch);
-			this.ourApp.ourPatcher.applyPatch(sendSpawnerPatch, receiveWavePlayerPatch);
-
-		}	
 	}
 
 	public async showSpiral(){

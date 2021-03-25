@@ -51,27 +51,30 @@ export default class Palette {
 		"Wav Player",
 		"",
 		"Midi Sender (soon)"//,
-		//"Sequencer (soon)",
-		//"Heart Beat (soon)"
+		//"Sequencer",
+		//"Heart Beat"
 	];
-		
+
 	private instrumentModules: string[] = [
 		"Piano",
 		"Staff",
 		"",
-		"Spawner (soon)",
-		"Geo (soon)",
-		"Spiral (soon)"];
+		"Spawner",
+		"Geo (soon)"
+		//"Spiral"
+		//"Tablature"
+	];
 
 	private presetLabels: string[] = [
 		"Piano",
-		"Spawner (soon)",
+		"Spawner",
 		"Geo (soon)",
-		"Spiral (soon)",
+		//"Spiral",
 		"",
 		"CLEAR ALL"];
 
-	private synthModules: string[] = []; //["SE-02 (soon)"
+	private synthModules: string[] = []; 
+	//"SE-02 "
 
 	constructor(protected ourApp: App) {
 	}
@@ -297,11 +300,12 @@ export default class Palette {
 		zPos = this.backgroundHeight * 0.5 - 0.3 - 0.3;
 		for (const s of this.presetLabels) {
 			if (s !== "") {
+				const sPreset=s+" Preset";
 				const selectPreset = new ButtonWithParameter(this.ourApp, s);
 				await selectPreset.createAsync(new MRE.Vector3(0.0, 0.051, zPos),
-					this.guiBackground2.id, s, s,
+					this.guiBackground2.id, sPreset, sPreset,
 					false, this.selectPreset.bind(this));
-					selectPreset.doVisualUpdates = false;
+				selectPreset.doVisualUpdates = false;
 			}
 			zPos -= 0.15;
 		}
