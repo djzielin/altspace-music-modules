@@ -469,6 +469,10 @@ export default class Geo extends MusicModule {
 	}
 
 	public receiveData(data: any[], messageType: string) {
+		if(this.isEnabled===false){
+			return;
+		}
+		
 		if (messageType === "midi") {
 			if (data.length > 1) {
 				const note = data[0] as number;

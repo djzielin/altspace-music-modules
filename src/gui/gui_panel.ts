@@ -95,7 +95,6 @@ export default class GuiPanel {
 	public receiveDelete(value: boolean){
 		this.ourApp.ourConsole.logMessage("GUI PANEL: received delete request!");
 
-		this.ourApp.ourPatcher.removeAttachedPatches(this);
 		this.destroy();		
 	}
 
@@ -108,6 +107,8 @@ export default class GuiPanel {
 		if(this.ourModule!==null){
 			this.ourModule.destroy();
 		}		
+
+		this.ourApp.ourPatcher.removeAttachedPatches(this);
 	}
 
 	public async createBackground(pos: MRE.Vector3, name: string, bgHeight: number) {

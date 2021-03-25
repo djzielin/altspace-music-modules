@@ -49,6 +49,7 @@ export default class Palette {
 		"Midi Receiver",
 		"Midi Player",
 		"Wav Player",
+		"",
 		"Midi Sender (soon)"//,
 		//"Sequencer (soon)",
 		//"Heart Beat (soon)"
@@ -57,6 +58,7 @@ export default class Palette {
 	private instrumentModules: string[] = [
 		"Piano",
 		"Staff",
+		"",
 		"Spawner (soon)",
 		"Geo (soon)",
 		"Spiral (soon)"];
@@ -66,6 +68,7 @@ export default class Palette {
 		"Spawner (soon)",
 		"Geo (soon)",
 		"Spiral (soon)",
+		"",
 		"CLEAR ALL"];
 
 	private synthModules: string[] = []; //["SE-02 (soon)"
@@ -235,36 +238,41 @@ export default class Palette {
 		let zPos = this.backgroundHeight * 0.5 - 0.3 - 0.3;
 
 		for (const s of this.utilityModules) {
-			const selectUtility = new ButtonWithParameter(this.ourApp,s);
-			await selectUtility.createAsync(new MRE.Vector3(-1.0, 0.051, zPos),
-				this.guiBackground.id, s, s,
-				false, this.selectModule.bind(this));
-			selectUtility.doVisualUpdates=false;
+			if (s !== "") {
+				const selectUtility = new ButtonWithParameter(this.ourApp, s);
+				await selectUtility.createAsync(new MRE.Vector3(-1.0, 0.051, zPos),
+					this.guiBackground.id, s, s,
+					false, this.selectModule.bind(this));
+				selectUtility.doVisualUpdates = false;
+			}
 			zPos -= 0.15;
 		}
 
 		zPos = this.backgroundHeight * 0.5 - 0.3 - 0.3;
 
 		for (const s of this.instrumentModules) {
-			const selectInstrument = new ButtonWithParameter(this.ourApp,s);
-			await selectInstrument.createAsync(new MRE.Vector3(0.0, 0.051, zPos),
-				this.guiBackground.id, s, s,
-				false, this.selectModule.bind(this));
-			selectInstrument.doVisualUpdates=false;
+			if (s !== "") {
+				const selectInstrument = new ButtonWithParameter(this.ourApp, s);
+				await selectInstrument.createAsync(new MRE.Vector3(0.0, 0.051, zPos),
+					this.guiBackground.id, s, s,
+					false, this.selectModule.bind(this));
+				selectInstrument.doVisualUpdates = false;
+			}
 			zPos -= 0.15;
 		}
 
 		zPos = this.backgroundHeight * 0.5 - 0.3 - 0.3;
 
 		for (const s of this.synthModules) {
-			const selectSynth = new ButtonWithParameter(this.ourApp,s);
-			await selectSynth.createAsync(new MRE.Vector3(1.0, 0.051, zPos),
-				this.guiBackground.id, s, s,
-				false, this.selectModule.bind(this));
-			selectSynth.doVisualUpdates=false;
+			if (s !== "") {
+				const selectSynth = new ButtonWithParameter(this.ourApp, s);
+				await selectSynth.createAsync(new MRE.Vector3(1.0, 0.051, zPos),
+					this.guiBackground.id, s, s,
+					false, this.selectModule.bind(this));
+				selectSynth.doVisualUpdates = false;
+			}
 			zPos -= 0.15;
 		}
-
 
 		const presetLabel = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
@@ -288,11 +296,13 @@ export default class Palette {
 
 		zPos = this.backgroundHeight * 0.5 - 0.3 - 0.3;
 		for (const s of this.presetLabels) {
-			const selectSynth = new ButtonWithParameter(this.ourApp,s);
-			await selectSynth.createAsync(new MRE.Vector3(0.0, 0.051, zPos),
-				this.guiBackground2.id, s, s,
-				false, this.selectPreset.bind(this));
-			selectSynth.doVisualUpdates=false;
+			if (s !== "") {
+				const selectPreset = new ButtonWithParameter(this.ourApp, s);
+				await selectPreset.createAsync(new MRE.Vector3(0.0, 0.051, zPos),
+					this.guiBackground2.id, s, s,
+					false, this.selectPreset.bind(this));
+					selectPreset.doVisualUpdates = false;
+			}
 			zPos -= 0.15;
 		}
 	}

@@ -287,7 +287,7 @@ export default class App {
 
 		this.ourConsole.logMessage("Creating Show  Pallete Button ");
 		this.ourPalette = new Palette(this);
-		await this.ourPalette.createBackground(new MRE.Vector3(5, 1.5, 0),
+		await this.ourPalette.createBackground(new MRE.Vector3(6, 1.5, 0),
 			MRE.Quaternion.FromEulerAngles(-90 * Math.PI / 180, 30 * Math.PI / 180, 0),
 			"Music Modules Palette",
 			1.5);
@@ -300,18 +300,7 @@ export default class App {
 		buttonZPos -= 0.2;
 		this.showPaletteButton.setElevatedUserOnlyVisibility();
 
-		await this.ourPresets.spawnPreset(this.instrumentType);
-	
-		this.ourConsole.logMessage("Waiting for all patch lines to be created");
-
-		for(const singlePatch of this.ourPatcher.ourPatches){
-			if(singlePatch.line){
-				await singlePatch.line.created();
-			}
-		}
-
-		this.showGUIsButton.setValue(false);
-		this.showGrabbersButton.setValue(false);
+		await this.ourPresets.spawnPreset(this.instrumentType);		
 
 		this.ourConsole.logMessage("Finished creation of all asyn items");
 	}

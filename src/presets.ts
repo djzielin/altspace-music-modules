@@ -67,8 +67,18 @@ export default class Presets {
 		if (presetLower === "spawner") {
 			await this.showSpawner();
 		}
-	}
 
+		this.ourApp.ourConsole.logMessage("Waiting for all patch lines to be created");
+
+		for(const singlePatch of this.ourApp.ourPatcher.ourPatches){
+			if(singlePatch.line){
+				await singlePatch.line.created();
+			}
+		}
+
+		this.ourApp.showGUIsButton.setValue(false);
+		this.ourApp.showGrabbersButton.setValue(false);
+	}
 
 	public async showPianoStaff() {
 		let xPos = 1.5;

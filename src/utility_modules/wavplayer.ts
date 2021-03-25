@@ -102,6 +102,7 @@ export default class WavPlayer extends MusicModule {
 
 	public destroy() {
 		this.ourApp.ourConsole.logMessage("WAVE PLAYER: destroy");
+
 		/*for(const sound of this.ourSounds.values()){
 			//Okay, how do we destroy or unload the sound?
 		}*/
@@ -231,6 +232,10 @@ export default class WavPlayer extends MusicModule {
 	}
 
 	public receiveData(data: any[], messageType: string) {
+		if(this.isEnabled===false){
+			return;
+		}
+	
 		if (messageType === "midi") {
 			if (data.length < 2) {
 				return;

@@ -60,6 +60,10 @@ export default class Sequencer extends MusicModule{
 	}*/
 
 	public receiveData(data: any[], messageType: string){
+		if(this.isEnabled===false){
+			return;
+		}
+		
 		if(messageType==="heartbeat"){
 			const beatType=data[0] as number;
 			const interval=data[1] as number;

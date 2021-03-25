@@ -34,11 +34,13 @@ export default class MidiPlayerGui extends GuiPanel{
 	private activeMidiIndex=0;
 	private ourMidiButtons: ButtonWithParameter[]=[];
 
+	private ourInterval: NodeJS.Timeout=null;
+
 	constructor(protected ourApp: App, private ourMidiPlayer: MidiPlayer) {
 		super(ourApp);
 		this.ourModule=ourMidiPlayer;
 
-		setInterval(() => {
+		this.ourInterval=setInterval(() => {
 			const recentState=(this.ourMidiPlayer.ourPlayState===PlayState.Playing);
 			
 			if(recentState!==this.isPlaying){
@@ -57,6 +59,15 @@ export default class MidiPlayerGui extends GuiPanel{
 			}
 		}, 1000);
 	}	
+
+	public destroy(){
+		this.ourApp.ourConsole.logMessage("MIDI PLAYER GUI: destroy");
+		if(this.ourInterval){
+			clearInterval(this.ourInterval);
+		}
+
+		super.destroy();
+	}
 
 	public sendMidiPatcher(b: boolean){
 		this.ourApp.ourPatcher.patcherClickEvent(this.ourMidiPlayer,"midi",true,this,this.sendButton);

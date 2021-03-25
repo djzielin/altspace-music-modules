@@ -362,6 +362,10 @@ export default class Spiral extends MusicModule {
 	}*/
 
 	public receiveData(data: any[], messageType: string) {
+		if(this.isEnabled===false){
+			return;
+		}
+		
 		if (messageType === "midi") {
 			if (data.length > 1) {
 				if (data[1] > 0) {

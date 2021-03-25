@@ -529,6 +529,10 @@ export default class Staff extends MusicModule {
 	}
 
 	public receiveData(data: any[], messageType: string) {
+		if(this.isEnabled===false){
+			return;
+		}
+		
 		if (messageType === "midi") {
 			if (data.length > 1) {
 				const note=Math.trunc(data[0] as number); //dont allow floating point (yet)

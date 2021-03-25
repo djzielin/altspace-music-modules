@@ -10,6 +10,7 @@ import PatchPoint from './patch_point';
 export default class MusicModule {
 	public ourGrabber: GrabButton=null;
 	public sendDestinations: PatchPoint[]=[];
+	public isEnabled=true;
 	
 	constructor(protected ourApp: App, public name: string) {
 		
@@ -17,6 +18,8 @@ export default class MusicModule {
 
 	public destroy(){
 		this.ourApp.ourConsole.logMessage("MUSIC MODULE: destroy");
+
+		this.isEnabled=false;
 
 		if(this.ourGrabber){
 			this.ourGrabber.destroy();
@@ -95,6 +98,10 @@ export default class MusicModule {
 	}
 
 	public sendData(data: any[], messageType: string){
+		if(this.isEnabled===false){
+			return;
+		}
+		
 		for(const singlePatch of this.sendDestinations){
 			if(singlePatch.messageType===messageType){
 				singlePatch.module.receiveData(data, messageType);
