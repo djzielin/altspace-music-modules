@@ -137,12 +137,12 @@ export default class Spiral extends MusicModule {
 	public setFancyKeyColor(midiNote: number) {
 		const note = midiNote % 12;
 
-		if (this.ourApp.ourStaff) {
-			const materialID = this.ourApp.ourStaff.noteMaterials[note].id;
-			if (this.ourKeys.has(midiNote)) {
-				this.ourKeys.get(midiNote).appearance.materialId = materialID;
-			}
-		}
+	//	if (this.ourApp.ourStaff) {
+//			const materialID = this.ourApp.ourStaff.noteMaterials[note].id;
+//			if (this.ourKeys.has(midiNote)) {
+//				this.ourKeys.get(midiNote).appearance.materialId = materialID;
+//			}
+//		}
 	}
 
 	private isAuthorized(user: MRE.User): boolean {
@@ -334,13 +334,13 @@ export default class Spiral extends MusicModule {
 		});
 	}
 
-	public getSharpsMode() { //TODO sharp mode should really be pulled out into a global setting
+	/*public getSharpsMode() { //TODO sharp mode should really be pulled out into a global setting
 		let doSharpsComputed = this.doSharps;
 		if (this.ourApp.ourStaff) {
 			doSharpsComputed = this.ourApp.ourStaff.doSharps;
 		}
 		return doSharpsComputed;
-	}
+	}*/
 
 	public receiveData(data: any[], messageType: string) {
 		if (messageType === "midi") {

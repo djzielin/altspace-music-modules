@@ -582,11 +582,12 @@ export default class Piano extends MusicModule {
 	}
 
 	public getSharpsMode() { //TODO sharp mode should really be pulled out into a global setting
-		let doSharpsComputed = this.doSharps;
+		/*let doSharpsComputed = this.doSharps;
 		if (this.ourApp.ourStaff) {
 			doSharpsComputed = this.ourApp.ourStaff.doSharps;
 		}
-		return doSharpsComputed;
+		return doSharpsComputed;*/
+		return this.doSharps;
 	}
 
 	public receiveData(data: any[], messageType: string) {

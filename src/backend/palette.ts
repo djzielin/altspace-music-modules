@@ -10,6 +10,34 @@ import GrabButton from '../gui/grabbutton';
 import ButtonWithParameter from '../gui/button_with_parameter';
 //import MusicModule from '../backend/music_module';
 
+import Piano from '../piano'
+import Spawner from '../spawner'
+import Staff from '../staff';
+import Geo from '../geo';
+import Spiral from '../spiral';
+
+//import Se02 from '../se02';
+
+import MidiReceiver from '../utility_modules/midi_receiver'
+import WavPlayer from '../utility_modules/wavplayer';
+//import Sequencer from '../utility_modules/sequencer';
+//import HeartBeat from '../utility_modules/heartbeat';
+import MidiPlayer from '../utility_modules/midi_player';
+
+//import GuiPanel from '../gui/gui_panel';
+//import GrabButton from '../gui/grabbutton';
+//import Button from '../gui/button';
+
+import MidiReceiverGui from '../gui/midi_receiver_gui';
+//import HeartBeatGui from '../gui/heartbeat_gui';
+//import GeoGui from '../gui/geo_gui';
+//import SequencerGui from '../gui/sequencer_gui';
+import WavPlayerGui from '../gui/wavplayer_gui';
+import SpawnerGui from '../gui/spawner_gui';
+import PianoGui from '../gui/piano_gui';
+import StaffGui from '../gui/staff_gui';
+import MidiPlayerGui from '../gui/midi_player_gui';
+
 export default class Palette {
 	protected guiBackground: MRE.Actor = null;
 	protected guiGrabber: GrabButton = null;
@@ -58,7 +86,7 @@ export default class Palette {
 	public selectModule(b: boolean, param: any){
 		const moduleName=param as string;
 
-		this.ourApp.spawnModule(moduleName);
+		this.spawnModule(moduleName);
 	}
 	
 	public async createBackground(pos: MRE.Vector3, rot: MRE.Quaternion, name: string, bgHeight: number) {
@@ -200,5 +228,96 @@ export default class Palette {
 			zPos -= 0.15;
 		}
 
+	}
+
+	//TODO: do something better about placing these, so it doesn't overlap (especially GUI's)
+	public spawnModule(name: string) {
+		let moduleNum=0;
+		if(this.ourApp.moduleCounts.has(name)){
+			moduleNum=this.ourApp.moduleCounts.get(name);
+		}
+
+		let displayName=name;
+		if(moduleNum>0){
+			displayName=displayName+" "+(moduleNum+1).toString();
+		}
+
+		if (name === "Piano") {
+			const ourPiano = new Piano(this.ourApp, displayName);
+			ourPiano.createAllKeys(new MRE.Vector3(2, 1, -1),
+				MRE.Quaternion.FromEulerAngles(-30 * Math.PI / 180, 0, 0)).then(() => {
+				this.ourApp.allModules.push(ourPiano);
+
+				const ourPianoGui = new PianoGui(this.ourApp, ourPiano);
+				ourPianoGui.createAsync(new MRE.Vector3(0, 0.1, -2), displayName).then(() => {
+					this.ourApp.allGUIs.push(ourPianoGui);
+				});
+			});
+		}
+
+		if (name === "Staff") {
+			const ourStaff = new Staff(this.ourApp, displayName);
+			ourStaff.createAsyncItems(new MRE.Vector3(2, 2, -1),
+				MRE.Quaternion.FromEulerAngles(-90 * Math.PI / 180, 0, 0)).then(() => {
+				this.ourApp.allModules.push(ourStaff);
+
+				const ourStaffGui = new StaffGui(this.ourApp, ourStaff);
+				ourStaffGui.createAsync(new MRE.Vector3(0, 0.1, -2), displayName).then(() => {
+					this.ourApp.allGUIs.push(ourStaffGui);
+				});
+			});
+		}
+
+		if (name === "Wav Player") {
+			const ourWavPlayer = new WavPlayer(this.ourApp, displayName);
+			ourWavPlayer.loadAllSounds("piano", 36, 84).then(() => {
+				this.ourApp.allModules.push(ourWavPlayer);
+
+				const ourWavPlayerGui = new WavPlayerGui(this.ourApp, ourWavPlayer);
+				ourWavPlayerGui.createAsync(new MRE.Vector3(0, 0.1, -2), displayName).then(() => {
+					this.ourApp.allGUIs.push(ourWavPlayerGui);
+				});
+			});
+		}
+
+		if (name === "Midi Receiver") {
+			const ourMidiReceiver = new MidiReceiver(this.ourApp, 3902, displayName);
+			this.ourApp.allModules.push(ourMidiReceiver);
+
+			const ourMidiReceiverGui = new MidiReceiverGui(this.ourApp, ourMidiReceiver);
+			ourMidiReceiverGui.createAsync(new MRE.Vector3(0, 0.1, -2), displayName).then(() => {
+				this.ourApp.allGUIs.push(ourMidiReceiverGui);
+			});
+		}
+
+		if (name === "Midi Player") {
+			const ourMidiPlayer = new MidiPlayer(this.ourApp, displayName);
+
+			const ourMidiPlayerGui = new MidiPlayerGui(this.ourApp, ourMidiPlayer);
+			ourMidiPlayerGui.createAsync(new MRE.Vector3(0, 0.1, -2), displayName).then(() => {
+				this.ourApp.allGUIs.push(ourMidiPlayerGui);
+			});
+		}
+
+		if (name === "Spawner") {
+			const ourSpawner = new Spawner(this.ourApp, displayName);
+			ourSpawner.createAsyncItems(new MRE.Vector3(2, 1, 0),
+				MRE.Quaternion.FromEulerAngles(0.0 * Math.PI / 180, 0, 0)).then(() => {
+
+				this.ourApp.allModules.push(ourSpawner);
+
+				const ourSpawnerGui = new SpawnerGui(this.ourApp, ourSpawner);
+				ourSpawnerGui.createAsync(new MRE.Vector3(0, 0.1, -2), displayName).then(() => {
+					this.ourApp.allGUIs.push(ourSpawnerGui);
+				});
+			});
+		}
+
+		if(this.ourApp.moduleCounts.has(name)){
+			const currentCount=this.ourApp.moduleCounts.get(name);
+			this.ourApp.moduleCounts.set(name,currentCount+1);
+		} else{
+			this.ourApp.moduleCounts.set(name,1);
+		}
 	}
 }
