@@ -99,8 +99,11 @@ export default class Spawner extends MusicModule {
 	//public ourSpawner: MRE.Actor;
 	public spawnerActor: MRE.Actor;
 
-	public ourWavPlayer: WavPlayer;
-	
+	//public ourWavPlayer: WavPlayer;
+
+	private ourInterval1: NodeJS.Timeout=null;
+	private ourInterval2: NodeJS.Timeout=null;
+
 	private removeFromAvailable(ourBubble: BubbleProperties) {
 		const index = this.availableBubbles.indexOf(ourBubble);
 		if (index > -1) {
@@ -109,10 +112,27 @@ export default class Spawner extends MusicModule {
 		ourBubble=null;
 	}	
 
+	public destroy() {
+		this.ourApp.ourConsole.logMessage("SPAWNER: destroy");
+
+		clearInterval(this.ourInterval1);
+		clearInterval(this.ourInterval2);
+		
+		for (const ourBubble of this.availableBubbles) {
+			if (ourBubble.animation) {
+				//ourBubble.animation.stop();
+				ourBubble.animation.delete();
+			}
+			ourBubble.actor.destroy();
+		}
+
+		super.destroy();
+	}
+
 	constructor(protected ourApp: App, public name: string) {
 		super(ourApp, name);
 
-		setInterval(() => { //cull bubbles that have been around too long
+		this.ourInterval1=setInterval(() => { //cull bubbles that have been around too long
 			const currentTime = Date.now();
 			const listOfAvailableBubblesToDelete: BubbleProperties[]=[];
 			for (const ourBubble of this.availableBubbles) {
@@ -142,7 +162,7 @@ export default class Spawner extends MusicModule {
 				`(${listOfAvailableBubblesToDelete.length} culled)`);*/
 		}, 1000);
 
-		setInterval(() => {
+		this.ourInterval2=setInterval(() => {
 			const bubblesToPop: BubbleProperties[] = [];
 
 			for (const ourBubble of this.availableBubbles) {
@@ -509,7 +529,7 @@ export default class Spawner extends MusicModule {
 		ourBubble.note = note;
 		ourBubble.vel = vel;
 
-		if (this.doPhysics) {
+		/*if (this.doPhysics) {
 			ourBubble.actor.collider.onCollision("collision-enter", (data: MRE.CollisionData) => {
 				this.ourApp.ourConsole.logMessage("onCollision called!");			
 
@@ -524,7 +544,9 @@ export default class Spawner extends MusicModule {
 					//this.ourApp.ourConsole.logMessage("hand collided with: " + otherActor.name);
 				}
 			});
-		} /*else {
+		} 
+		*/
+		/*else {
 			ourBubble.actor.collider.onTrigger("trigger-enter", (otherActor: MRE.Actor) => {
 				this.ourApp.ourConsole.logMessage("onTrigger called!");			
 

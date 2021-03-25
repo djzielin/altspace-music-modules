@@ -60,6 +60,13 @@ export default class MidiPlayer extends MusicModule {
 		this.setupAfterAction();
 	}
 
+	public destroy(){
+		this.ourApp.ourConsole.logMessage("MIDI PLAYER: destroy");
+		this.setStopped();
+
+		super.destroy();
+	}
+
 	private loadArrayBuffers() {
 		for (let i = 0; i < this.midiFiles.length; i++) {
 			this.midiFileArrayBuffers.push(null);

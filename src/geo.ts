@@ -58,6 +58,15 @@ export default class Geo extends MusicModule {
 	private keyLocations: Map<number, MRE.Vector3> = new Map();
 	private canBePicked: Map<number, boolean> = new Map();
 
+	public destroy() {
+		this.ourApp.ourConsole.logMessage("GEO: destroy");
+		for(const geo of this.ourGeos){
+			this.stopGeoTravel(geo);
+		}
+
+		super.destroy();
+	}
+
 	constructor(protected ourApp: App, public name: string) {
 		super(ourApp, name);
 		this.artifacts = new GeoArtifacts();
@@ -268,10 +277,8 @@ export default class Geo extends MusicModule {
 		}
 	}
 
-	private clickOnGeo(oneGeo: SingleGeo, userID: MRE.Guid){
-		this.ourApp.ourConsole.logMessage("GEO: user clicked on: " + oneGeo.name);
-
-		let oldPos = oneGeo.position.clone();
+	private stopGeoTravel(oneGeo: SingleGeo): MRE.Vector3{
+		let oldPos=oneGeo.position.clone()
 
 		if (oneGeo.travelAnimation) {
 			this.geoReleased(oneGeo);
@@ -289,6 +296,14 @@ export default class Geo extends MusicModule {
 			ourAnim.animation.delete();
 			oneGeo.travelAnimation=null;
 		}
+
+		return oldPos;
+	}
+
+	private clickOnGeo(oneGeo: SingleGeo, userID: MRE.Guid){
+		this.ourApp.ourConsole.logMessage("GEO: user clicked on: " + oneGeo.name);
+
+		const oldPos=this.stopGeoTravel(oneGeo);
 
 		//oneGeo.growAnimation.play(true);
 		

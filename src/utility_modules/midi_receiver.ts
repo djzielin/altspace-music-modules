@@ -73,9 +73,17 @@ export default class MidiReceiver extends MusicModule {
 		});
 	}
 
+	public destroy() {
+		this.ourApp.ourConsole.logMessage("MIDI RECEIVER: destroy");
+		this.wss.close();
+
+		super.destroy();
+	}
+
+
 	constructor(protected ourApp: App, public port: number, name: string) {
 		super(ourApp, name);
-		
+
 		this.createServer();
 	}
 }

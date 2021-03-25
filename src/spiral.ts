@@ -100,6 +100,25 @@ export default class Spiral extends MusicModule {
 
 	private ourIntervals: SpiralIntervals = null;
 
+	public destroy() {
+		this.ourApp.ourConsole.logMessage("SPIRAL: destroy");
+
+		//clearInterval(this.ourInterval1);
+		//clearInterval(this.ourInterval2);
+		
+		/*for (const ourBubble of this.availableBubbles) {
+			if (ourBubble.animation) {
+				//ourBubble.animation.stop();
+				ourBubble.animation.delete();
+			}
+			ourBubble.actor.destroy();
+		}
+*/
+
+		super.destroy();
+	}
+
+
 	constructor(protected ourApp: App, public name: string) {
 		super(ourApp, name);
 		this.ourIntervals = new SpiralIntervals(ourApp, this);

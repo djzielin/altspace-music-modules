@@ -16,6 +16,8 @@ export default class MusicModule {
 	}
 
 	public destroy(){
+		this.ourApp.ourConsole.logMessage("MUSIC MODULE: destroy");
+
 		if(this.ourGrabber){
 			this.ourGrabber.destroy();
 		}

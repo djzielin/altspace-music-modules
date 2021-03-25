@@ -203,6 +203,16 @@ export default class App {
 		}
 	}
 
+	public async clearAll(){
+		for (const singlePanel of this.allGUIs) {
+			singlePanel.destroy();
+			await new Promise(resolve => setTimeout(resolve, 100));
+		}
+
+		this.allGUIs=[];
+		this.allModules=[];
+	}
+
 	public showAllGrabbers(b: boolean) {
 		if (b) {
 			this.ourConsole.logMessage("trying to show all grabbers");
@@ -290,22 +300,7 @@ export default class App {
 		buttonZPos -= 0.2;
 		this.showPaletteButton.setElevatedUserOnlyVisibility();
 
-		if(this.instrumentType==="piano"){
-			await this.ourPresets.showPianoStaff();
-			//await this.showSpiralStaff();
-		}
-
-		if(this.instrumentType==="spiral"){
-			await this.ourPresets.showSpiral();
-		}
-
-		if(this.instrumentType==="geo"){
-			await this.ourPresets.showGeo();
-		}
-
-		if(this.instrumentType==="spawner"){
-			await this.ourPresets.showSpawner();
-		}
+		await this.ourPresets.spawnPreset(this.instrumentType);
 	
 		this.ourConsole.logMessage("Waiting for all patch lines to be created");
 

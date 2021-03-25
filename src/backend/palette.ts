@@ -40,6 +40,8 @@ import MidiPlayerGui from '../gui/midi_player_gui';
 
 export default class Palette {
 	protected guiBackground: MRE.Actor = null;
+	protected guiBackground2: MRE.Actor = null;
+
 	protected guiGrabber: GrabButton = null;
 	protected backgroundHeight = 1.75;
 
@@ -47,18 +49,26 @@ export default class Palette {
 		"Midi Receiver",
 		"Midi Player",
 		"Wav Player",
-		"Midi Sender (soon)",
-		"Sequencer (soon)",
-		"Heart Beat (soon)"];
+		"Midi Sender (soon)"//,
+		//"Sequencer (soon)",
+		//"Heart Beat (soon)"
+	];
 		
 	private instrumentModules: string[] = [
 		"Piano",
 		"Staff",
-		"Spiral (soon)",
 		"Spawner (soon)",
-		"Geo (soon)"];
-	private synthModules: string[] = ["SE-02 (soon)"];
+		"Geo (soon)",
+		"Spiral (soon)"];
 
+	private presetLabels: string[] = [
+		"Piano",
+		"Spawner (soon)",
+		"Geo (soon)",
+		"Spiral (soon)",
+		"CLEAR ALL"];
+
+	private synthModules: string[] = []; //["SE-02 (soon)"
 
 	constructor(protected ourApp: App) {
 	}
@@ -88,6 +98,14 @@ export default class Palette {
 
 		this.spawnModule(moduleName);
 	}
+
+	public selectPreset(b: boolean, param: any){
+		const presetName=param as string;
+
+		this.ourApp.ourPresets.spawnPreset(presetName).then( ()=>{
+			this.ourApp.ourConsole.logMessage("new preset loaded!: " + presetName);
+		});
+	}
 	
 	public async createBackground(pos: MRE.Vector3, rot: MRE.Quaternion, name: string, bgHeight: number) {
 		this.backgroundHeight=bgHeight;
@@ -95,6 +113,7 @@ export default class Palette {
 		this.guiGrabber.create(pos,rot);
 		
 		const backGroundMesh = this.ourApp.assets.createBoxMesh('boxMesh', 3.0, 0.1, this.backgroundHeight);
+		const backGroundMesh2 = this.ourApp.assets.createBoxMesh('boxMesh', 1.0, 0.1, this.backgroundHeight);
 
 
 		this.guiBackground = MRE.Actor.Create(this.ourApp.context, {
@@ -107,13 +126,31 @@ export default class Palette {
 				},
 				transform: {
 					local: {
-						position: { x: -1.75, y:0.0, z: -0.25 },
+						position: { x: -3, y:0.0, z: -0.25 },
 						rotation: { x: 0, y: 0, z:0}
 					}
 				}
 			}
 		});
-		await this.guiBackground.created();
+
+		this.guiBackground2 = MRE.Actor.Create(this.ourApp.context, {
+			actor: {
+				parentId: this.guiGrabber.getGUID(),
+				name: "presetBackground",
+				appearance: {
+					meshId: backGroundMesh2.id,
+					materialId: this.ourApp.grayMat.id
+				},
+				transform: {
+					local: {
+						position: { x: -.75, y:0.0, z: -0.25 },
+						rotation: { x: 0, y: 0, z:0}
+					}
+				}
+			}
+		});
+
+		await this.guiBackground2.created();
 
 		const guiTextActor = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
@@ -180,7 +217,7 @@ export default class Palette {
 				parentId: this.guiBackground.id,
 				name: 'titleText',
 				text: {
-					contents: "Synths",
+					contents: "Hardware",
 					height: 2.0 / 25,
 					anchor: MRE.TextAnchorLocation.TopCenter,
 					color: new MRE.Color3(1, 1, 1)
@@ -228,6 +265,36 @@ export default class Palette {
 			zPos -= 0.15;
 		}
 
+
+		const presetLabel = MRE.Actor.Create(this.ourApp.context, {
+			actor: {
+				parentId: this.guiBackground2.id,
+				name: 'titleText',
+				text: {
+					contents: "Presets",
+					height: 2.0 / 25,
+					anchor: MRE.TextAnchorLocation.TopCenter,
+					color: new MRE.Color3(1, 1, 1)
+				},
+				transform: {
+					local: {
+						position: new MRE.Vector3(0.0, 0.051, this.backgroundHeight * 0.5 - 0.3),
+						rotation: MRE.Quaternion.FromEulerAngles(this.ourApp.degToRad(90), 0, 0)
+					}
+				}
+			}
+		});
+		await presetLabel.created();
+
+		zPos = this.backgroundHeight * 0.5 - 0.3 - 0.3;
+		for (const s of this.presetLabels) {
+			const selectSynth = new ButtonWithParameter(this.ourApp,s);
+			await selectSynth.createAsync(new MRE.Vector3(0.0, 0.051, zPos),
+				this.guiBackground2.id, s, s,
+				false, this.selectPreset.bind(this));
+			selectSynth.doVisualUpdates=false;
+			zPos -= 0.15;
+		}
 	}
 
 	//TODO: do something better about placing these, so it doesn't overlap (especially GUI's)
@@ -311,6 +378,32 @@ export default class Palette {
 					this.ourApp.allGUIs.push(ourSpawnerGui);
 				});
 			});
+		}
+		if (name === "Geo") {
+			/*const ourSpawner = new Spawner(this.ourApp, displayName);
+			ourSpawner.createAsyncItems(new MRE.Vector3(2, 1, 0),
+				MRE.Quaternion.FromEulerAngles(0.0 * Math.PI / 180, 0, 0)).then(() => {
+
+				this.ourApp.allModules.push(ourSpawner);
+
+				const ourSpawnerGui = new SpawnerGui(this.ourApp, ourSpawner);
+				ourSpawnerGui.createAsync(new MRE.Vector3(0, 0.1, -2), displayName).then(() => {
+					this.ourApp.allGUIs.push(ourSpawnerGui);
+				});
+			});*/
+		}
+		if (name === "Spiral") {
+			/*const ourSpawner = new Spawner(this.ourApp, displayName);
+			ourSpawner.createAsyncItems(new MRE.Vector3(2, 1, 0),
+				MRE.Quaternion.FromEulerAngles(0.0 * Math.PI / 180, 0, 0)).then(() => {
+
+				this.ourApp.allModules.push(ourSpawner);
+
+				const ourSpawnerGui = new SpawnerGui(this.ourApp, ourSpawner);
+				ourSpawnerGui.createAsync(new MRE.Vector3(0, 0.1, -2), displayName).then(() => {
+					this.ourApp.allGUIs.push(ourSpawnerGui);
+				});
+			});*/
 		}
 
 		if(this.ourApp.moduleCounts.has(name)){

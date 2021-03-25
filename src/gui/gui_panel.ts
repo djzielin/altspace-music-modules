@@ -96,6 +96,11 @@ export default class GuiPanel {
 		this.ourApp.ourConsole.logMessage("GUI PANEL: received delete request!");
 
 		this.ourApp.ourPatcher.removeAttachedPatches(this);
+		this.destroy();		
+	}
+
+	public destroy(){
+		this.ourApp.ourConsole.logMessage("GUI PANEL: destroy");
 
 		this.guiBackground.destroy();
 		this.guiGrabber.destroy();

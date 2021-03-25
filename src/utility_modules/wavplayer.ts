@@ -98,10 +98,27 @@ export default class WavPlayer extends MusicModule {
 		}
 	}	
 
+	private ourInterval: NodeJS.Timeout=null;
+
+	public destroy() {
+		this.ourApp.ourConsole.logMessage("WAVE PLAYER: destroy");
+		/*for(const sound of this.ourSounds.values()){
+			//Okay, how do we destroy or unload the sound?
+		}*/
+
+		for(const playingSound of this.playingWavs.values()){
+			playingSound.actor.destroy();
+		}
+
+		clearInterval(this.ourInterval);
+
+		super.destroy();
+	}
+
 	constructor(protected ourApp: App, public name: string) {
 		super(ourApp, name);
 
-		setInterval(() => { //cull bubbles that have been around too long
+		this.ourInterval=setInterval(() => { //cull bubbles that have been around too long
 			const currentTime = Date.now();
 			const listOfPlayingWavsToDelete: WavProperties[] = [];
 
@@ -151,10 +168,21 @@ export default class WavPlayer extends MusicModule {
 				this.highestNote=i;
 			}
 
-			const newSound = this.ourApp.assets.createSound("pianoKey" + i, {
-				uri: URL
-			});
-			await newSound.created;
+			let newSound: MRE.Sound=null; 
+			for(const sound of this.ourApp.assets.sounds){ 
+				if(sound.uri===URL){
+					this.ourApp.ourConsole.logMessage("Actually, we already have this sound loaded!");
+					newSound=sound;
+					break;
+				}
+			}
+
+			if (newSound === null) {
+				newSound = this.ourApp.assets.createSound("pianoKey" + i, {
+					uri: URL
+				});
+				await newSound.created;
+			}
 
 			this.ourSounds.set(i,newSound);
 			//this.ourSoundsArray.push(newSound);

@@ -46,7 +46,31 @@ export default class Presets {
 	constructor(protected ourApp: App) {
 	}
 
-	public async showPianoStaff(){
+	public async spawnPreset(presetName: string) {
+		const presetLower = presetName.toLowerCase();
+
+		await this.ourApp.clearAll();
+
+		if (presetLower === "piano") {
+			await this.showPianoStaff();
+			//await this.showSpiralStaff();
+		}
+
+		if (presetLower === "spiral") {
+			await this.showSpiral();
+		}
+
+		if (presetLower === "geo") {
+			await this.showGeo();
+		}
+
+		if (presetLower === "spawner") {
+			await this.showSpawner();
+		}
+	}
+
+
+	public async showPianoStaff() {
 		let xPos = 1.5;
 
 		const ourWavPlayer = new WavPlayer(this.ourApp, "Wav Player");

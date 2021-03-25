@@ -88,6 +88,8 @@ export default class Piano extends MusicModule {
 
 	private keyboardBounds: number[]=[];
 
+	private ourInterval: NodeJS.Timeout=null;
+
 	constructor(protected ourApp: App, public name: string) {
 		super(ourApp, name);
 
@@ -100,7 +102,7 @@ export default class Piano extends MusicModule {
 
 		//let previousHands: Map<MRE.Actor, MRE.Vector3> = new Map();
 
-		setInterval(() => {
+		this.ourInterval=setInterval(() => {
 			if (this.isKeysSetup) {
 				const allHands: Map<MRE.Actor, MRE.Vector3> = new Map();
 
@@ -155,6 +157,14 @@ export default class Piano extends MusicModule {
 				//previousHands=allHands;
 			}
 		}, 100);
+	}
+
+	public destroy(){
+		this.ourApp.ourConsole.logMessage("PIANO: destroy");
+		clearInterval(this.ourInterval);
+		//TODO: do we need to delete all objects we created?
+
+		super.destroy();
 	}
 
 	private isInsideBoundingBox(pos: MRE.Vector3) {
