@@ -300,7 +300,10 @@ export default class Palette {
 		zPos = this.backgroundHeight * 0.5 - 0.3 - 0.3;
 		for (const s of this.presetLabels) {
 			if (s !== "") {
-				const sPreset=s+" Preset";
+				let sPreset = s;
+				if (sPreset !== "CLEAR ALL") {
+					sPreset += " Preset";
+				}
 				const selectPreset = new ButtonWithParameter(this.ourApp, s);
 				await selectPreset.createAsync(new MRE.Vector3(0.0, 0.051, zPos),
 					this.guiBackground2.id, sPreset, sPreset,
@@ -362,7 +365,7 @@ export default class Palette {
 		}
 
 		if (name === "Midi Receiver") {
-			const ourMidiReceiver = new MidiReceiver(this.ourApp, 3902, displayName);
+			const ourMidiReceiver = new MidiReceiver(this.ourApp, this.ourApp.port+1, displayName);
 			this.ourApp.allModules.push(ourMidiReceiver);
 
 			const ourMidiReceiverGui = new MidiReceiverGui(this.ourApp, ourMidiReceiver);

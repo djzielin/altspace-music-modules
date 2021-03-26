@@ -56,7 +56,7 @@ export default class App {
 	public moduleCounts: Map<string,number>=new Map();
 
 	constructor(public context: MRE.Context, public baseUrl: string,
-		public baseDir: string, public instrumentType: string) {
+		public baseDir: string, public instrumentType: string, public port: number) {
 			
 		this.ourConsole = new Console(this);
 		this.ourPatcher = new Patcher(this);

@@ -102,7 +102,7 @@ export default class Presets {
 			MRE.Quaternion.FromEulerAngles(-90 * Math.PI / 180, 0, 0));		
 		this.ourApp.allModules.push(ourStaff);
 		
-		const ourMidiReceiver = new MidiReceiver(this.ourApp,3902, "Midi Receiver");
+		const ourMidiReceiver = new MidiReceiver(this.ourApp, this.ourApp.port+1, "Midi Receiver");
 		this.ourApp.allModules.push(ourMidiReceiver);
 
 		const ourStaffGui = new StaffGui(this.ourApp, ourStaff);
@@ -200,6 +200,7 @@ export default class Presets {
 		//await ourWavPlayer.loadAllSounds("GoogleDrive/GeoSound",21,108);
 		await ourWavPlayer.loadAllSoundsDirectory("speak", 21);
 		this.ourApp.allModules.push(ourWavPlayer);
+		ourWavPlayer.volume=0.5;
 
 		const ourWavPlayerGui = new WavPlayerGui(this.ourApp, ourWavPlayer);
 		await ourWavPlayerGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "WavPlayer")
@@ -252,7 +253,7 @@ export default class Presets {
 
 		//======================================================================
 
-		const ourMidiReceiver = new MidiReceiver(this.ourApp, 3902, "Midi Receiver");
+		const ourMidiReceiver = new MidiReceiver(this.ourApp, this.ourApp.port+1, "Midi Receiver");
 		this.ourApp.allModules.push(ourMidiReceiver);
 		
 		const ourMidiReceiverGui = new MidiReceiverGui(this.ourApp, ourMidiReceiver);
