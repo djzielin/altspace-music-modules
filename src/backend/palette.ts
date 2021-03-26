@@ -30,7 +30,7 @@ import MidiPlayer from '../utility_modules/midi_player';
 
 import MidiReceiverGui from '../gui/midi_receiver_gui';
 //import HeartBeatGui from '../gui/heartbeat_gui';
-//import GeoGui from '../gui/geo_gui';
+import GeoGui from '../gui/geo_gui';
 //import SequencerGui from '../gui/sequencer_gui';
 import WavPlayerGui from '../gui/wavplayer_gui';
 import SpawnerGui from '../gui/spawner_gui';
@@ -49,8 +49,8 @@ export default class Palette {
 		"Midi Receiver",
 		"Midi Player",
 		"Wav Player",
-		"",
-		"Midi Sender (soon)"//,
+		""//,
+		//"Midi Sender (soon)"//,
 		//"Sequencer",
 		//"Heart Beat"
 	];
@@ -58,9 +58,8 @@ export default class Palette {
 	private instrumentModules: string[] = [
 		"Piano",
 		"Staff",
-		"",
 		"Spawner",
-		"Geo (soon)"
+		"Geo"
 		//"Spiral"
 		//"Tablature"
 	];
@@ -68,7 +67,7 @@ export default class Palette {
 	private presetLabels: string[] = [
 		"Piano",
 		"Spawner",
-		"Geo (soon)",
+		"Geo",
 		//"Spiral",
 		"",
 		"CLEAR ALL"];
@@ -218,7 +217,7 @@ export default class Palette {
 		});
 		await instrumentLabel.created();
 
-		const synthLabel = MRE.Actor.Create(this.ourApp.context, {
+		/*const synthLabel = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
 				parentId: this.guiBackground.id,
 				name: 'titleText',
@@ -237,6 +236,7 @@ export default class Palette {
 			}
 		});
 		await synthLabel.created();
+		*/
 
 		let zPos = this.backgroundHeight * 0.5 - 0.3 - 0.3;
 
@@ -394,18 +394,35 @@ export default class Palette {
 			});
 		}
 		if (name === "Geo") {
-			/*const ourSpawner = new Spawner(this.ourApp, displayName);
-			ourSpawner.createAsyncItems(new MRE.Vector3(2, 1, 0),
-				MRE.Quaternion.FromEulerAngles(0.0 * Math.PI / 180, 0, 0)).then(() => {
+			let lowNote = 36;
+			let highNote = 84;
 
-				this.ourApp.allModules.push(ourSpawner);
+			//TODO, figure out better way to communicate how many samples available to geo 
+			for (const module of this.ourApp.allModules) {
+				if (module.moduleType === "WavPlayer") {
+					this.ourApp.ourConsole.logMessage("Found the WavPlayer!");
+					lowNote = (module as WavPlayer).lowestNote;
+					highNote = (module as WavPlayer).highestNote;
+				}
+			}
 
-				const ourSpawnerGui = new SpawnerGui(this.ourApp, ourSpawner);
-				ourSpawnerGui.createAsync(new MRE.Vector3(0, 0.1, -2), displayName).then(() => {
-					this.ourApp.allGUIs.push(ourSpawnerGui);
+			const ourGeo = new Geo(this.ourApp, "Geo");
+
+			ourGeo.createAllGeos(new MRE.Vector3(0, 0, 0),
+				MRE.Quaternion.Identity(),
+				lowNote,
+				highNote).then(() => {
+
+				this.ourApp.allModules.push(ourGeo);
+
+				const ourGeoGui = new GeoGui(this.ourApp, ourGeo);
+
+				ourGeoGui.createAsync(new MRE.Vector3(0, 0.1, -2), "Geo").then(() => {
+					this.ourApp.allGUIs.push(ourGeoGui);
 				});
-			});*/
+			});
 		}
+			
 		if (name === "Spiral") {
 			/*const ourSpawner = new Spawner(this.ourApp, displayName);
 			ourSpawner.createAsyncItems(new MRE.Vector3(2, 1, 0),
@@ -420,8 +437,8 @@ export default class Palette {
 			});*/
 		}
 
-		if(this.ourApp.moduleCounts.has(name)){
-			const currentCount=this.ourApp.moduleCounts.get(name);
+		if (this.ourApp.moduleCounts.has(name)) {
+			const currentCount = this.ourApp.moduleCounts.get(name);
 			this.ourApp.moduleCounts.set(name,currentCount+1);
 		} else{
 			this.ourApp.moduleCounts.set(name,1);

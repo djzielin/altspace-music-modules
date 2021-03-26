@@ -60,8 +60,13 @@ export default class Geo extends MusicModule {
 
 	public destroy() {
 		this.ourApp.ourConsole.logMessage("GEO: destroy");
+
 		for(const geo of this.ourGeos){
 			this.stopGeoTravel(geo);
+		}
+
+		for(const geo of this.geoPositioners.values()){
+			geo.destroy();
 		}
 
 		super.destroy();
@@ -203,7 +208,7 @@ export default class Geo extends MusicModule {
 			const geoPositioner = MRE.Actor.Create(this.ourApp.context, {
 				actor: {
 					name: 'individualKeyParent',
-					//parentId: this.geoParent.id,
+					parentId: this.ourGrabber.getGUID(),
 					transform: {
 						local: {
 							position: geoPos,
@@ -331,33 +336,25 @@ export default class Geo extends MusicModule {
 
 		oneGeo.position = newPos;
 
+		const userPos=this.ourApp.ourUsers.getUserPos(userID);
+		const pos1 = userPos; //userChest.transform.app.position;
+		const pos2 = oldPos;
+		const d = MRE.Vector3.Distance(pos1, pos2);
+		const scale = d / 10;
+
+		this.ourApp.ourConsole.logMessage("GEO:  chest pos: " + pos1);
+
+		const projectileParticle = this.createActorFromArtifact(this.artifacts.particleEffects[0],
+			userPos.add(new MRE.Vector3(0, 0, 0)),
+			MRE.Quaternion.LookAt(pos1, pos2),
+			new MRE.Vector3(0.5, 0.5, scale),
+			MRE.ZeroGuid);
+		this.ourApp.ourConsole.logMessage("GEO:  created particle!");
+
+		setTimeout(() => {
+			projectileParticle.destroy();
+		}, 2000);
 		
-		const userChest = this.ourApp.ourUsers.getUserChest(userID);
-		if (userChest) {
-			this.ourApp.ourConsole.logMessage("GEO:  chestID: " + userChest.id);
-
-			const pos1 = userChest.transform.app.position;
-			const pos2 = oldPos;
-			const d = MRE.Vector3.Distance(pos1, pos2);
-			const scale = d / 10;
-
-			this.ourApp.ourConsole.logMessage("GEO:  chest pos: " + pos1);
-
-			const projectileParticle = this.createActorFromArtifact(this.artifacts.particleEffects[1],
-				userChest.transform.app.position.add(new MRE.Vector3(0,0.0,0)),
-				MRE.Quaternion.LookAt(pos1,pos2), 
-				new MRE.Vector3(0.5, 0.5, scale), 
-				MRE.ZeroGuid);
-			this.ourApp.ourConsole.logMessage("GEO:  created particle!");
-
-			setTimeout(() => {
-				projectileParticle.destroy();
-			}, 2000);
-		} else {
-			this.ourApp.ourConsole.logMessage("GEO:   ERROR - no user chest");
-		}
-
-
 		/*if (!oneGeo.insideParticle) {
 			const s=0.05;
 			const insideParticle = this.createActorFromArtifact(this.artifacts.particleEffects[1], //3

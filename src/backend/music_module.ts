@@ -11,6 +11,7 @@ export default class MusicModule {
 	public ourGrabber: GrabButton=null;
 	public sendDestinations: PatchPoint[]=[];
 	public isEnabled=true;
+	public moduleType="";
 	
 	constructor(protected ourApp: App, public name: string) {
 		

@@ -101,12 +101,19 @@ export default class GuiPanel {
 	public destroy(){
 		this.ourApp.ourConsole.logMessage("GUI PANEL: destroy");
 
-		this.guiBackground.destroy();
-		this.guiGrabber.destroy();
+		if(this.guiBackground){
+			this.guiBackground.destroy();
+		}
 
-		if(this.ourModule!==null){
+		if(this.guiGrabber){
+			this.guiGrabber.destroy();
+		}
+		if(this.ourModule){
+			this.ourApp.ourConsole.logMessage("GUI PANEL: about to try to destroy module");
 			this.ourModule.destroy();
-		}		
+		} else{
+			this.ourApp.ourConsole.logMessage("GUI PANEL: ERROR! NO MODULE TO DESTROY!");
+		}	
 
 		this.ourApp.ourPatcher.removeAttachedPatches(this);
 	}

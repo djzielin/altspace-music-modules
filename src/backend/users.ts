@@ -34,7 +34,7 @@ export default class Users {
 
 	}
 
-	public getUserChest(userID: MRE.Guid): MRE.Actor {
+	/*public getUserChest(userID: MRE.Guid): MRE.Actor {
 		for (const oneUser of this.allUsers) {
 			if (oneUser.userID === userID) {
 				if (oneUser.chest) {
@@ -43,6 +43,21 @@ export default class Users {
 			}
 		}
 		return null;
+	}*/
+
+	public getUserPos(userID: MRE.Guid): MRE.Vector3 {
+		for (const oneUser of this.allUsers) {
+			if (oneUser.userID === userID) {
+				if (oneUser.rHand && oneUser.lHand) {
+					const rPos = oneUser.rHand.transform.app.position;
+					const lPos = oneUser.lHand.transform.app.position;
+
+					const avgPos = (rPos.add(lPos)).multiplyByFloats(0.5, 0.5, 0.5);
+					return avgPos;
+				}
+			}
+		}
+		return MRE.Vector3.Zero();
 	}
 
 	public showHands() {

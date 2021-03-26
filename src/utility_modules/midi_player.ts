@@ -35,7 +35,7 @@ export default class MidiPlayer extends MusicModule {
 
 	constructor(protected ourApp: App, public name: string) {
 		super(ourApp, name);
-
+		
 		this.midiFiles.push("https://www.mutopiaproject.org/ftp/BachJS/"+
 			"BWV846/wtk1-prelude1/wtk1-prelude1.mid");
 		this.midiFiles.push("https://www.mutopiaproject.org/ftp/DebussyC/"+
@@ -63,7 +63,6 @@ export default class MidiPlayer extends MusicModule {
 	public destroy(){
 		this.ourApp.ourConsole.logMessage("MIDI PLAYER: destroy");
 		this.setStopped();
-		//this.Player.
 
 		super.destroy();
 	}
@@ -125,7 +124,7 @@ export default class MidiPlayer extends MusicModule {
 
 		for(let i=0;i<128;i++){ //simulate a note off for all notes
 			const sendMessage = [i, 0, 0];
-			this.sendData(sendMessage, "midi")
+			this.sendData(sendMessage, "midi");
 		}
 	}
 

@@ -198,7 +198,7 @@ export default class Presets {
 		ourWavPlayer.cullTime = 0; //don't cull sounds based on time playing
 		ourWavPlayer.doPedal = false;
 		//await ourWavPlayer.loadAllSounds("GoogleDrive/GeoSound",21,108);
-		await ourWavPlayer.loadAllSoundsDirectory("GoogleDrive/GeoSound", 21);
+		await ourWavPlayer.loadAllSoundsDirectory("speak", 21);
 		this.ourApp.allModules.push(ourWavPlayer);
 
 		const ourWavPlayerGui = new WavPlayerGui(this.ourApp, ourWavPlayer);

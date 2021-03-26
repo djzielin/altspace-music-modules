@@ -18,6 +18,7 @@ export default class GeoGui extends GuiPanel{
 
 	constructor(protected ourApp: App, private ourGeo: Geo) {
 		super(ourApp);
+		this.ourModule=ourGeo; //TODO: pass this through super constructor?
 	}
 
 	public setAuthAllUsers(b: boolean): void {
