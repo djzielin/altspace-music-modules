@@ -92,38 +92,50 @@ export default class Presets {
 		this.ourApp.allGUIs.push(ourWavPlayerGui);
 		xPos -= 1.75;
 		
-		const ourPiano = new Piano(this.ourApp, "Piano");
-		await ourPiano.createAllKeys(new MRE.Vector3(2, 1, 0),
-			MRE.Quaternion.FromEulerAngles(-30 * Math.PI / 180, 0, 0));	
-		this.ourApp.allModules.push(ourPiano);
+		// ===================================================================
 
 		const ourStaff = new Staff(this.ourApp, "Staff");
 		await ourStaff.createAsyncItems(new MRE.Vector3(2, 2, 0.5),
 			MRE.Quaternion.FromEulerAngles(-90 * Math.PI / 180, 0, 0));		
 		this.ourApp.allModules.push(ourStaff);
 		
-		const ourMidiReceiver = new MidiReceiver(this.ourApp, this.ourApp.port+1, "Midi Receiver");
-		this.ourApp.allModules.push(ourMidiReceiver);
-
 		const ourStaffGui = new StaffGui(this.ourApp, ourStaff);
 		await ourStaffGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Staff")
 		this.ourApp.allGUIs.push(ourStaffGui);
 		xPos -= 1.75;
 
+		// ===================================================================
+
+		const ourPiano = new Piano(this.ourApp, "Piano");
+		await ourPiano.createAllKeys(new MRE.Vector3(2, 1, 0),
+			MRE.Quaternion.FromEulerAngles(-30 * Math.PI / 180, 0, 0));	
+		this.ourApp.allModules.push(ourPiano);
+
 		const ourPianoGui = new PianoGui(this.ourApp, ourPiano);
 		await ourPianoGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Piano")
 		this.ourApp.allGUIs.push(ourPianoGui);
 		//ourPianoGui.removeSharpsButton(); //TODO: should have global sharp/flat button
-
 		xPos -= 1.75;
+
+		// ===================================================================	
+
 		const ourMidiPlayer = new MidiPlayer(this.ourApp, "Midi Player");
+		this.ourApp.allModules.push(ourMidiPlayer);		
+		
 		const ourMidiPlayerGui = new MidiPlayerGui(this.ourApp, ourMidiPlayer);
 		await ourMidiPlayerGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "Midi Player");
 		this.ourApp.allGUIs.push(ourMidiPlayerGui);
 
+		// ===================================================================
+
+		const ourMidiReceiver = new MidiReceiver(this.ourApp, this.ourApp.port+1, "Midi Receiver");
+		this.ourApp.allModules.push(ourMidiReceiver);
+
 		const ourMidiReceiverGui = new MidiReceiverGui(this.ourApp, ourMidiReceiver);
 		await ourMidiReceiverGui.createAsync(new MRE.Vector3(xPos, 0.1, -2), "Midi Recv")
 		this.ourApp.allGUIs.push(ourMidiReceiverGui);
+
+		// ===================================================================
 				
 		const sendPatchPiano = new PatchPoint();
 		sendPatchPiano.module = ourPiano;
@@ -200,7 +212,7 @@ export default class Presets {
 		//await ourWavPlayer.loadAllSounds("GoogleDrive/GeoSound",21,108);
 		await ourWavPlayer.loadAllSoundsDirectory("speak", 21);
 		this.ourApp.allModules.push(ourWavPlayer);
-		ourWavPlayer.volume=0.5;
+		ourWavPlayer.volume=0.25;
 
 		const ourWavPlayerGui = new WavPlayerGui(this.ourApp, ourWavPlayer);
 		await ourWavPlayerGui.createAsync(new MRE.Vector3(xPos, 0.1, 0), "WavPlayer")

@@ -41,7 +41,7 @@ export default class MidiReceiver extends MusicModule {
 			this.ourApp.ourConsole.logMessage('remote midi keyboard has connected from: ' + ws.url); 
 
 			ws.on('message', (message: string) => {
-				//MRE.log.info("app", 'received from client: %s', message);
+				//this.ourApp.ourConsole.logMessage('received from client: ' + message);
 				const messageArray: number[] = JSON.parse(message);
 
 				const note = messageArray[0];
