@@ -154,7 +154,7 @@ export default class Spawner extends MusicModule {
 
 					if (currentTime - ourBubble.timeStamp > (this.timeOut * 1000)) {
 						if (ourBubble.animation) {
-							//ourBubble.animation.stop();
+							ourBubble.animation.stop();
 							ourBubble.animation.delete();
 						}
 						ourBubble.actor.destroy();
