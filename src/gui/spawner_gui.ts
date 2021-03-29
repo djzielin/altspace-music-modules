@@ -14,83 +14,66 @@ import Button from './button';
 import GuiPanel from './gui_panel';
 
 export default class extends GuiPanel {
-	public sendButton: Button=null;
-	public receiveButton: Button=null;
+	public sendButton: Button = null;
+	public receiveButton: Button = null;
 
 	constructor(protected ourApp: App, private ourSpawner: Spawner) {
 		super(ourApp);
-		this.ourModule=ourSpawner;
+		this.ourModule = ourSpawner;
 	}
 
 	public setEmitterWidth(n: number): void {
-		if (this.ourSpawner) {
-			this.ourSpawner.spawnerWidth = n;
-			this.ourSpawner.spawnerActor.transform.local.scale =
-				new MRE.Vector3(
-					this.ourSpawner.spawnerWidth,
-					0.01,
-					0.05);
-			this.ourSpawner.spawnerActor.transform.local.position =
-				new MRE.Vector3(-this.ourSpawner.spawnerWidth, 0, 0);
-		} else {
-			this.ourApp.ourConsole.logMessage("ERROR: spawner referenced by spawner gui doesn't exist!");
-		}
+
+		this.ourSpawner.spawnerWidth = n;
+		this.ourSpawner.spawnerActor.transform.local.scale =
+			new MRE.Vector3(
+				this.ourSpawner.spawnerWidth,
+				0.01,
+				0.05);
+		this.ourSpawner.spawnerActor.transform.local.position =
+			new MRE.Vector3(-this.ourSpawner.spawnerWidth * 0.5 - 0.5, 0, 0);
 	}
 
 	public setEmitterHeight(n: number): void {
-		if (this.ourSpawner) {
-			this.ourSpawner.spawnerHeight = n;
-		} else {
-			this.ourApp.ourConsole.logMessage("ERROR: spawner referenced by spawner gui doesn't exist!");
-		}
+
+		this.ourSpawner.spawnerHeight = n;
+
 	}
 
 	public setTimeOut(n: number): void {
-		if (this.ourSpawner) {
-			this.ourSpawner.timeOut = n;
-		} else {
-			this.ourApp.ourConsole.logMessage("ERROR: spawner referenced by spawner gui doesn't exist!");
-		}
+
+		this.ourSpawner.timeOut = n;
+
 	}
 
 	public setBubbleSize(n: number): void {
-		if (this.ourSpawner) {
-			this.ourSpawner.bubbleSize = n;
-		} else {
-			this.ourApp.ourConsole.logMessage("ERROR: spawner referenced by spawner gui doesn't exist!");
-		}
+
+		this.ourSpawner.bubbleSize = n;
+
 	}
 
 	public setBubbleLimit(n: number): void {
-		if (this.ourSpawner) {
-			this.ourSpawner.bubbleLimit = n;
-		} else {
-			this.ourApp.ourConsole.logMessage("ERROR: spawner referenced by spawner gui doesn't exist!");
-		}
+
+		this.ourSpawner.bubbleLimit = n;
+
 	}
 
 	public setBubbleSpeed(n: number): void {
-		if (this.ourSpawner) {
-			this.ourSpawner.bubbleSpeed = n;
-		} else {
-			this.ourApp.ourConsole.logMessage("ERROR: spawner referenced by spawner gui doesn't exist!");
-		}
+
+		this.ourSpawner.bubbleSpeed = n;
+
 	}
 
 	public setDoParticleEffect(b: boolean): void {
-		if (this.ourSpawner) {
-			this.ourSpawner.doParticleEffect = b;
-		} else {
-			this.ourApp.ourConsole.logMessage("ERROR: spawner referenced by spawner gui doesn't exist!");
-		}
+
+		this.ourSpawner.doParticleEffect = b;
+
 	}
 
 	public setDoPosRandom(b: boolean): void {
-		if (this.ourSpawner) {
-			this.ourSpawner.doPosRandom = b;
-		} else {
-			this.ourApp.ourConsole.logMessage("ERROR: spawner referenced by spawner gui doesn't exist!");
-		}
+
+		this.ourSpawner.doPosRandom = b;
+
 	}
 
 	/*public setDoPhysics(b: boolean): void {
@@ -98,11 +81,9 @@ export default class extends GuiPanel {
 	}*/
 
 	public setDoElongated(b: boolean): void {
-		if (this.ourSpawner) {
-			this.ourSpawner.doElongatedCubes = b;
-		} else {
-			this.ourApp.ourConsole.logMessage("ERROR: spawner referenced by spawner gui doesn't exist!");
-		}
+
+		this.ourSpawner.doElongatedCubes = b;
+
 	}
 
 
@@ -127,7 +108,7 @@ export default class extends GuiPanel {
 		const randButton = new Button(this.ourApp);
 		await randButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
 			this.guiBackground.id, "Pos Rand", "Pos Lin",
-			this.ourSpawner.doPosRandom, this.setDoPosRandom.bind(this.ourSpawner));
+			this.ourSpawner.doPosRandom, this.setDoPosRandom.bind(this));
 		zPos -= 0.15;
 
 		/*const pButton = new Button(this.ourApp);
@@ -139,7 +120,7 @@ export default class extends GuiPanel {
 		const button = new Button(this.ourApp);
 		await button.createAsync(new MRE.Vector3(0, 0.025, zPos),
 			this.guiBackground.id, "Particle On", "ParticleOff",
-			this.ourSpawner.doParticleEffect, this.setDoParticleEffect.bind(this.ourSpawner));
+			this.ourSpawner.doParticleEffect, this.setDoParticleEffect.bind(this));
 		zPos -= 0.15;
 
 		/*const button2 = new Button(this.ourApp);
@@ -152,37 +133,37 @@ export default class extends GuiPanel {
 		const speedGUI = new PlusMinus(this.ourApp);
 		await speedGUI.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
 			this.guiBackground.id, "speed",
-			this.ourSpawner.bubbleSpeed, 0.01, this.setBubbleSpeed.bind(this.ourSpawner));
+			this.ourSpawner.bubbleSpeed, 0.01, this.setBubbleSpeed.bind(this));
 		zPos -= 0.15;
 
 		const sizeGUI = new PlusMinus(this.ourApp);
 		await sizeGUI.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
 			this.guiBackground.id, "size",
-			this.ourSpawner.bubbleSize, 0.01, this.setBubbleSize.bind(this.ourSpawner));
+			this.ourSpawner.bubbleSize, 0.01, this.setBubbleSize.bind(this));
 		zPos -= 0.15;
 
 		const timeoutGUI = new PlusMinus(this.ourApp);
 		await timeoutGUI.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
 			this.guiBackground.id, "culltime",
-			this.ourSpawner.timeOut, 1, this.setTimeOut.bind(this.ourSpawner));
+			this.ourSpawner.timeOut, 1, this.setTimeOut.bind(this));
 		zPos -= 0.15;
 
 		const bubbleLimitGUI = new PlusMinus(this.ourApp);
 		await bubbleLimitGUI.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
 			this.guiBackground.id, "# limit",
-			this.ourSpawner.bubbleLimit, 10, this.setBubbleLimit.bind(this.ourSpawner));
+			this.ourSpawner.bubbleLimit, 10, this.setBubbleLimit.bind(this));
 		zPos -= 0.15;
 
 		const emitWidth = new PlusMinus(this.ourApp);
 		await emitWidth.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
 			this.guiBackground.id, "s_width",
-			this.ourSpawner.spawnerWidth, 0.05, this.setEmitterWidth.bind(this.ourSpawner));
+			this.ourSpawner.spawnerWidth, 0.05, this.setEmitterWidth.bind(this));
 		zPos -= 0.15;
 
 		const emitHeight = new PlusMinus(this.ourApp);
 		await emitHeight.createAsync(new MRE.Vector3(-0.5, 0.05, zPos),
 			this.guiBackground.id, "s_height",
-			this.ourSpawner.spawnerHeight, 0.05, this.setEmitterHeight.bind(this.ourSpawner));
+			this.ourSpawner.spawnerHeight, 0.05, this.setEmitterHeight.bind(this));
 		zPos -= 0.15;
 
 		this.receiveButton = new Button(this.ourApp);

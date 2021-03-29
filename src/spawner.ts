@@ -246,7 +246,7 @@ export default class Spawner extends MusicModule {
 				parentId: this.ourGrabber.getGUID(),
 				transform: {
 					local: {
-						position: new MRE.Vector3(-this.spawnerWidth, 0,0),
+						position: new MRE.Vector3(-this.spawnerWidth*0.5-0.5, 0,0),
 						scale: new MRE.Vector3(this.spawnerWidth, 0.01, 0.05)
 					}
 				},
