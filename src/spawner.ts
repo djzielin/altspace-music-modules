@@ -101,8 +101,7 @@ export default class Spawner extends MusicModule {
 
 	//public ourWavPlayer: WavPlayer;
 
-	private ourInterval1: NodeJS.Timeout=null;
-	private ourInterval2: NodeJS.Timeout=null;
+	private ourInterval: NodeJS.Timeout=null;
 
 	private removeFromAvailable(ourBubble: BubbleProperties) {
 		const index = this.availableBubbles.indexOf(ourBubble);
@@ -115,8 +114,7 @@ export default class Spawner extends MusicModule {
 	public destroy() {
 		this.ourApp.ourConsole.logMessage("SPAWNER: destroy");
 
-		clearInterval(this.ourInterval1);
-		clearInterval(this.ourInterval2);
+		clearInterval(this.ourInterval);
 		
 		for (const ourBubble of this.availableBubbles) {
 			if (ourBubble.animation) {
@@ -132,38 +130,12 @@ export default class Spawner extends MusicModule {
 	constructor(protected ourApp: App, public name: string) {
 		super(ourApp, name);
 
-		this.ourInterval1=setInterval(() => { //cull bubbles that have been around too long
-			const currentTime = Date.now();
-			const listOfAvailableBubblesToDelete: BubbleProperties[]=[];
-			for (const ourBubble of this.availableBubbles) {
-				//this.ourApp.ourConsole.logMessage("pos: " + ourBubble.actor.transform.app.position);
+		this.ourInterval=setInterval(() => {
+			//this.ourApp.ourConsole.logMessage("SPAWNER: doing collision check");
 
-				if (currentTime - ourBubble.timeStamp > (this.timeOut * 1000)) {
-					if (ourBubble.animation) {
-						//ourBubble.animation.stop();
-						ourBubble.animation.delete();
-					}
-					ourBubble.actor.destroy();
-					listOfAvailableBubblesToDelete.push(ourBubble);
-				}
-			}
-
-			for(const ourBubble of listOfAvailableBubblesToDelete){
-				this.removeFromAvailable(ourBubble);
-			}		
-	
-			//const timeNow=new Date(Date.now());			
-
-			/*this.ourApp.ourConsole.logMessage(
-				`Time: ${this.ourApp.pad(timeNow.getHours(),2,'0')}:`+
-				`${this.ourApp.pad(timeNow.getMinutes(),2,'0')}:` +
-				`${this.ourApp.pad(timeNow.getSeconds(),2,'0')} - ` +
-				`${this.availableBubbles.length} playable `+
-				`(${listOfAvailableBubblesToDelete.length} culled)`);*/
-		}, 200);
-
-		this.ourInterval2=setInterval(() => {
 			const bubblesToPop: BubbleProperties[] = [];
+			const listOfAvailableBubblesToDelete: BubbleProperties[]=[];
+			const currentTime = Date.now();
 
 			for (const ourBubble of this.availableBubbles) {
 				if (ourBubble.animation) {
@@ -180,33 +152,50 @@ export default class Spawner extends MusicModule {
 					//this.ourApp.ourConsole.logMessage("reportedPos: " + ourBubble.actor.transform.app.position);
 
 
-					for (const ourUser of this.ourApp.ourUsers.allUsers) {
-						//this.ourApp.ourConsole.logMessage("examining: " + ourUser.name);
-
-						if (ourUser.lHand) {
-							const lPos = ourUser.lHand.transform.app.position;
-							if (MRE.Vector3.Distance(computedPos, lPos) < 0.15) {
-								ourBubble.collisionPos = computedPos;
-								bubblesToPop.push(ourBubble);
-							}
+					if (currentTime - ourBubble.timeStamp > (this.timeOut * 1000)) {
+						if (ourBubble.animation) {
+							//ourBubble.animation.stop();
+							ourBubble.animation.delete();
 						}
-						if (ourUser.rHand) {
-							const rPos = ourUser.rHand.transform.app.position;
-							//this.ourApp.ourConsole.logMessage("rpos: " + rPos);
+						ourBubble.actor.destroy();
+						listOfAvailableBubblesToDelete.push(ourBubble);
+					} else {
 
-							if (MRE.Vector3.Distance(computedPos, rPos) < 0.15) {
-								ourBubble.collisionPos = computedPos;
-								bubblesToPop.push(ourBubble);
+						//TODO: check for auth/freeplay flag
+						for (const ourUser of this.ourApp.ourUsers.allUsers) {
+							//this.ourApp.ourConsole.logMessage("examining: " + ourUser.name);
+
+							if (ourUser.lHand) {
+								const lPos = ourUser.lHand.transform.app.position;
+								if (MRE.Vector3.Distance(computedPos, lPos) < 0.15) {
+									ourBubble.collisionPos = computedPos;
+									bubblesToPop.push(ourBubble);
+								}
+							}
+							if (ourUser.rHand) {
+								const rPos = ourUser.rHand.transform.app.position;
+								//this.ourApp.ourConsole.logMessage("rpos: " + rPos);
+
+								if (MRE.Vector3.Distance(computedPos, rPos) < 0.15) {
+									ourBubble.collisionPos = computedPos;
+									bubblesToPop.push(ourBubble);
+								}
 							}
 						}
 					}
+
 				}
 			}
+
+			for (const ourBubble of listOfAvailableBubblesToDelete) {
+				this.removeFromAvailable(ourBubble);
+			}
+
 			for (const ourBubble of bubblesToPop) {
 				this.popBubble(ourBubble);
-			}		
+			}
 		}, 100);
-	
+
 	}
 
 	private isAuthorized(user: MRE.User): boolean {

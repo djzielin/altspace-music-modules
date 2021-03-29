@@ -129,11 +129,15 @@ export default class Staff extends MusicModule {
 	private drawingUser: MRE.User;
 
 	private computedStaffScale: number;
+	private ourInterval: NodeJS.Timeout=null;
 
 	constructor(protected ourApp: App, public name: string) {
 		super(ourApp, name);
 
-		setInterval(() => {
+		this.ourInterval=setInterval(() => {
+
+			//this.ourApp.ourConsole.logMessage("STAFF: doing collision check");
+
 			for (const ourNote of this.activeNotes) {
 				ourNote.worldPos= this.getWorldPos(ourNote.pos); //translate to world coordinates					
 				
@@ -161,6 +165,14 @@ export default class Staff extends MusicModule {
 				}
 			}
 		}, 100);
+	}
+
+	public destroy(){
+		this.ourApp.ourConsole.logMessage("STAFF: destroy");
+		clearInterval(this.ourInterval);
+		//TODO: do we need to delete all objects we created?
+
+		super.destroy();
 	}
 
 	private handleNoteTouch(ourNote: NoteProperties, hand: MRE.Actor){

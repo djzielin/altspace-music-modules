@@ -66,14 +66,14 @@ export default class App {
 
 		this.assets = new MRE.AssetContainer(context);
 
-		this.context.onStarted(() => this.started());
-		this.context.onStopped(() => this.stopped());
-
 		this.context.onUserJoined(user => {
 			this.ourUsers.userJoined(user,true);
 		});
 
 		this.context.onUserLeft(user => this.ourUsers.userLeft(user));
+
+		this.context.onStarted(() => this.started());
+		this.context.onStopped(() => this.stopped());		
 	}
 
 	private async createMeshAndMaterial(){
