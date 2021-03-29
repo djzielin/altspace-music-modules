@@ -136,7 +136,9 @@ export default class Users {
 	
 
 		if(createHands){
-			this.addHands(ourUser);
+			this.addHands(ourUser).then( ()=> {
+				this.ourApp.ourConsole.logMessage("  all hands created for: " + ourUser.name);
+			});
 		}
 		//if(createChest){
 		//	this.addChest(ourUser);
@@ -207,33 +209,30 @@ export default class Users {
 		this.ourApp.ourConsole.logMessage("  user array is now size: " + this.allUsers.length);
 	}
 
-	private addHands(ourUser: UserProperties) {
+	private async addHands(ourUser: UserProperties) {
 
-		setTimeout(() => {
-			this.ourApp.ourConsole.logMessage("creating hands for: " + ourUser.name);
+		this.ourApp.ourConsole.logMessage("creating hands for: " + ourUser.name);
 
-			ourUser.rHand = this.createHand('right-hand', ourUser.userID, 
-				//new MRE.Vector3(0, 0, 0.1),
-				new MRE.Vector3(-0.03, 0.01, 0.16),
-				//new MRE.Vector3(0.03, 0.03, 0.14));
-				new MRE.Vector3(0.03, 0.03, 0.03));
+		//sometimes create user gets called before we've had a chance to setup the meshes
+		await this.ourApp.boxMesh.created; 
 
-			ourUser.rHand.created().then(() => {
-				this.ourApp.ourConsole.logMessage("  right hand created for: " + ourUser.name);
-			});
-	
-			ourUser.lHand = this.createHand('left-hand', ourUser.userID, 
-				//new MRE.Vector3(0, 0, 0.1),
-				new MRE.Vector3(0.03, 0.01, 0.16),
-				//new MRE.Vector3(0.03, 0.03, 0.14));
-				new MRE.Vector3(0.03, 0.03, 0.03));
+		ourUser.rHand = this.createHand('right-hand', ourUser.userID,
+			//new MRE.Vector3(0, 0, 0.1),
+			new MRE.Vector3(-0.03, 0.01, 0.16),
+			//new MRE.Vector3(0.03, 0.03, 0.14));
+			new MRE.Vector3(0.03, 0.03, 0.03))
+		await ourUser.rHand.created();
 
-			ourUser.lHand.created().then(() => {
-				this.ourApp.ourConsole.logMessage("  left hand created for: " + ourUser.name);
-			});
+		this.ourApp.ourConsole.logMessage("  right hand created for: " + ourUser.name);
 
-		}, 1000);
+		ourUser.lHand = this.createHand('left-hand', ourUser.userID,
+			//new MRE.Vector3(0, 0, 0.1),
+			new MRE.Vector3(0.03, 0.01, 0.16),
+			//new MRE.Vector3(0.03, 0.03, 0.14));
+			new MRE.Vector3(0.03, 0.03, 0.03));
+		await ourUser.lHand.created();
 
+		this.ourApp.ourConsole.logMessage("  left hand created for: " + ourUser.name);
 	}
 
 	/*private addChest(ourUser: UserProperties) {

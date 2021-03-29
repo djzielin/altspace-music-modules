@@ -23,42 +23,74 @@ export default class extends GuiPanel {
 	}
 
 	public setEmitterWidth(n: number): void {
-		this.ourSpawner.spawnerWidth = n;
-		this.ourSpawner.spawnerActor.transform.local.scale =
-			new MRE.Vector3(
-				this.ourSpawner.spawnerWidth,
-				0.01,
-				0.05);	
-		this.ourSpawner.spawnerActor.transform.local.position=
-			new MRE.Vector3(-this.ourSpawner.spawnerWidth, 0,0);
+		if (this.ourSpawner) {
+			this.ourSpawner.spawnerWidth = n;
+			this.ourSpawner.spawnerActor.transform.local.scale =
+				new MRE.Vector3(
+					this.ourSpawner.spawnerWidth,
+					0.01,
+					0.05);
+			this.ourSpawner.spawnerActor.transform.local.position =
+				new MRE.Vector3(-this.ourSpawner.spawnerWidth, 0, 0);
+		} else {
+			this.ourApp.ourConsole.logMessage("ERROR: spawner referenced by spawner gui doesn't exist!");
+		}
 	}
 
 	public setEmitterHeight(n: number): void {
-		this.ourSpawner.spawnerHeight=n;
+		if (this.ourSpawner) {
+			this.ourSpawner.spawnerHeight = n;
+		} else {
+			this.ourApp.ourConsole.logMessage("ERROR: spawner referenced by spawner gui doesn't exist!");
+		}
 	}
 
 	public setTimeOut(n: number): void {
-		this.ourSpawner.timeOut=n;
+		if (this.ourSpawner) {
+			this.ourSpawner.timeOut = n;
+		} else {
+			this.ourApp.ourConsole.logMessage("ERROR: spawner referenced by spawner gui doesn't exist!");
+		}
 	}
 
 	public setBubbleSize(n: number): void {
-		this.ourSpawner.bubbleSize=n;
+		if (this.ourSpawner) {
+			this.ourSpawner.bubbleSize = n;
+		} else {
+			this.ourApp.ourConsole.logMessage("ERROR: spawner referenced by spawner gui doesn't exist!");
+		}
 	}
 
 	public setBubbleLimit(n: number): void {
-		this.ourSpawner.bubbleLimit=n;
+		if (this.ourSpawner) {
+			this.ourSpawner.bubbleLimit = n;
+		} else {
+			this.ourApp.ourConsole.logMessage("ERROR: spawner referenced by spawner gui doesn't exist!");
+		}
 	}
 
 	public setBubbleSpeed(n: number): void {
-		this.ourSpawner.bubbleSpeed=n;
+		if (this.ourSpawner) {
+			this.ourSpawner.bubbleSpeed = n;
+		} else {
+			this.ourApp.ourConsole.logMessage("ERROR: spawner referenced by spawner gui doesn't exist!");
+		}
 	}
 
 	public setDoParticleEffect(b: boolean): void {
-		this.ourSpawner.doParticleEffect=b;
+		if (this.ourSpawner) {
+			this.ourSpawner.doParticleEffect = b;
+		} else {
+			this.ourApp.ourConsole.logMessage("ERROR: spawner referenced by spawner gui doesn't exist!");
+		}
 	}
 
 	public setDoPosRandom(b: boolean): void {
-		this.ourSpawner.doPosRandom=b;
+		if (this.ourSpawner) {
+			this.ourSpawner.doPosRandom = b;
+		} else {
+			this.ourApp.ourConsole.logMessage("ERROR: spawner referenced by spawner gui doesn't exist!");
+		}
 	}
 
 	/*public setDoPhysics(b: boolean): void {
@@ -66,19 +98,23 @@ export default class extends GuiPanel {
 	}*/
 
 	public setDoElongated(b: boolean): void {
-		this.ourSpawner.doElongatedCubes=b;
+		if (this.ourSpawner) {
+			this.ourSpawner.doElongatedCubes = b;
+		} else {
+			this.ourApp.ourConsole.logMessage("ERROR: spawner referenced by spawner gui doesn't exist!");
+		}
 	}
 
 
-	public sendMidiPatcher(b: boolean){
-		this.ourApp.ourPatcher.patcherClickEvent(this.ourSpawner,"midi",true,this,this.sendButton);
+	public sendMidiPatcher(b: boolean) {
+		this.ourApp.ourPatcher.patcherClickEvent(this.ourSpawner, "midi", true, this, this.sendButton);
 	}
 
-	public recvMidiPatch(b: boolean){
-		this.ourApp.ourPatcher.patcherClickEvent(this.ourSpawner,"midi",false,this,this.receiveButton);
+	public recvMidiPatch(b: boolean) {
+		this.ourApp.ourPatcher.patcherClickEvent(this.ourSpawner, "midi", false, this, this.receiveButton);
 	}
 
-	public grabRelease(){
+	public grabRelease() {
 		this.ourApp.ourPatcher.updatePatchLines(this);
 	}
 
@@ -86,7 +122,7 @@ export default class extends GuiPanel {
 		this.ourApp.ourConsole.logMessage("creating spawner gui");
 
 		await this.createBackground(pos, name, 1.5);
-		let zPos=this.backgroundHeight * 0.5 - 0.3;
+		let zPos = this.backgroundHeight * 0.5 - 0.3;
 
 		const randButton = new Button(this.ourApp);
 		await randButton.createAsync(new MRE.Vector3(0, 0.025, zPos),
