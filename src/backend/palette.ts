@@ -385,10 +385,10 @@ export default class Palette {
 
 		if (name === "Spawner") {
 			const ourSpawner = new Spawner(this.ourApp, displayName);
+			this.ourApp.allModules.push(ourSpawner);
+
 			ourSpawner.createAsyncItems(new MRE.Vector3(2, 1, 0),
 				MRE.Quaternion.FromEulerAngles(0.0 * Math.PI / 180, 0, 0)).then(() => {
-
-				this.ourApp.allModules.push(ourSpawner);
 
 				const ourSpawnerGui = new SpawnerGui(this.ourApp, ourSpawner);
 				ourSpawnerGui.createAsync(new MRE.Vector3(0, 0.1, -2), displayName).then(() => {

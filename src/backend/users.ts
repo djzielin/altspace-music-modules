@@ -214,13 +214,24 @@ export default class Users {
 		this.ourApp.ourConsole.logMessage("creating hands for: " + ourUser.name);
 
 		//sometimes create user gets called before we've had a chance to setup the meshes
-		await this.ourApp.boxMesh.created; 
+		while (this.ourApp.boxMesh === null) {
+			this.ourApp.ourConsole.logMessage("mesh hasn't been created yet, so waiting 1 second");
+			await new Promise(resolve => setTimeout(resolve, 1000));
+		}
+
+		this.ourApp.ourConsole.logMessage("Good! seems the box mesh is not null for the hands");
+
+		await this.ourApp.boxMesh.created;
 
 		ourUser.rHand = this.createHand('right-hand', ourUser.userID,
 			//new MRE.Vector3(0, 0, 0.1),
 			new MRE.Vector3(-0.03, 0.01, 0.16),
 			//new MRE.Vector3(0.03, 0.03, 0.14));
-			new MRE.Vector3(0.03, 0.03, 0.03))
+			new MRE.Vector3(0.03, 0.03, 0.03));
+
+		if(ourUser.rHand===null){
+			this.ourApp.ourConsole.logMessage("ERROR: UNABLE TO CREATE RIGHT HAND FOR: " + ourUser.name);
+		}
 		await ourUser.rHand.created();
 
 		this.ourApp.ourConsole.logMessage("  right hand created for: " + ourUser.name);
@@ -231,6 +242,10 @@ export default class Users {
 			//new MRE.Vector3(0.03, 0.03, 0.14));
 			new MRE.Vector3(0.03, 0.03, 0.03));
 		await ourUser.lHand.created();
+
+		if(ourUser.lHand===null){
+			this.ourApp.ourConsole.logMessage("ERROR: UNABLE TO CREATE LEFT HAND FOR: " + ourUser.name);
+		}
 
 		this.ourApp.ourConsole.logMessage("  left hand created for: " + ourUser.name);
 	}

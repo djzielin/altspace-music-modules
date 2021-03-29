@@ -103,6 +103,8 @@ export default class Piano extends MusicModule {
 		//let previousHands: Map<MRE.Actor, MRE.Vector3> = new Map();
 
 		this.ourInterval=setInterval(() => {
+			this.ourApp.ourConsole.logMessage("PIANO: doing collision check");
+
 			if (this.isKeysSetup) {
 				const allHands: Map<MRE.Actor, MRE.Vector3> = new Map();
 

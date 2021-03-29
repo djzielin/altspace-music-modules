@@ -14,6 +14,7 @@ import Presets from './presets';
 import GuiPanel from './gui/gui_panel';
 import GrabButton from './gui/grabbutton';
 import Button from './gui/button';
+import { threadId } from 'worker_threads';
 
 export default class App {
 	public assets: MRE.AssetContainer = null;
@@ -33,20 +34,20 @@ export default class App {
 	public showGrabbersButton: Button = null;
 	public showPaletteButton: Button = null;
 
-	public boxMesh: MRE.Mesh;
-	public sphereMesh: MRE.Mesh;
+	public boxMesh: MRE.Mesh = null;
+	public sphereMesh: MRE.Mesh = null;
 	
-	public redMat: MRE.Material;
-	public greenMat: MRE.Material;
-	public whiteMat: MRE.Material;
-	public blackMat: MRE.Material;
-	public almostBlackMat: MRE.Material;
-	public grayMat: MRE.Material;
-	public darkgrayMat: MRE.Material;
-	public grayRedMat: MRE.Material;
-	public lightgrayMat: MRE.Material;
-	public transparentBlackMat: MRE.Material;
-	public transparentWhiteMat: MRE.Material;
+	public redMat: MRE.Material = null;
+	public greenMat: MRE.Material = null;
+	public whiteMat: MRE.Material = null;
+	public blackMat: MRE.Material = null;
+	public almostBlackMat: MRE.Material = null;
+	public grayMat: MRE.Material = null;
+	public darkgrayMat: MRE.Material = null;
+	public grayRedMat: MRE.Material = null;
+	public lightgrayMat: MRE.Material = null;
+	public transparentBlackMat: MRE.Material = null;
+	public transparentWhiteMat: MRE.Material = null;
 
 	public handMesh: MRE.Mesh = null;
 	public handTexture: MRE.Texture = null;
@@ -65,18 +66,14 @@ export default class App {
 
 		this.assets = new MRE.AssetContainer(context);
 
-		this.context.onUserLeft(user => this.ourUsers.userLeft(user));
-
-		//const isGeo = (instrumentType === "geo");
-		//const createHands = !isGeo;
-		//const createChest = isGeo;
+		this.context.onStarted(() => this.started());
+		this.context.onStopped(() => this.stopped());
 
 		this.context.onUserJoined(user => {
 			this.ourUsers.userJoined(user,true);
 		});
 
-		this.context.onStarted(() => this.started());
-		this.context.onStopped(() => this.stopped());
+		this.context.onUserLeft(user => this.ourUsers.userLeft(user));
 	}
 
 	private async createMeshAndMaterial(){
@@ -319,6 +316,7 @@ export default class App {
 
 	private stopped() {
 		MRE.log.info("app", "stopped callback has been called");
+		this.clearAll();
 	}
 
 	private started() {
