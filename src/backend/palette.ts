@@ -44,6 +44,7 @@ export default class Palette {
 
 	protected guiGrabber: GrabButton = null;
 	protected backgroundHeight = 1.75;
+	private presetLabel: MRE.Actor=null;
 
 	private utilityModules: string[] = [
 		"Midi Receiver",
@@ -64,6 +65,7 @@ export default class Palette {
 		//"Tablature"
 	];
 
+	private presetButtons: ButtonWithParameter[] = [];
 	private presetLabels: string[] = [
 		"Piano",
 		"Spawner",
@@ -107,8 +109,21 @@ export default class Palette {
 	public selectPreset(b: boolean, param: any){
 		const presetName=param as string;
 
+		for(const b of this.presetButtons){
+			b.setVisible(false);
+		}
+
+		this.setPresetLabel("Loading:\n"+presetName);
+
+
 		this.ourApp.ourPresets.spawnPreset(presetName).then( ()=>{
 			this.ourApp.ourConsole.logMessage("new preset loaded!: " + presetName);
+
+			for(const b of this.presetButtons){
+				b.setVisible(true);
+			}
+			this.setPresetLabel("Presets");
+
 		});
 	}
 	
@@ -277,7 +292,7 @@ export default class Palette {
 			zPos -= 0.15;
 		}
 
-		const presetLabel = MRE.Actor.Create(this.ourApp.context, {
+		this.presetLabel = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
 				parentId: this.guiBackground2.id,
 				name: 'titleText',
@@ -295,7 +310,7 @@ export default class Palette {
 				}
 			}
 		});
-		await presetLabel.created();
+		await this.presetLabel.created();
 
 		zPos = this.backgroundHeight * 0.5 - 0.3 - 0.3;
 		for (const s of this.presetLabels) {
@@ -309,13 +324,22 @@ export default class Palette {
 					this.guiBackground2.id, sPreset, sPreset,
 					false, this.selectPreset.bind(this));
 				selectPreset.doVisualUpdates = false;
+				this.presetButtons.push(selectPreset);
 			}
 			zPos -= 0.15;
 		}
 	}
 
+	private setPresetLabel(s: string){
+		if(this.presetLabel){
+			this.presetLabel.text.contents=s;
+		}
+	}
+
 	//TODO: do something better about placing these, so it doesn't overlap (especially GUI's)
 	public spawnModule(name: string) {
+		this.ourApp.ourConsole.logMessage("Spawning module: " + name);
+
 		let moduleNum=0;
 		if(this.ourApp.moduleCounts.has(name)){
 			moduleNum=this.ourApp.moduleCounts.get(name);
