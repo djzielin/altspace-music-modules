@@ -140,9 +140,14 @@ export default class Piano extends MusicModule {
 		this.intervalMode = loadedParams.intervalMode;
 		this.noteNameMode = loadedParams.noteNameMode;
 		this.moduleType=loadedParams.moduleType;
-		this.moduleType=loadedParams.name;
-		this.ourGrabber.setPos(loadedParams.pos);
-		this.ourGrabber.setRot(loadedParams.rot);
+		this.moduleType=loadedParams.name;		
+
+		if(this.ourGrabber){
+			this.ourGrabber.setPos(loadedParams.pos);
+			this.ourGrabber.setRot(loadedParams.rot);
+		} else{
+			this.setInitialLocation(loadedParams.pos,loadedParams.rot);
+		}
 	}
 
 	constructor(protected ourApp: App, public name: string) {
