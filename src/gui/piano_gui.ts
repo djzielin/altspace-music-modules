@@ -55,9 +55,9 @@ export default class PianoGui extends GuiPanel{
 			this.ourApp.ourConsole.logMessage("high key adjustment complete");
 		});
 	}
-	public setAudioRange(n: number): void {
+	/*public setAudioRange(n: number): void {
 		this.ourPiano.audioRange = n;
-	}
+	}*/
 
 	public sendMidiPatcher(b: boolean){
 		this.ourApp.ourPatcher.patcherClickEvent(this.ourPiano,"midi",true,this,this.sendButton);

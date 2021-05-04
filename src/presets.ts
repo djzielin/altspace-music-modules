@@ -107,8 +107,11 @@ export default class Presets {
 		// ===================================================================
 
 		const ourPiano = new Piano(this.ourApp, "Piano");
-		await ourPiano.createAllKeys(new MRE.Vector3(2, 1, 0),
-			MRE.Quaternion.FromEulerAngles(-30 * Math.PI / 180, 0, 0));	
+		ourPiano.setInitialLocation(
+			new MRE.Vector3(2, 1, 0),
+			MRE.Quaternion.FromEulerAngles(-30 * Math.PI / 180, 0, 0));
+
+		await ourPiano.createAllKeys();	
 		this.ourApp.allModules.push(ourPiano);
 
 		const ourPianoGui = new PianoGui(this.ourApp, ourPiano);

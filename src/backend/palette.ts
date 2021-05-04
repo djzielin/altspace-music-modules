@@ -346,14 +346,17 @@ export default class Palette {
 		}
 
 		let displayName=name;
-		if(moduleNum>0){
-			displayName=displayName+" "+(moduleNum+1).toString();
+		if (moduleNum > 0) {
+			displayName = displayName + " " + (moduleNum + 1).toString();
 		}
 
 		if (name === "Piano") {
 			const ourPiano = new Piano(this.ourApp, displayName);
-			ourPiano.createAllKeys(new MRE.Vector3(2, 1, -1),
-				MRE.Quaternion.FromEulerAngles(-30 * Math.PI / 180, 0, 0)).then(() => {
+			ourPiano.setInitialLocation(
+				new MRE.Vector3(2, 1, -1),
+				MRE.Quaternion.FromEulerAngles(-30 * Math.PI / 180, 0, 0));
+
+			ourPiano.createAllKeys().then(() => {
 				this.ourApp.allModules.push(ourPiano);
 
 				const ourPianoGui = new PianoGui(this.ourApp, ourPiano);

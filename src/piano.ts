@@ -3,8 +3,9 @@
  */
 /* eslint-disable no-warning-comments */
 
+import { load } from 'dotenv/types';
 import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
-import { User } from '../../mixed-reality-extension-sdk/packages/sdk/';
+import { Quaternion, User, Vector3 } from '../../mixed-reality-extension-sdk/packages/sdk/';
 
 import App from './app';
 import MusicModule from './backend/music_module';
@@ -14,7 +15,6 @@ import PianoLayout from './piano_layout';
 enum AuthType {
 	Moderators = 0,
 	All = 1,
-	SpecificUser = 2
 }
 
 enum IntervalMode {
@@ -52,57 +52,113 @@ interface PianoKey{
 	collisionSize: MRE.Vector3;
 }
 
-export default class Piano extends MusicModule {
-	public ourInteractionAuth = AuthType.All;
-	public authorizedUser: MRE.User;
+interface PianoSavedParams {
+	ourInteractionAuth: AuthType;
+	keyLowest: number;
+	keyHighest: number;
+	pianoScale: number;
+	doSharps: boolean;
+	isTwelveTone: boolean;
+	intervalMode: IntervalMode;
+	noteNameMode: NoteNameMode;
+	moduleType: string; //from music module baseclass
+	name: string;       //from music module baseclass
+	pos: MRE.Vector3;
+	rot: MRE.Quaternion;
+} 
 
+export default class Piano extends MusicModule {
+
+	/////////////// SAVED PARAMS ///////////////
+	public ourInteractionAuth = AuthType.All;
+	public keyLowest = 36;
+	public keyHighest = 84;
+	public pianoScale = 5.0;
+	public doSharps = true;
+	public isTwelveTone=true;
+	public intervalMode: IntervalMode = IntervalMode.western;
+	public noteNameMode: NoteNameMode = NoteNameMode.letter;
+
+	/////////////// RUNTIME ///////////////
 	public activeNotes: Set<number> = new Set();
 	public ourKeys: Map<number, PianoKey> = new Map();
 
 	public keyboardParent: MRE.Actor;
 	public breathAnimData: MRE.AnimationData;
 
-	public keyLowest = 36;
-	public keyHighest = 84;
-	public pianoScale = 5.0;
-	public audioRange = 50.0;
-	public doSharps = true;
-	public isTwelveTone=true;
-
-	public intervalMode: IntervalMode = IntervalMode.western;
-	public noteNameMode: NoteNameMode = NoteNameMode.letter;
-
-	private noteNamesFlats =
-		["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
-	private noteNamesSharps =
-		["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-
-	private solfegeSharpNames = ["Do", "Di", "Re", "Ri", "Mi", "Fa", "Fi", "Sol", "Si", "La", "Li", "Ti"];
-	private solfegeFlatNames = ["Do", "Ra", "Re", "Me", "Mi", "Fa", "Se", "Sol", "Le", "La", "Te", "Ti"];
-
 	private ourIntervals: PianoIntervals = null;
-	public ourLayout: PianoLayout=null;
+	public ourLayout: PianoLayout = null;
 
 	private ourTransformInverse: MRE.Matrix;
 	private isKeysSetup = false;
+	private keyboardBounds: number[] = [];
+	private ourInterval: NodeJS.Timeout = null;
 
-	private keyboardBounds: number[]=[];
+	private initialPos: MRE.Vector3=new Vector3();
+	private initialRot: MRE.Quaternion=new Quaternion();
 
-	private ourInterval: NodeJS.Timeout=null;
+	/////////////// CONSTANTS ///////////////
+	private readonly noteNamesFlats =
+		["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
+	private readonly noteNamesSharps =
+		["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+
+	private readonly solfegeSharpNames = ["Do", "Di", "Re", "Ri", "Mi", "Fa", "Fi", "Sol", "Si", "La", "Li", "Ti"];
+	private readonly solfegeFlatNames = ["Do", "Ra", "Re", "Me", "Mi", "Fa", "Se", "Sol", "Le", "La", "Te", "Ti"];
+
+	public ParametersAsJSON(): string {
+		const params = {
+			ourInteractionAuth: this.ourInteractionAuth,
+			keyLowest: this.keyLowest,
+			keyHighest: this.keyHighest,
+			pianoScale: this.pianoScale,
+			doSharps: this.doSharps,
+			isTwelveTone: this.isTwelveTone,
+			intervalMode: this.intervalMode,
+			noteNameMode: this.noteNameMode,
+			moduleType: this.moduleType,
+			name: this.name,
+			pos: this.ourGrabber.getPos(),
+			rot: this.ourGrabber.getRot()
+		}
+
+		const jsonString = JSON.stringify(params);
+		this.ourApp.ourConsole.logMessage("Piano json is: " + jsonString);
+		
+		return jsonString;
+	}
+
+	public LoadParametersFromJSON(input: string) {
+		const loadedParams: PianoSavedParams = JSON.parse(input);
+
+		this.ourInteractionAuth = loadedParams.ourInteractionAuth;
+		this.keyLowest = loadedParams.keyLowest;
+		this.keyHighest = loadedParams.keyHighest;
+		this.pianoScale = loadedParams.pianoScale;
+		this.doSharps = loadedParams.doSharps;
+		this.isTwelveTone = loadedParams.isTwelveTone;
+		this.intervalMode = loadedParams.intervalMode;
+		this.noteNameMode = loadedParams.noteNameMode;
+		this.moduleType=loadedParams.moduleType;
+		this.moduleType=loadedParams.name;
+		this.ourGrabber.setPos(loadedParams.pos);
+		this.ourGrabber.setRot(loadedParams.rot);
+	}
 
 	constructor(protected ourApp: App, public name: string) {
 		super(ourApp, name);
+		this.moduleType="Piano";
 
-		for(let i=0;i<6;i++){
+		for (let i = 0; i < 6; i++) {
 			this.keyboardBounds.push(0);
 		}
-		
+
 		this.ourIntervals = new PianoIntervals(ourApp, this);
 		this.ourLayout = new PianoLayout(ourApp, this);
 
 		//let previousHands: Map<MRE.Actor, MRE.Vector3> = new Map();
 
-		this.ourInterval=setInterval(() => {
+		this.ourInterval = setInterval(() => {
 			//this.ourApp.ourConsole.logMessage("PIANO: doing collision check");
 
 			if (this.isKeysSetup) {
@@ -161,12 +217,17 @@ export default class Piano extends MusicModule {
 		}, 100);
 	}
 
-	public destroy(){
+	public destroy() {
 		this.ourApp.ourConsole.logMessage("PIANO: destroy");
 		clearInterval(this.ourInterval);
 		//TODO: do we need to delete all objects we created?
 
 		super.destroy();
+	}
+
+	public setInitialLocation(pos: MRE.Vector3, rot: MRE.Quaternion){
+		this.initialPos=pos;
+		this.initialRot=rot;
 	}
 
 	private isInsideBoundingBox(pos: MRE.Vector3) {
@@ -370,11 +431,11 @@ export default class Piano extends MusicModule {
 		if (this.ourInteractionAuth === AuthType.Moderators) {
 			return this.ourApp.ourUsers.isAuthorized(user);
 		}
-		if (this.ourInteractionAuth === AuthType.SpecificUser) {
+		/*if (this.ourInteractionAuth === AuthType.SpecificUser) {
 			if (user === this.authorizedUser) {
 				return true;
 			}
-		}
+		}*/
 
 		return false;
 	}	
@@ -423,12 +484,12 @@ export default class Piano extends MusicModule {
 		this.updatePositioning();
 	}
 
-	public async createAllKeys(pos: MRE.Vector3, rot = new MRE.Quaternion()) {
+	public async createAllKeys() {
 		if (!this.ourGrabber) {
-			this.createGrabber(pos, rot);
+			this.createGrabber(this.initialPos, this.initialRot);
 		} else {
-			this.ourGrabber.setPos(pos);
-			this.ourGrabber.setRot(rot);
+			this.ourGrabber.setPos(this.initialPos);
+			this.ourGrabber.setRot(this.initialRot);
 		}
 
 		await this.ourLayout.createAsync();
@@ -462,6 +523,10 @@ export default class Piano extends MusicModule {
 		this.updatePositioning();
 		this.isKeysSetup=true;
 		this.ourGrabber.setGrabReleaseCallback(this.updatePositioning.bind(this));
+
+		const param=this.ParametersAsJSON();
+		this.LoadParametersFromJSON(param);
+
 	}	
 
 	public async setKeyLowest(n: number) {
